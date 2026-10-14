@@ -10,14 +10,12 @@ export function App() {
   const pathname = usePathname();
   const route = parseRoute(pathname);
   const main = useRef<HTMLElement>(null);
-  const firstRender = useRef(true);
+  const lastPath = useRef(pathname);
 
-  // After an in-app navigation, start screen readers at the new page.
+  // After an in-app navigation (not the first load), start screen readers at the new page.
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
-      return;
-    }
+    if (lastPath.current === pathname) return;
+    lastPath.current = pathname;
     main.current?.focus({ preventScroll: true });
   }, [pathname]);
 
