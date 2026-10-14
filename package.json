@@ -1,0 +1,27 @@
+{
+  "name": "airlock",
+  "private": true,
+  "type": "module",
+  "description": "Before you run a stranger's code, let a fenced agent open it first.",
+  "license": "MIT",
+  "workspaces": ["web"],
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node --no-warnings server/main.ts",
+    "build": "npm run build -w @airlock/web",
+    "dev": "npm run dev -w @airlock/web",
+    "scan": "node --no-warnings server/cli.ts",
+    "test": "node --no-warnings --test \"server/test/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.299",
+    "@hono/node-server": "^2.1.5",
+    "hono": "^4.13.13",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}
