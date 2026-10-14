@@ -1,0 +1,145 @@
+/* Page frame: skip link, header, main column, footer. */
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
+main:focus {
+  outline: none;
+}
+
+.skip-link {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 500;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 72px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.brand__name {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.site-nav a {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: 14.5px;
+  text-decoration: none;
+}
+
+.site-nav a:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+@media (max-width: 420px) {
+  .site-nav a:first-child {
+    display: none;
+  }
+}
+
+.site-footer {
+  margin-top: 96px;
+  border-top: 1px solid var(--border);
+}
+
+.site-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 32px;
+  padding-top: 28px;
+  padding-bottom: 40px;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.site-footer__brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  color: var(--text);
+}
+
+.site-footer__brand .brand__name {
+  font-size: 15px;
+}
+
+.site-footer__line {
+  color: var(--text-3);
+}
+
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+}
+
+.site-footer__links a {
+  color: var(--text-2);
+}
+
+.site-footer__credit {
+  width: 100%;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+/* Vertical rhythm between page sections. */
+.page {
+  padding-top: 24px;
+}
+
+.page > * + * {
+  margin-top: 72px;
+}
+
+@media (max-width: 520px) {
+  .page > * + * {
+    margin-top: 56px;
+  }
+}
