@@ -10,7 +10,7 @@ import { realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { createSdkMcpServer, query, tool } from '@anthropic-ai/claude-agent-sdk';
-import type { CanUseTool, SDKMessage } from '@anthropic-ai/claude-agent-sdk';
+import type { CanUseTool, HookCallback, SDKMessage } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
 import type { Inventory } from './inventory.ts';
 import type { Category, Finding, RepoInfo, Severity, ToolEvent, Verdict } from './types.ts';
@@ -157,11 +157,66 @@ function isArmorIq(text: string | undefined): boolean {
   return !!text && /armor ?(claude|iq)/i.test(text);
 }
 
+/** ArmorClaude's own MCP tools the reviewer may call: declaring its plan and
+ * reading the policy. Nothing that changes the policy. */
+const ARMORCLAUDE_TOOLS = /^mcp__.*armorclaude.*__(register_intent_plan|policy_read)$/i;
+/** Tools that only shape the agent's own output or bookkeeping. */
+const OWN_TOOLS = new Set(['StructuredOutput', 'TodoWrite']);
+
+export type BackstopDecision = { pass: true } | { ask: string } | { deny: string };
+
+/** Airlock's own rule for one tool call, applied in a PreToolUse hook so it sees
+ * every call, including shell commands Claude Code would let through as harmless. */
+export async function backstop(tool: string, input: Record<string, unknown>, root: string): Promise<BackstopDecision> {
+  if (tool.startsWith('mcp__airlock__') || ARMORCLAUDE_TOOLS.test(tool) || OWN_TOOLS.has(tool)) return { pass: true };
+  if (READ_TOOLS.has(tool)) {
+    return (await staysInside(tool, input, root))
+      ? { pass: true }
+      : { deny: `${BACKSTOP}: reading outside the repository is not allowed.` };
+  }
+  if (PERSON_TOOLS.has(tool)) return { ask: 'Fetching a web page needs the approval of the person running this scan.' };
+  return { deny: `${BACKSTOP}: ${tool} is not one of the reviewer's read-only tools.` };
+}
+
+interface Call {
+  tool: string;
+  summary: string;
+  /** What ArmorClaude's PreToolUse hook answered, when it answered something. */
+  armoriq?: { decision: 'deny' | 'ask'; reason: string };
+  backstop?: string;
+  person?: boolean;
+}
+
+/** Reads a PreToolUse hook's JSON answer, if the hook gave one. */
+export function hookDecision(output: string): { decision: 'deny' | 'ask' | 'allow'; reason: string } | null {
+  const text = output.trim();
+  if (!text.startsWith('{')) return null;
+  try {
+    const parsed = JSON.parse(text) as { hookSpecificOutput?: { permissionDecision?: string; permissionDecisionReason?: string } };
+    const decision = parsed.hookSpecificOutput?.permissionDecision;
+    if (decision !== 'deny' && decision !== 'ask' && decision !== 'allow') return null;
+    return { decision, reason: parsed.hookSpecificOutput?.permissionDecisionReason ?? '' };
+  } catch {
+    return null;
+  }
+}
+
 export async function review(opts: ReviewOptions): Promise<ReviewResult> {
   const { dir, repo, inventory, hooks } = opts;
-  const pending = new Map<string, { tool: string; summary: string; decidedBy?: ToolEvent['by']; decision?: ToolEvent['decision'] }>();
+  const calls = new Map<string, Call>();
+  /** Calls per tool name still waiting for ArmorClaude's PreToolUse answer, oldest first. */
+  const awaitingArmor = new Map<string, string[]>();
   let n = 0;
   const emit = (e: Omit<ToolEvent, 'id' | 'at'>) => hooks.onTool({ ...e, id: `t${++n}`, at: new Date().toISOString() });
+  const callFor = (id: string, tool: string, input: Record<string, unknown>): Call => {
+    let call = calls.get(id);
+    if (!call) {
+      call = { tool, summary: summarize(tool, input, dir) };
+      calls.set(id, call);
+      if (config.armorClaudeDir) awaitingArmor.set(tool, [...(awaitingArmor.get(tool) ?? []), id]);
+    }
+    return call;
+  };
 
   const searchMeaning = tool(
     'search_meaning',
@@ -186,37 +241,35 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
     { annotations: { readOnlyHint: true, openWorldHint: false } },
   );
 
-  const canUseTool: CanUseTool = async (toolName, input, options) => {
-    const summary = summarize(toolName, input, dir);
-    const entry = pending.get(options.toolUseID) ?? { tool: toolName, summary };
-    pending.set(options.toolUseID, entry);
+  // Runs before every tool call, beside ArmorClaude's own hook. Deny wins over ask, ask over allow.
+  const backstopHook: HookCallback = async (input, toolUseID) => {
+    if (input.hook_event_name !== 'PreToolUse') return {};
+    const args = (input.tool_input ?? {}) as Record<string, unknown>;
+    const decision = await backstop(input.tool_name, args, dir);
+    if (toolUseID && 'deny' in decision) callFor(toolUseID, input.tool_name, args).backstop = decision.deny;
+    if ('pass' in decision) return {};
+    return {
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse' as const,
+        permissionDecision: 'deny' in decision ? ('deny' as const) : ('ask' as const),
+        permissionDecisionReason: 'deny' in decision ? decision.deny : decision.ask,
+      },
+    };
+  };
 
-    // Our own read-only search server.
-    if (options.mcpServer?.source === 'sdk' && options.mcpServer.name === 'airlock') {
-      return { behavior: 'allow', updatedInput: input };
+  // Reached only when a call asks for a person: WebFetch, held by ArmorIQ or by the backstop.
+  const canUseTool: CanUseTool = async (toolName, input, options) => {
+    const call = callFor(options.toolUseID, toolName, input);
+    if (!PERSON_TOOLS.has(toolName) || call.backstop) {
+      return { behavior: 'deny', message: call.backstop ?? `${BACKSTOP}: ${toolName} is not one of the reviewer's read-only tools.` };
     }
-    // ArmorIQ's policy put this call on hold: a person decides.
-    const held = isArmorIq(options.decisionReason) || PERSON_TOOLS.has(toolName);
-    if (held && PERSON_TOOLS.has(toolName)) {
-      const by: ToolEvent['by'] = isArmorIq(options.decisionReason) ? 'armoriq' : 'airlock';
-      emit({ tool: toolName, summary, decision: 'held', by, reason: options.decisionReason ?? 'Fetching a web page needs your approval.' });
-      const yes = await hooks.askPerson({ tool: toolName, summary, reason: options.decisionReason ?? 'Fetching a web page needs your approval.' });
-      entry.decidedBy = 'person';
-      entry.decision = yes ? 'approved' : 'denied';
-      return yes
-        ? { behavior: 'allow', updatedInput: input }
-        : { behavior: 'deny', message: 'The person reviewing this scan said no. Carry on without it.' };
-    }
-    // Plain reads inside the repository.
-    if (READ_TOOLS.has(toolName) && (await staysInside(toolName, input, dir))) {
-      return { behavior: 'allow', updatedInput: input };
-    }
-    entry.decidedBy = 'airlock';
-    entry.decision = 'blocked';
-    const why = READ_TOOLS.has(toolName)
-      ? `${BACKSTOP}: reading outside the repository is not allowed.`
-      : `${BACKSTOP}: ${toolName} is not one of the reviewer's read-only tools.`;
-    return { behavior: 'deny', message: why };
+    const heldBy: ToolEvent['by'] = call.armoriq?.decision === 'ask' || isArmorIq(options.decisionReason) ? 'armoriq' : 'airlock';
+    const reason = call.armoriq?.reason || options.decisionReason || 'Fetching a web page needs your approval.';
+    emit({ tool: toolName, summary: call.summary, decision: 'held', by: heldBy, reason });
+    call.person = await hooks.askPerson({ tool: toolName, summary: call.summary, reason });
+    return call.person
+      ? { behavior: 'allow', updatedInput: input }
+      : { behavior: 'deny', message: 'The person running this scan said no. Carry on without it.' };
   };
 
   const plugins = config.armorClaudeDir ? [{ type: 'local' as const, path: config.armorClaudeDir }] : [];
@@ -233,6 +286,8 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
       settingSources: [],
       plugins,
       mcpServers: { airlock: createSdkMcpServer({ name: 'airlock', version: '0.1.0', tools: [searchMeaning] }) },
+      hooks: { PreToolUse: [{ hooks: [backstopHook] }] },
+      includeHookEvents: true,
       canUseTool,
       outputFormat: { type: 'json_schema', schema: OUTPUT_SCHEMA as unknown as Record<string, unknown> },
       abortController: abortFrom(opts.signal),
@@ -252,28 +307,34 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
   function handleMessage(message: SDKMessage): void {
     if (message.type === 'assistant') {
       for (const block of message.message.content) {
-        if (block.type === 'tool_use') {
-          const input = (block.input ?? {}) as Record<string, unknown>;
-          if (!pending.has(block.id)) pending.set(block.id, { tool: block.name, summary: summarize(block.name, input, dir) });
-        } else if (block.type === 'text' && block.text.trim()) {
-          hooks.onThought(block.text.trim().slice(0, 600));
-        }
+        if (block.type === 'tool_use') callFor(block.id, block.name, (block.input ?? {}) as Record<string, unknown>);
+        else if (block.type === 'text' && block.text.trim()) hooks.onThought(block.text.trim().slice(0, 600));
       }
+    } else if (message.type === 'system' && message.subtype === 'hook_response' && message.hook_event === 'PreToolUse') {
+      // Command hooks are ArmorClaude's (Airlock's backstop is an in-process callback).
+      const tool = message.hook_name.replace(/^PreToolUse:/, '');
+      const queue = awaitingArmor.get(tool);
+      const id = queue?.shift();
+      const answer = hookDecision(message.output || message.stdout);
+      const call = id ? calls.get(id) : undefined;
+      if (call && answer && answer.decision !== 'allow') call.armoriq = { decision: answer.decision, reason: firstLine(answer.reason) };
     } else if (message.type === 'user') {
       const content = message.message.content;
       if (!Array.isArray(content)) return;
       for (const block of content) {
         if (typeof block !== 'object' || block === null || block.type !== 'tool_result') continue;
-        const entry = pending.get(block.tool_use_id);
-        if (!entry || entry.tool === 'StructuredOutput') continue;
+        const call = calls.get(block.tool_use_id);
+        if (!call || OWN_TOOLS.has(call.tool)) continue;
+        const base = { tool: call.tool, summary: call.summary };
         const text = resultText(block.content);
-        if (entry.decision === 'approved') emit({ tool: entry.tool, summary: entry.summary, decision: 'approved', by: 'person' });
-        else if (entry.decision === 'denied') emit({ tool: entry.tool, summary: entry.summary, decision: 'denied', by: 'person' });
-        else if (block.is_error && text.includes(BACKSTOP)) emit({ tool: entry.tool, summary: entry.summary, decision: 'blocked', by: 'airlock', reason: text });
-        else if (block.is_error && isArmorIq(text)) emit({ tool: entry.tool, summary: entry.summary, decision: 'blocked', by: 'armoriq', reason: firstLine(text) });
-        else if (block.is_error) emit({ tool: entry.tool, summary: entry.summary, decision: 'failed', by: 'airlock', reason: firstLine(text) });
-        else emit({ tool: entry.tool, summary: entry.summary, decision: 'allowed', by: config.armorClaudeDir ? 'armoriq' : 'airlock' });
-        pending.delete(block.tool_use_id);
+        if (call.person === true) emit({ ...base, decision: 'approved', by: 'person' });
+        else if (call.person === false) emit({ ...base, decision: 'denied', by: 'person' });
+        else if (call.armoriq?.decision === 'deny') emit({ ...base, decision: 'blocked', by: 'armoriq', reason: call.armoriq.reason });
+        else if (call.backstop) emit({ ...base, decision: 'blocked', by: 'airlock', reason: call.backstop });
+        else if (block.is_error && isArmorIq(text)) emit({ ...base, decision: 'blocked', by: 'armoriq', reason: firstLine(text) });
+        else if (block.is_error) emit({ ...base, decision: 'failed', by: 'airlock', reason: firstLine(text) });
+        else emit({ ...base, decision: 'allowed', by: config.armorClaudeDir ? 'armoriq' : 'airlock' });
+        calls.delete(block.tool_use_id);
       }
     } else if (message.type === 'result') {
       costUsd = message.total_cost_usd;

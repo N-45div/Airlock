@@ -37,3 +37,38 @@ test('summaries name what a call touches, relative to the repository', () => {
   assert.equal(summarize('WebFetch', { url: 'https://example.com/a.sh' }, root), 'https://example.com/a.sh');
   assert.ok(summarize('mcp__airlock__search_meaning', { query: 'x'.repeat(400) }, root).endsWith('…'));
 });
+
+test('the backstop passes reads inside the repo and its own tools, asks for fetches, refuses the rest', async () => {
+  const { backstop } = await import('../review.ts');
+  const root = await mkdtemp(path.join(os.tmpdir(), 'airlock-bs-'));
+  const cases: [string, Record<string, unknown>, 'pass' | 'ask' | 'deny'][] = [
+    ['Read', { file_path: 'package.json' }, 'pass'],
+    ['Grep', { pattern: 'x' }, 'pass'],
+    ['Read', { file_path: '../secrets' }, 'deny'],
+    ['mcp__airlock__search_meaning', { query: 'send files' }, 'pass'],
+    ['mcp__plugin_armorclaude_armorclaude-policy__register_intent_plan', {}, 'pass'],
+    ['mcp__plugin_armorclaude_armorclaude-policy__policy_update', {}, 'deny'],
+    ['StructuredOutput', {}, 'pass'],
+    ['WebFetch', { url: 'https://example.com' }, 'ask'],
+    ['Bash', { command: 'echo hi' }, 'deny'],
+    ['PowerShell', { command: 'echo hi' }, 'deny'],
+    ['Write', { file_path: 'x' }, 'deny'],
+    ['Task', {}, 'deny'],
+    ['WebSearch', { query: 'x' }, 'deny'],
+  ];
+  for (const [tool, input, expected] of cases) {
+    const decision = await backstop(tool, input, root);
+    assert.equal('pass' in decision ? 'pass' : 'ask' in decision ? 'ask' : 'deny', expected, tool);
+  }
+});
+
+test('reads a hook answer only when it is a PreToolUse decision', async () => {
+  const { hookDecision } = await import('../review.ts');
+  assert.deepEqual(
+    hookDecision('{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"ArmorClaude policy denied Bash"}}'),
+    { decision: 'deny', reason: 'ArmorClaude policy denied Bash' },
+  );
+  assert.equal(hookDecision(''), null);
+  assert.equal(hookDecision('not json'), null);
+  assert.equal(hookDecision('{"hookSpecificOutput":{"additionalContext":"hi"}}'), null);
+});
