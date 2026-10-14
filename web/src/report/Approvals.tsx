@@ -93,7 +93,7 @@ function ApprovalPrompt({
             disabled={busy !== null}
             onClick={() => void answer('approve')}
           >
-            Allow
+            Allow once
           </Button>
           <Button variant="secondary" icon="close" busy={busy === 'deny'} disabled={busy !== null} onClick={() => void answer('deny')}>
             Decline
