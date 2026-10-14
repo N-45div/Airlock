@@ -31,7 +31,7 @@ export interface ScanState {
   finishedLive: boolean;
 }
 
-type Action =
+export type ScanAction =
   | { type: 'event'; event: ScanEvent; now: number }
   | { type: 'connection'; connection: Connection }
   | { type: 'missing' }
@@ -95,7 +95,7 @@ function applyEvent(state: ScanState, event: ScanEvent, now: number): ScanState 
   }
 }
 
-function reducer(state: ScanState, action: Action): ScanState {
+export function scanReducer(state: ScanState, action: ScanAction): ScanState {
   switch (action.type) {
     case 'event':
       return applyEvent(state, action.event, action.now);
@@ -116,7 +116,7 @@ function reducer(state: ScanState, action: Action): ScanState {
   }
 }
 
-const initial: ScanState = {
+export const initialScanState: ScanState = {
   scan: null,
   missing: false,
   connection: 'connecting',
@@ -125,82 +125,83 @@ const initial: ScanState = {
   finishedLive: false,
 };
 
-export function useScan(id: string): [ScanState, (approval: Approval) => void] {
-  const [state, dispatch] = useReducer(reducer, initial);
+/** Follows one scan's stream and reports every change to `dispatch`. Returns a function that stops it. */
+export function followScan(id: string, dispatch: (action: ScanAction) => void): () => void {
+  let source: EventSource | null = null;
+  let retry: number | undefined;
+  let stopped = false;
+  let checking = false;
+  let failures = 0;
 
-  useEffect(() => {
-    let source: EventSource | null = null;
-    let retry: number | undefined;
-    let stopped = false;
-    let checking = false;
-    let failures = 0;
+  const stop = () => {
+    stopped = true;
+    source?.close();
+    window.clearTimeout(retry);
+  };
 
-    const stop = () => {
-      stopped = true;
-      source?.close();
-      window.clearTimeout(retry);
-    };
-
-    const check = async (): Promise<'running' | 'over' | 'unreachable'> => {
-      try {
-        const scan = await api.scan(id);
-        if (stopped) return 'over';
-        if (isFinished(scan)) {
-          dispatch({ type: 'event', event: { type: 'done', scan }, now: Date.now() });
-          stop();
-          return 'over';
-        }
-        dispatch({ type: 'event', event: { type: 'scan', scan }, now: Date.now() });
-        return 'running';
-      } catch (error) {
-        if (stopped) return 'over';
-        if (error instanceof ApiError && error.status === 404) {
-          dispatch({ type: 'missing' });
-          stop();
-          return 'over';
-        }
-        return 'unreachable';
+  const check = async (): Promise<'running' | 'over' | 'unreachable'> => {
+    try {
+      const scan = await api.scan(id);
+      if (stopped) return 'over';
+      if (isFinished(scan)) {
+        dispatch({ type: 'event', event: { type: 'done', scan }, now: Date.now() });
+        stop();
+        return 'over';
       }
-    };
+      dispatch({ type: 'event', event: { type: 'scan', scan }, now: Date.now() });
+      return 'running';
+    } catch (error) {
+      if (stopped) return 'over';
+      if (error instanceof ApiError && error.status === 404) {
+        dispatch({ type: 'missing' });
+        stop();
+        return 'over';
+      }
+      return 'unreachable';
+    }
+  };
 
-    const connect = () => {
-      if (stopped) return;
-      const es = new EventSource(api.streamUrl(id));
-      source = es;
-      es.onopen = () => {
-        failures = 0;
-        dispatch({ type: 'connection', connection: 'live' });
-      };
-      es.onmessage = (message: MessageEvent<string>) => {
-        let event: ScanEvent;
-        try {
-          event = JSON.parse(message.data) as ScanEvent;
-        } catch {
-          return;
+  const connect = () => {
+    if (stopped) return;
+    const es = new EventSource(api.streamUrl(id));
+    source = es;
+    es.onopen = () => {
+      failures = 0;
+      dispatch({ type: 'connection', connection: 'live' });
+    };
+    es.onmessage = (message: MessageEvent<string>) => {
+      let event: ScanEvent;
+      try {
+        event = JSON.parse(message.data) as ScanEvent;
+      } catch {
+        return;
+      }
+      dispatch({ type: 'event', event, now: Date.now() });
+      if (event.type === 'done') stop();
+    };
+    es.onerror = () => {
+      if (stopped || checking) return;
+      checking = true;
+      dispatch({ type: 'connection', connection: 'reconnecting' });
+      void check().then((result) => {
+        checking = false;
+        if (stopped || result === 'over') return;
+        // CONNECTING means the browser is already retrying; CLOSED means it gave up.
+        if (es.readyState === EventSource.CLOSED) {
+          es.close();
+          failures += 1;
+          retry = window.setTimeout(connect, Math.min(15_000, 1000 * 2 ** Math.min(failures, 4)));
         }
-        dispatch({ type: 'event', event, now: Date.now() });
-        if (event.type === 'done') stop();
-      };
-      es.onerror = () => {
-        if (stopped || checking) return;
-        checking = true;
-        dispatch({ type: 'connection', connection: 'reconnecting' });
-        void check().then((result) => {
-          checking = false;
-          if (stopped || result === 'over') return;
-          // CONNECTING means the browser is already retrying; CLOSED means it gave up.
-          if (es.readyState === EventSource.CLOSED) {
-            es.close();
-            failures += 1;
-            retry = window.setTimeout(connect, Math.min(15_000, 1000 * 2 ** Math.min(failures, 4)));
-          }
-        });
-      };
+      });
     };
+  };
 
-    connect();
-    return stop;
-  }, [id]);
+  connect();
+  return stop;
+}
 
+export function useScan(id: string): [ScanState, (approval: Approval) => void] {
+  const [state, dispatch] = useReducer(scanReducer, initialScanState);
+  useEffect(() => followScan(id, dispatch), [id]);
   return [state, (approval: Approval) => dispatch({ type: 'answered', approval })];
 }
