@@ -3,12 +3,24 @@ import { HomePage } from './home/HomePage.tsx';
 import { NotFound } from './NotFound.tsx';
 import { PrivacyPage } from './PrivacyPage.tsx';
 import { ReportPage } from './report/ReportPage.tsx';
-import { parseRoute, usePathname } from './router.tsx';
+import { parseRoute, usePathname, type Route } from './router.tsx';
 import { SiteFooter, SiteHeader } from './ui/Layout.tsx';
+
+function Page({ route }: { route: Route }) {
+  switch (route.name) {
+    case 'home':
+      return <HomePage />;
+    case 'report':
+      return <ReportPage key={route.id} id={route.id} />;
+    case 'privacy':
+      return <PrivacyPage />;
+    case 'missing':
+      return <NotFound />;
+  }
+}
 
 export function App() {
   const pathname = usePathname();
-  const route = parseRoute(pathname);
   const main = useRef<HTMLElement>(null);
   const lastPath = useRef(pathname);
 
@@ -27,15 +39,7 @@ export function App() {
       <SiteHeader />
       <main id="main" ref={main} tabIndex={-1}>
         <div className="wrap">
-          {route.name === 'home' ? (
-            <HomePage />
-          ) : route.name === 'report' ? (
-            <ReportPage key={route.id} id={route.id} />
-          ) : route.name === 'privacy' ? (
-            <PrivacyPage />
-          ) : (
-            <NotFound />
-          )}
+          <Page route={parseRoute(pathname)} />
         </div>
       </main>
       <SiteFooter />

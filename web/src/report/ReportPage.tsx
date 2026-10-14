@@ -52,21 +52,27 @@ export function ReportPage({ id }: { id: string }) {
   if (state.missing) return <MissingReport />;
   if (!scan) return <LoadingReport />;
 
+  if (finished) {
+    // The answer first, then the evidence.
+    return (
+      <div className="page page--report">
+        <RepoHeader scan={scan} />
+        {scan.status === 'done' ? <VerdictCard scan={scan} rows={rows} /> : <FailedCard scan={scan} />}
+        <Findings scan={scan} />
+        <FencePanel rows={rows} live={false} thoughts={state.thoughts} />
+        <ReportFooter scan={scan} />
+      </div>
+    );
+  }
+
+  // While it runs, the fence is where things happen; findings so far follow.
   return (
     <div className="page page--report">
       <RepoHeader scan={scan} />
-      {scan.status === 'done' ? (
-        <VerdictCard scan={scan} rows={rows} />
-      ) : scan.status === 'failed' ? (
-        <FailedCard scan={scan} />
-      ) : (
-        <LiveStatus state={state} canAnswer={!!key} />
-      )}
-      {finished ? null : <Approvals scan={scan} seen={state.seen} scanKey={key} onAnswered={answered} />}
-      {finished ? <Findings scan={scan} /> : null}
-      <FencePanel rows={rows} live={!finished} thoughts={state.thoughts} />
-      {finished ? null : <Findings scan={scan} />}
-      {finished ? <ReportFooter scan={scan} /> : null}
+      <LiveStatus state={state} canAnswer={!!key} />
+      <Approvals scan={scan} seen={state.seen} scanKey={key} onAnswered={answered} />
+      <FencePanel rows={rows} live thoughts={state.thoughts} />
+      <Findings scan={scan} />
     </div>
   );
 }
