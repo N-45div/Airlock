@@ -57,3 +57,15 @@ test('a clean project has no findings', async () => {
   const root = await repo({ 'package.json': JSON.stringify({ scripts: { build: 'tsc' } }), 'index.js': 'export {}' });
   assert.deepEqual((await takeInventory(root)).findings, []);
 });
+
+test('a folder of packed files is one finding, a lone packed file in source is its own', async () => {
+  const packed = `var a = ${JSON.stringify('c'.repeat(5000))};`;
+  const files: Record<string, string> = { 'src/config.js': packed };
+  for (let i = 0; i < 40; i++) files[`app/static/_nuxt/chunk-${i}.js`] = packed;
+  const inv = await takeInventory(await repo(files));
+  assert.equal(inv.findings.length, 2);
+  const group = inv.findings.find((f) => f.title.startsWith('40 packed files'));
+  assert.ok(group, 'the folder is grouped');
+  assert.equal(group.severity, 'low');
+  assert.ok(inv.findings.some((f) => f.file === 'src/config.js' && f.severity === 'medium'));
+});

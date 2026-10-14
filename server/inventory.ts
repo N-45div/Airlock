@@ -147,7 +147,53 @@ export async function takeInventory(root: string): Promise<Inventory> {
       }
     }
   }
+  inv.findings = groupCrowds(inv.findings);
   return inv;
+}
+
+/** Folders holding this many packed files or programs are reported once. */
+const CROWD = 4;
+
+/** A built web app can hold hundreds of packed files; one finding per folder
+ * says the same thing without burying everything else. A lone packed file in
+ * source code still stands out on its own. */
+function groupCrowds(findings: Finding[]): Finding[] {
+  const groups = new Map<string, Finding[]>();
+  for (const f of findings) {
+    if ((f.category !== 'obfuscation' && f.category !== 'binary') || !f.file) continue;
+    const key = `${f.category}:${path.posix.dirname(f.file)}`;
+    groups.set(key, [...(groups.get(key) ?? []), f]);
+  }
+  const crowded = new Set([...groups.values()].filter((g) => g.length >= CROWD).flat());
+  const out = findings.filter((f) => !crowded.has(f));
+  for (const group of groups.values()) {
+    if (group.length < CROWD) continue;
+    const first = group[0]!;
+    const dir = path.posix.dirname(first.file!);
+    const examples = group.slice(0, 3).map((f) => path.posix.basename(f.file!)).join(', ');
+    out.push(
+      first.category === 'obfuscation'
+        ? {
+            id: first.id,
+            source: 'static',
+            severity: 'low',
+            category: 'obfuscation',
+            title: `${group.length} packed files in ${dir}`,
+            detail: `Files such as ${examples} are packed onto very long lines. A folder like this is usually a built web app, which can't be read line by line; check that nothing outside it loads these files.`,
+            file: first.file!,
+          }
+        : {
+            id: first.id,
+            source: 'static',
+            severity: 'medium',
+            category: 'binary',
+            title: `${group.length} compiled programs in ${dir}`,
+            detail: `Files such as ${examples} are compiled, so nobody can read what they do from the source.`,
+            file: first.file!,
+          },
+    );
+  }
+  return out;
 }
 
 async function readText(file: string): Promise<string> {
