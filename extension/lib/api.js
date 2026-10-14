@@ -101,7 +101,9 @@ export async function lookupScan(apiBase, repoUrl, { timeoutMs = 10_000 } = {}) 
   return verdictView(body?.scan ?? null);
 }
 
-/** Starts a check. Returns { id, key } (CreateScanResponse). */
+/** Starts a check. Returns { id, key } (CreateScanResponse). The key is
+ * empty when the server hands back a recent check of the same repository
+ * instead of starting a new one; that report simply opens without it. */
 export async function createScan(apiBase, repoUrl, { timeoutMs = 20_000 } = {}) {
   const body = await request(
     scansEndpoint(apiBase),
@@ -112,7 +114,7 @@ export async function createScan(apiBase, repoUrl, { timeoutMs = 20_000 } = {}) 
     },
     timeoutMs,
   );
-  if (!body || !isScanId(body.id) || typeof body.key !== 'string' || !body.key || body.key.length > 512) {
+  if (!body || !isScanId(body.id) || typeof body.key !== 'string' || body.key.length > 512) {
     throw new ApiError(`${PRODUCT_NAME} sent an answer the extension does not understand. It may need an update.`);
   }
   return { id: body.id, key: body.key };
