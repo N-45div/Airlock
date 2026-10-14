@@ -21,6 +21,8 @@ export const LIMITS = {
   /** A finished scan of the same repo this recent is reused. */
   reuseMs: 6 * 60 * 60 * 1000,
   approvalMs: 3 * 60 * 1000,
+  /** A review that runs longer is stopped, so one stuck scan can't hold the line. */
+  reviewMs: Number(process.env.AIRLOCK_REVIEW_MINUTES ?? 8) * 60 * 1000,
 };
 
 export class ScanError extends Error {
@@ -183,6 +185,8 @@ export class Scanner {
     const { scan } = live;
     const work = path.join(this.dataDir, 'work', scan.id);
     const dir = path.join(work, 'repo');
+    const deadline = new AbortController();
+    const timer = setTimeout(() => deadline.abort(), LIMITS.reviewMs);
     try {
       await mkdir(work, { recursive: true });
       this.status(live, 'fetching');
@@ -198,6 +202,7 @@ export class Scanner {
       let asked = 0;
       const result = await review({
         dir,
+        signal: deadline.signal,
         fenceTest: true,
         repo: scan.repo,
         inventory,
@@ -244,10 +249,13 @@ export class Scanner {
       scan.error =
         error instanceof FetchError || error instanceof ScanError
           ? error.message
-          : 'The review could not finish. Nothing from the repository was run.';
+          : deadline.signal.aborted
+            ? `The review ran longer than ${Math.round(LIMITS.reviewMs / 60_000)} minutes and was stopped. Nothing from the repository was run.`
+            : 'The review could not finish. Nothing from the repository was run.';
       if (!(error instanceof FetchError)) console.error(`scan ${scan.id} failed:`, error);
       this.emit(live, { type: 'error', message: scan.error });
     } finally {
+      clearTimeout(timer);
       scan.finishedAt = new Date().toISOString();
       for (const approval of scan.approvals) if (approval.status === 'pending') approval.status = 'expired';
       await writeFile(path.join(this.dataDir, 'scans', `${scan.id}.json`), JSON.stringify(scan, null, 2)).catch(() => {});
