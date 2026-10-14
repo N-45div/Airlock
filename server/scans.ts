@@ -79,7 +79,8 @@ export class Scanner {
     }
     let best: Scan | null = null;
     for (const scan of this.finished.values()) {
-      if (scan.repo.url !== repo.url || scan.status !== 'done') continue;
+      // GitHub owner and repository names are case-insensitive.
+      if (scan.repo.url.toLowerCase() !== repo.url.toLowerCase() || scan.status !== 'done') continue;
       if (!best || scan.startedAt > best.startedAt) best = scan;
     }
     return best;
