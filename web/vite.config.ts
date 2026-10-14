@@ -24,8 +24,10 @@ export default defineConfig({
     proxy: { '/api': { target: 'http://127.0.0.1:8787' } },
   },
   build: {
-    // The server's CSP allows only same-origin scripts, so nothing may be inlined as a script.
+    // The server's CSP allows only same-origin scripts and fonts (font-src 'self', no data:),
+    // so nothing is inlined: every asset ships as its own file under /assets.
     modulePreload: { polyfill: false },
+    assetsInlineLimit: 0,
     sourcemap: false,
   },
 });
