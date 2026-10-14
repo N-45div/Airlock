@@ -4,6 +4,7 @@ import { absorbKeyFromHash, loadKey } from '../api.ts';
 import { PRODUCT } from '../brand.ts';
 import { ScanForm } from '../home/ScanForm.tsx';
 import { Card } from '../ui/primitives.tsx';
+import { Approvals } from './Approvals.tsx';
 import { FencePanel } from './Fence.tsx';
 import { formatCost, formatDuration } from './format.ts';
 import { fenceRows, repoName, VERDICT } from './labels.ts';
@@ -18,7 +19,7 @@ export function ReportPage({ id }: { id: string }) {
     absorbKeyFromHash(id);
     return loadKey(id);
   });
-  const [state] = useScan(id);
+  const [state, answered] = useScan(id);
   const { scan } = state;
   const finished = isFinished(scan);
   const rows = useMemo(() => (scan ? fenceRows(scan.events, scan.approvals) : []), [scan]);
@@ -60,6 +61,7 @@ export function ReportPage({ id }: { id: string }) {
       ) : (
         <LiveStatus state={state} canAnswer={!!key} />
       )}
+      {finished ? null : <Approvals scan={scan} seen={state.seen} scanKey={key} onAnswered={answered} />}
       <FencePanel rows={rows} live={!finished} thoughts={state.thoughts} />
       {finished ? <ReportFooter scan={scan} /> : null}
     </div>
