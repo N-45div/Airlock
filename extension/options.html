@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Settings</title>
+    <link rel="stylesheet" href="options.css" />
+    <script type="module" src="options.js"></script>
+  </head>
+  <body>
+    <main>
+      <header class="top">
+        <img src="icons/icon-48.png" width="32" height="32" alt="" />
+        <h1><span data-product-name></span> settings</h1>
+      </header>
+
+      <form id="form" novalidate>
+        <div class="field">
+          <label for="api-base">Server address</label>
+          <input id="api-base" type="text" inputmode="url" autocomplete="off" spellcheck="false" />
+          <p class="hint">
+            Leave this as it is unless you run your own <span data-product-name></span> server. Use an
+            https:// address, or http://localhost for a server on this computer. For a new https://
+            address, Chrome will ask you to let the extension talk to it.
+          </p>
+        </div>
+
+        <div class="field">
+          <label class="check">
+            <input id="auto-lookup" type="checkbox" />
+            Show earlier verdicts when I open a repository page
+          </label>
+          <p class="hint">
+            When this is on, opening a GitHub repository or an npm package page sends that
+            repository's address to the server, to look for an earlier check. When it is off, an
+            address is sent only when you press Check before you run, or open this extension's
+            popup.
+          </p>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="primary">Save</button>
+          <button type="button" class="secondary" id="reset">Use the defaults</button>
+        </div>
+        <p id="status" class="status" role="status"></p>
+      </form>
+
+      <section class="about">
+        <h2>What this extension sends</h2>
+        <p>
+          Only the address of a repository: the one you choose to check, and, if the setting above is
+          on, the one on the page you are looking at. Nothing else: no other pages you visit, no
+          cookies, no account details and no tracking.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
