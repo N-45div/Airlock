@@ -1,0 +1,41 @@
+# Airlock behind Caddy, which gets and renews the HTTPS certificate.
+#   AIRLOCK_HOST=airlock.example.com docker compose -f deploy/compose.yaml up -d --build
+# Keys go in deploy/airlock.env (see airlock.env.example); it is never committed.
+
+services:
+  airlock:
+    build: ..
+    image: airlock:latest
+    restart: unless-stopped
+    env_file: airlock.env
+    environment:
+      AIRLOCK_TRUST_PROXY: "1"
+    volumes:
+      - airlock-data:/data
+    expose:
+      - "8787"
+    # The reviewer only reads; it needs no more than this.
+    mem_limit: 2g
+    pids_limit: 512
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      AIRLOCK_HOST: ${AIRLOCK_HOST:?set AIRLOCK_HOST to the public host name}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - airlock
+
+volumes:
+  airlock-data:
+  caddy-data:

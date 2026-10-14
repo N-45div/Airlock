@@ -51,10 +51,17 @@ ENV HOME=/home/airlock \
     SGREP_BIN=/usr/local/bin/sgrep \
     HF_HOME=/home/airlock/.cache/huggingface
 
-# Fetch sgrep's small model once, so searches work offline later.
-RUN mkdir -p /tmp/warm && echo 'function sendToServer(data) { return fetch(url, { body: data }) }' > /tmp/warm/a.js \
- && HF_HUB_OFFLINE=0 sgrep "upload data to a server" /tmp/warm > /dev/null || true \
- && rm -rf /tmp/warm
+# Fetch sgrep's model and the code parsers for common languages once, at build time.
+RUN mkdir -p /tmp/warm && cd /tmp/warm \
+ && echo 'function send(d) { return fetch(u, { body: d }) }' > a.js \
+ && echo 'export function send(d: string) { return fetch(u, { body: d }) }' > b.ts \
+ && printf 'def send(d):\n    return post(u, d)\n' > c.py \
+ && printf 'package m\nfunc Send(d string) {}\n' > d.go \
+ && echo 'fn send(d: &str) {}' > e.rs \
+ && echo 'class S { void send(String d) {} }' > f.java \
+ && echo 'void send(const char *d) {}' > g.c \
+ && (HF_HUB_OFFLINE=0 sgrep "send data to a server" /tmp/warm > /dev/null || true) \
+ && cd / && rm -rf /tmp/warm
 
 USER root
 RUN mkdir -p /data && chown airlock:airlock /data

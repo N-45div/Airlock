@@ -1,0 +1,7 @@
+{$AIRLOCK_HOST} {
+	encode zstd gzip
+	reverse_proxy airlock:8787 {
+		# Scan pages follow a live event stream; send each event as it happens.
+		flush_interval -1
+	}
+}
