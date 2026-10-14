@@ -134,7 +134,7 @@ export function summarize(tool: string, input: Record<string, unknown>, root: st
     case 'Read': return rel(input.file_path);
     case 'Grep': return `"${String(input.pattern ?? '')}"${input.path ? ` in ${rel(input.path)}` : ''}`;
     case 'Glob': return String(input.pattern ?? '');
-    case 'Bash': return String(input.command ?? '').slice(0, 160);
+    case 'Bash': case 'PowerShell': return String(input.command ?? '').split(root).join('.').slice(0, 160);
     case 'WebFetch': return String(input.url ?? '');
     case 'Write': case 'Edit': case 'MultiEdit': return rel(input.file_path);
     default: {
@@ -267,6 +267,11 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
   // Reached only when a call asks for a person: WebFetch, held by ArmorIQ or by the backstop.
   const canUseTool: CanUseTool = async (toolName, input, options) => {
     const call = callFor(options.toolUseID, toolName, input);
+    // Airlock's own read-only search (registered in-process, so its source is 'sdk')
+    // asks once as an MCP tool; it only reads the repository.
+    if (options.mcpServer?.source === 'sdk' && options.mcpServer.name === 'airlock') {
+      return { behavior: 'allow', updatedInput: input };
+    }
     if (!PERSON_TOOLS.has(toolName) || call.backstop) {
       return { behavior: 'deny', message: call.backstop ?? `${BACKSTOP}: ${toolName} is not one of the reviewer's read-only tools.` };
     }

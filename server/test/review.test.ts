@@ -72,3 +72,8 @@ test('reads a hook answer only when it is a PreToolUse decision', async () => {
   assert.equal(hookDecision('not json'), null);
   assert.equal(hookDecision('{"hookSpecificOutput":{"additionalContext":"hi"}}'), null);
 });
+
+test('shell summaries show the repository as .', () => {
+  const root = path.resolve('/work/repo');
+  assert.equal(summarize('Bash', { command: `cd "${root}" && cat package.json` }, root), 'cd "." && cat package.json');
+});
