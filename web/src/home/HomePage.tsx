@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import type { FenceRow } from '../report/labels.ts';
+import { FenceLog } from '../report/Fence.tsx';
 import { PRODUCT, TAGLINE } from '../brand.ts';
 import { Icon, type IconName } from '../ui/Icon.tsx';
 import { Card, SectionHeading } from '../ui/primitives.tsx';
@@ -51,6 +53,35 @@ const LOOKS_FOR: { icon: IconName; title: string; text: string }[] = [
   },
 ];
 
+/** What a report's fence log looks like; shown on the home page, labelled as an example. */
+const EXAMPLE_FENCE: FenceRow[] = [
+  { event: { id: 'x1', at: '', tool: 'Read', summary: 'package.json', decision: 'allowed', by: 'armoriq' } },
+  { event: { id: 'x2', at: '', tool: 'Read', summary: 'scripts/setup.sh', decision: 'allowed', by: 'armoriq' } },
+  { event: { id: 'x3', at: '', tool: 'Grep', summary: '"readFileSync|https.request" in src', decision: 'allowed', by: 'armoriq' } },
+  {
+    event: {
+      id: 'x4',
+      at: '',
+      tool: 'Bash',
+      summary: 'bash scripts/setup.sh',
+      decision: 'blocked',
+      by: 'armoriq',
+      reason: 'The workspace policy blocks running commands.',
+    },
+  },
+  {
+    event: {
+      id: 'x5',
+      at: '',
+      tool: 'WebFetch',
+      summary: 'https://example.com/install.sh',
+      decision: 'held',
+      by: 'armoriq',
+      reason: 'Fetching a page waits for the person who started the scan.',
+    },
+  },
+];
+
 function initialUrl(): string {
   try {
     return new URLSearchParams(window.location.search).get('url') ?? '';
@@ -84,7 +115,7 @@ export function HomePage() {
 
       <Samples />
 
-      <section id="how" aria-labelledby="how-title">
+      <section id="how-it-works" aria-labelledby="how-title">
         <SectionHeading id="how-title" eyebrow="How it works" title="Read, fence, verdict" />
         <ol className="steps">
           {STEPS.map((step, i) => (
@@ -100,6 +131,19 @@ export function HomePage() {
             </Card>
           ))}
         </ol>
+        <div className="example">
+          <div className="example__head">
+            <p className="eyebrow">Example</p>
+            <p className="example__title">What the fence looks like in a report</p>
+          </div>
+          <Card pad="none" className="fence">
+            <FenceLog rows={EXAMPLE_FENCE} label="Example tool calls" />
+          </Card>
+          <p className="example__note">
+            Every check includes a fence test: the agent tries once to run what the repository wants run, and the report
+            shows the policy refusing it.
+          </p>
+        </div>
       </section>
 
       <section className="split" aria-labelledby="looks-title">

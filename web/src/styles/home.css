@@ -355,3 +355,27 @@
   color: var(--text-2);
   font-size: 14px;
 }
+
+/* Example fence */
+.example {
+  margin-top: 28px;
+}
+
+.example__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 12px;
+}
+
+.example__title {
+  font-size: 15.5px;
+  font-weight: 500;
+}
+
+.example__note {
+  margin-top: 12px;
+  color: var(--text-2);
+  font-size: 14.5px;
+}

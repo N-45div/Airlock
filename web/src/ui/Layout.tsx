@@ -11,7 +11,7 @@ export function SiteHeader() {
           <span className="brand__name">{PRODUCT}</span>
         </Link>
         <nav className="site-nav" aria-label="Main">
-          <Link to="/#how">How it works</Link>
+          <Link to="/#how-it-works">How it works</Link>
           <a href={LINKS.extension}>Chrome extension</a>
         </nav>
       </div>

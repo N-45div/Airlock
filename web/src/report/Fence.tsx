@@ -42,7 +42,7 @@ export function FenceRowView({ row }: { row: FenceRow }) {
         <div className="fence-row__body">
           {summary ? <code className="fence-row__full">{summary}</code> : null}
           {reason ? <p className="fence-row__reason">{reason}</p> : null}
-          <p className="fence-row__time">{clockTime(event.at)}</p>
+          {clockTime(event.at) ? <p className="fence-row__time">{clockTime(event.at)}</p> : null}
         </div>
       </details>
     </li>
