@@ -4,6 +4,7 @@ import { absorbKeyFromHash, loadKey } from '../api.ts';
 import { PRODUCT } from '../brand.ts';
 import { ScanForm } from '../home/ScanForm.tsx';
 import { Card } from '../ui/primitives.tsx';
+import { FencePanel } from './Fence.tsx';
 import { formatCost, formatDuration } from './format.ts';
 import { fenceRows, repoName, VERDICT } from './labels.ts';
 import { LiveStatus } from './Progress.tsx';
@@ -59,6 +60,7 @@ export function ReportPage({ id }: { id: string }) {
       ) : (
         <LiveStatus state={state} canAnswer={!!key} />
       )}
+      <FencePanel rows={rows} live={!finished} thoughts={state.thoughts} />
       {finished ? <ReportFooter scan={scan} /> : null}
     </div>
   );
