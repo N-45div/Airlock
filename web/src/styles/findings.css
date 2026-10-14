@@ -1,0 +1,109 @@
+/* Findings, grouped by severity. */
+
+.findings {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.findings__empty {
+  color: var(--text-2);
+}
+
+.severity-group__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.severity-group__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.finding {
+  position: relative;
+  overflow: hidden;
+}
+
+.finding::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: var(--border-strong);
+}
+
+.finding--critical::before,
+.finding--high::before {
+  background: var(--danger);
+}
+
+.finding--medium::before {
+  background: var(--caution);
+}
+
+.finding__tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.finding__title {
+  margin-top: 12px;
+  font-size: 17px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.finding__detail {
+  max-width: 720px;
+  margin-top: 6px;
+  color: var(--text-2);
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.finding__where {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-top: 12px;
+  color: var(--text-3);
+  font-size: 13.5px;
+}
+
+.finding__where code {
+  overflow-wrap: anywhere;
+}
+
+.finding__where a {
+  min-width: 0;
+}
+
+.snippet {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.snippet code {
+  font-size: inherit;
+}

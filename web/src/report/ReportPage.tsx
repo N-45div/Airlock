@@ -6,6 +6,7 @@ import { ScanForm } from '../home/ScanForm.tsx';
 import { Card } from '../ui/primitives.tsx';
 import { Approvals } from './Approvals.tsx';
 import { FencePanel } from './Fence.tsx';
+import { Findings } from './Findings.tsx';
 import { formatCost, formatDuration } from './format.ts';
 import { fenceRows, repoName, VERDICT } from './labels.ts';
 import { LiveStatus } from './Progress.tsx';
@@ -62,7 +63,9 @@ export function ReportPage({ id }: { id: string }) {
         <LiveStatus state={state} canAnswer={!!key} />
       )}
       {finished ? null : <Approvals scan={scan} seen={state.seen} scanKey={key} onAnswered={answered} />}
+      {finished ? <Findings scan={scan} /> : null}
       <FencePanel rows={rows} live={!finished} thoughts={state.thoughts} />
+      {finished ? null : <Findings scan={scan} />}
       {finished ? <ReportFooter scan={scan} /> : null}
     </div>
   );
