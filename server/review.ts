@@ -231,7 +231,7 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
     { query: z.string().min(3).max(200), limit: z.number().int().min(1).max(15).optional() },
     async ({ query: q, limit }) => {
       try {
-        const { stdout } = await run(config.sgrep, ['--json', '-n', String(limit ?? 8), q, dir], {
+        const { stdout } = await run(config.sgrep, ['--json', '-n', String(limit ?? 8), '--', q, dir], {
           cwd: dir,
           timeout: 60_000,
           maxBuffer: 4 * 1024 * 1024,
@@ -398,13 +398,14 @@ function firstLine(text: string): string {
 
 function formatSgrep(stdout: string, root: string): string {
   try {
-    const hits = JSON.parse(stdout) as { path?: string; file?: string; start_line?: number; end_line?: number; text?: string; content?: string }[];
+    // sgrep --json prints [{path, start, end, content}] with 1-based lines.
+    const hits = JSON.parse(stdout) as { path?: string; start?: number; end?: number; content?: string }[];
     if (!Array.isArray(hits) || hits.length === 0) return 'No passages matched.';
     return hits
       .map((h) => {
-        const file = path.relative(root, path.resolve(root, h.path ?? h.file ?? '')) || '?';
-        const where = h.start_line ? `:${h.start_line}${h.end_line ? `-${h.end_line}` : ''}` : '';
-        return `${file}${where}\n${(h.text ?? h.content ?? '').slice(0, 1500)}`;
+        const file = (path.relative(root, path.resolve(root, h.path ?? '')) || '?').split(path.sep).join('/');
+        const where = h.start ? `:${h.start}${h.end ? `-${h.end}` : ''}` : '';
+        return `${file}${where}\n${(h.content ?? '').slice(0, 1500)}`;
       })
       .join('\n\n---\n\n');
   } catch {
