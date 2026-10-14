@@ -13,8 +13,10 @@ import type { RepoInfo } from './types.ts';
 const run = promisify(execFile);
 
 export const LIMITS = {
-  /** GitHub reports repo size in KB; this is the packed size. */
-  maxRepoKb: 60 * 1024,
+  /** GitHub reports the packed size of the whole history in KB. A shallow clone
+   * downloads far less, so this only turns away the very largest; the working
+   * tree is capped below. */
+  maxRepoKb: 1024 * 1024,
   maxFiles: 15_000,
   maxBytes: 200 * 1024 * 1024,
   cloneTimeoutMs: 90_000,
@@ -53,9 +55,10 @@ interface GitHubRepo {
   default_branch: string;
 }
 
-/** Asks GitHub how big the repo is before cloning, so a huge repo is refused
- * in a second instead of after a long download. */
-async function checkWithGitHub(repo: RepoInfo): Promise<GitHubRepo> {
+/** Asks GitHub whether the repo exists, is public and isn't enormous, so those
+ * answers come in a second. When GitHub's API is rate-limiting us, the clone
+ * itself is the check (it fails for private and missing repos too). */
+async function checkWithGitHub(repo: RepoInfo): Promise<GitHubRepo | null> {
   const headers: Record<string, string> = {
     accept: 'application/vnd.github+json',
     'user-agent': 'airlock-scanner',
@@ -66,9 +69,7 @@ async function checkWithGitHub(repo: RepoInfo): Promise<GitHubRepo> {
     signal: AbortSignal.timeout(10_000),
   });
   if (res.status === 404) throw new FetchError('GitHub says that repository does not exist or is private.');
-  if (res.status === 403 || res.status === 429) {
-    throw new FetchError('GitHub is rate-limiting us right now. Try again in a few minutes.');
-  }
+  if (res.status === 403 || res.status === 429) return null;
   if (!res.ok) throw new FetchError(`GitHub answered ${res.status} for that repository.`);
   const body = (await res.json()) as GitHubRepo;
   if (body.private) throw new FetchError('That repository is private. Airlock reads public repositories.');
@@ -110,7 +111,7 @@ export async function fetchRepo(repo: RepoInfo, dest: string): Promise<RepoInfo>
     );
   } catch (error) {
     const killed = (error as { killed?: boolean }).killed;
-    throw new FetchError(killed ? 'Downloading that repository took too long.' : 'Could not download that repository.');
+    throw new FetchError(killed ? 'Downloading that repository took too long.' : 'Could not download that repository. Check that it exists and is public.');
   }
   const { stdout } = await run('git', ['-C', dest, 'rev-parse', 'HEAD'], { env: GIT_ENV });
   // The reviewer reads the working tree only; git's own files are noise.
