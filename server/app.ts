@@ -69,9 +69,11 @@ export function createApp(scanner: Scanner, webDir: string): Hono {
         return;
       }
       await new Promise<void>((resolve) => {
+        // Writes go out in order, and the stream closes only after the last one is sent.
+        let writes = Promise.resolve();
         const stop = scanner.subscribe(id, (event) => {
-          void send(event);
-          if (event.type === 'done') finish();
+          writes = writes.then(() => send(event)).catch(() => {});
+          if (event.type === 'done') void writes.then(finish);
         });
         const ping = setInterval(() => void stream.writeSSE({ event: 'ping', data: '' }), 20_000);
         const finish = () => {
