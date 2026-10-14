@@ -13,6 +13,8 @@ const APPROVAL_MS = 3 * 60 * 1000;
 /** When a question runs out. Approvals carry no time of their own, so this uses the
  * moment the fence held the matching call, or else when this page first saw it. */
 function expiresAt(scan: Scan, approval: Approval, seenAt: number | undefined): number {
+  const given = approval.expiresAt ? Date.parse(approval.expiresAt) : NaN;
+  if (Number.isFinite(given)) return given;
   const held = scan.events.findLast(
     (e) => e.decision === 'held' && e.tool === approval.tool && e.summary === approval.summary,
   );

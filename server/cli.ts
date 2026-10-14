@@ -34,9 +34,9 @@ try {
       onTool: (e) => console.log(`  ${e.decision.padEnd(8)} ${e.by.padEnd(7)} ${e.tool} ${e.summary}${e.reason ? `  (${e.reason})` : ''}`),
       onThought: (t) => console.log(`  … ${t.split('\n')[0]}`),
       askPerson: async (q) => {
-        const yes = process.env.AIRLOCK_CLI_APPROVE === 'yes';
-        console.log(`  ASKED   ${q.tool} ${q.summary} -> ${yes ? 'yes' : 'no'}`);
-        return yes;
+        const answer = process.env.AIRLOCK_CLI_APPROVE === 'yes' ? 'yes' : 'no';
+        console.log(`  ASKED   ${q.tool} ${q.summary} -> ${answer}`);
+        return answer;
       },
     },
   });

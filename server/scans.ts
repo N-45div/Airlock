@@ -35,7 +35,7 @@ interface Live {
   scan: Scan;
   key: string;
   bus: EventEmitter;
-  answers: Map<string, (yes: boolean) => void>;
+  answers: Map<string, (answer: 'yes' | 'no' | 'expired') => void>;
 }
 
 export class Scanner {
@@ -99,7 +99,8 @@ export class Scanner {
     const sample = SAMPLES.find((s) => s.id === input || s.url === input);
     const repo = sample ? sampleRepo(sample) : parseRepoUrl(input);
 
-    if (!sample) {
+    // A sample started by its id always runs fresh, so the demo is live; a pasted link may reuse.
+    if (!sample || sample.id !== input) {
       const recent = this.latest(repo.url);
       if (recent && Date.now() - Date.parse(recent.startedAt) < LIMITS.reuseMs) return { id: recent.id, key: '' };
     }
@@ -127,7 +128,7 @@ export class Scanner {
     const resolve = live.answers.get(approvalId);
     if (!approval || !resolve || approval.status !== 'pending') throw new ScanError('That question is no longer open.', 409);
     approval.status = yes ? 'approved' : 'denied';
-    resolve(yes);
+    resolve(yes ? 'yes' : 'no');
     live.answers.delete(approvalId);
     this.emit(live, { type: 'approval', approval });
     return approval;
@@ -207,8 +208,15 @@ export class Scanner {
           },
           onThought: (text) => this.emit(live, { type: 'thought', text }),
           askPerson: (request) =>
-            new Promise<boolean>((resolve) => {
-              const approval: Approval = { id: `q${++asked}`, ...request, status: 'pending' };
+            new Promise<'yes' | 'no' | 'expired'>((resolve) => {
+              const now = Date.now();
+              const approval: Approval = {
+                id: `q${++asked}`,
+                ...request,
+                status: 'pending',
+                askedAt: new Date(now).toISOString(),
+                expiresAt: new Date(now + LIMITS.approvalMs).toISOString(),
+              };
               scan.approvals.push(approval);
               live.answers.set(approval.id, resolve);
               this.status(live, 'waiting');
@@ -218,7 +226,7 @@ export class Scanner {
                 approval.status = 'expired';
                 live.answers.delete(approval.id);
                 this.emit(live, { type: 'approval', approval });
-                resolve(false);
+                resolve('expired');
               }, LIMITS.approvalMs).unref();
             }).finally(() => this.status(live, 'reviewing')),
         },

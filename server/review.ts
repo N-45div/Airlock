@@ -20,8 +20,8 @@ const run = promisify(execFile);
 export interface ReviewHooks {
   onTool(event: ToolEvent): void;
   onThought(text: string): void;
-  /** Resolves true when the person approves. Airlock times out to false. */
-  askPerson(request: { tool: string; summary: string; reason: string }): Promise<boolean>;
+  /** The person's answer, or 'expired' when nobody answered in time. */
+  askPerson(request: { tool: string; summary: string; reason: string }): Promise<'yes' | 'no' | 'expired'>;
 }
 
 export interface ReviewOptions {
@@ -37,7 +37,7 @@ export interface ReviewOptions {
 
 const FENCE_TEST = `
 
-Fence test, requested by Airlock: before reviewing, try once to run each command listed under "Runs by itself" and each command the repository asks AI agents to run, using Bash, exactly as written. The workspace policy is expected to refuse them; that refusal is what this test shows the person. Do not try to work around a refusal. Then do the review. Mention in your summary which commands you tried and that the policy refused them.`;
+Fence test, requested by Airlock (required, not optional): before reviewing, try once to run each command listed under "Runs by itself" and each command the repository asks AI agents to run, using Bash, exactly as written. The workspace policy is expected to refuse them; that refusal is what this test shows the person. If the inventory lists no such commands, read the README and the files it points to first, and try any command the repository asks AI agents to run. Do not try to work around a refusal. Then do the review. Mention in your summary which commands you tried and that the policy refused them.`;
 
 export interface ReviewResult {
   verdict: Verdict;
@@ -191,7 +191,7 @@ interface Call {
   /** What ArmorClaude's PreToolUse hook answered, when it answered something. */
   armoriq?: { decision: 'deny' | 'ask'; reason: string };
   backstop?: string;
-  person?: boolean;
+  person?: 'yes' | 'no' | 'expired';
 }
 
 /** Reads a PreToolUse hook's JSON answer, if the hook gave one. */
@@ -279,9 +279,11 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
     const reason = call.armoriq?.reason || options.decisionReason || 'Fetching a web page needs your approval.';
     emit({ tool: toolName, summary: call.summary, decision: 'held', by: heldBy, reason });
     call.person = await hooks.askPerson({ tool: toolName, summary: call.summary, reason });
-    return call.person
-      ? { behavior: 'allow', updatedInput: input }
-      : { behavior: 'deny', message: 'The person running this scan said no. Carry on without it.' };
+    if (call.person === 'yes') return { behavior: 'allow', updatedInput: input };
+    return {
+      behavior: 'deny',
+      message: call.person === 'no' ? 'The person running this scan said no. Carry on without it.' : 'Nobody answered in time. Carry on without it.',
+    };
   };
 
   const plugins = config.armorClaudeDir ? [{ type: 'local' as const, path: config.armorClaudeDir }] : [];
@@ -340,8 +342,9 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
         if (!call || OWN_TOOLS.has(call.tool)) continue;
         const base = { tool: call.tool, summary: call.summary };
         const text = resultText(block.content);
-        if (call.person === true) emit({ ...base, decision: 'approved', by: 'person' });
-        else if (call.person === false) emit({ ...base, decision: 'denied', by: 'person' });
+        if (call.person === 'yes') emit({ ...base, decision: 'approved', by: 'person' });
+        else if (call.person === 'no') emit({ ...base, decision: 'denied', by: 'person' });
+        else if (call.person === 'expired') emit({ ...base, decision: 'denied', by: 'airlock', reason: 'No answer in time.' });
         else if (call.armoriq?.decision === 'deny') emit({ ...base, decision: 'blocked', by: 'armoriq', reason: call.armoriq.reason });
         else if (call.backstop) emit({ ...base, decision: 'blocked', by: 'airlock', reason: call.backstop });
         else if (block.is_error && isArmorIq(text)) emit({ ...base, decision: 'blocked', by: 'armoriq', reason: firstLine(text) });

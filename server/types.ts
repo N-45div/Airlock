@@ -53,6 +53,9 @@ export interface Approval {
   summary: string;
   reason: string;
   status: 'pending' | 'approved' | 'denied' | 'expired';
+  askedAt: string;
+  /** After this the question closes and the agent carries on without it. */
+  expiresAt: string;
 }
 
 export type ScanStatus =
