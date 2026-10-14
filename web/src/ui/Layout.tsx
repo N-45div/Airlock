@@ -31,6 +31,7 @@ export function SiteFooter() {
         <nav className="site-footer__links" aria-label="Footer">
           <a href={LINKS.extension}>Chrome extension</a>
           <a href={LINKS.source}>Source on GitHub</a>
+          <Link to="/privacy">Privacy</Link>
         </nav>
         <p className="site-footer__credit">Reviews by Claude · fenced by ArmorIQ</p>
       </div>

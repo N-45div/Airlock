@@ -1,13 +1,14 @@
-// Client-side routing on the history API: three routes need no library.
+// Client-side routing on the history API: a handful of routes need no library.
 
 import { useSyncExternalStore, type AnchorHTMLAttributes, type MouseEvent } from 'react';
 
-export type Route = { name: 'home' } | { name: 'report'; id: string } | { name: 'missing' };
+export type Route = { name: 'home' } | { name: 'report'; id: string } | { name: 'privacy' } | { name: 'missing' };
 
 const NAVIGATE = 'airlock:navigate';
 
 export function parseRoute(pathname: string): Route {
   if (pathname === '/' || pathname === '/index.html') return { name: 'home' };
+  if (pathname === '/privacy' || pathname === '/privacy/') return { name: 'privacy' };
   const match = /^\/r\/([A-Za-z0-9_-]{1,64})\/?$/.exec(pathname);
   if (match?.[1]) return { name: 'report', id: match[1] };
   return { name: 'missing' };

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { HomePage } from './home/HomePage.tsx';
 import { NotFound } from './NotFound.tsx';
+import { PrivacyPage } from './PrivacyPage.tsx';
 import { ReportPage } from './report/ReportPage.tsx';
 import { parseRoute, usePathname } from './router.tsx';
 import { SiteFooter, SiteHeader } from './ui/Layout.tsx';
@@ -32,6 +33,8 @@ export function App() {
             <HomePage />
           ) : route.name === 'report' ? (
             <ReportPage key={route.id} id={route.id} />
+          ) : route.name === 'privacy' ? (
+            <PrivacyPage />
           ) : (
             <NotFound />
           )}

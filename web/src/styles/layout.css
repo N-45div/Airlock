@@ -143,3 +143,64 @@ main:focus {
     margin-top: 56px;
   }
 }
+
+/* Plain document pages, such as privacy. */
+.doc-head {
+  max-width: 720px;
+  padding-top: 24px;
+}
+
+.doc-head__title {
+  margin-top: 8px;
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.doc-head__lede {
+  margin-top: 14px;
+  color: var(--text-2);
+  font-size: 17px;
+}
+
+.page--doc > * + * {
+  margin-top: 32px;
+}
+
+.doc-list {
+  margin: 0;
+}
+
+.doc-list__row {
+  display: grid;
+  grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+  gap: 8px 32px;
+  padding: 20px 24px;
+}
+
+.doc-list__row + .doc-list__row {
+  border-top: 1px solid var(--border);
+}
+
+.doc-list__title {
+  font-size: 15.5px;
+  font-weight: 600;
+}
+
+.doc-list__text {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 15.5px;
+}
+
+.doc-foot {
+  color: var(--text-3);
+  font-size: 13.5px;
+}
+
+@media (max-width: 600px) {
+  .doc-list__row {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 18px;
+  }
+}
