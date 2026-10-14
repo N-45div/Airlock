@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Check a repository</title>
+    <link rel="stylesheet" href="popup.css" />
+    <script type="module" src="popup.js"></script>
+  </head>
+  <body>
+    <header class="top">
+      <img src="icons/icon-32.png" width="20" height="20" alt="" />
+      <span class="name" data-product-name></span>
+      <button type="button" class="link" id="settings">Settings</button>
+    </header>
+
+    <main>
+      <p id="status" class="muted" role="status">Looking at this page…</p>
+
+      <section id="repo" hidden>
+        <p class="eyebrow" id="repo-source">Repository on this page</p>
+        <a id="repo-link" class="repo" target="_blank" rel="noopener noreferrer"></a>
+        <p id="lookup-note" class="muted" role="status"></p>
+        <div id="verdict" class="verdict" hidden>
+          <span id="verdict-chip" class="chip"></span>
+          <p id="verdict-headline" class="headline"></p>
+        </div>
+        <div class="actions">
+          <button type="button" id="primary" class="primary">Check before you run</button>
+          <button type="button" id="again" class="secondary" hidden>Check again</button>
+        </div>
+      </section>
+
+      <p id="error" class="error" role="alert" hidden></p>
+
+      <button type="button" class="link" id="show-paste" hidden>Check a different repository</button>
+
+      <form id="paste" novalidate hidden>
+        <label for="paste-input">Check a GitHub repository</label>
+        <div class="row">
+          <input
+            id="paste-input"
+            type="text"
+            inputmode="url"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="github.com/owner/name"
+          />
+          <button type="submit" class="primary">Check</button>
+        </div>
+        <p class="hint" id="paste-hint">
+          Open a repository on GitHub, or paste its address here. If this is a GitHub page that was
+          open before you added <span data-product-name></span>, reload it.
+        </p>
+      </form>
+    </main>
+
+    <footer>
+      <details>
+        <summary>How it works</summary>
+        <ol>
+          <li><span data-product-name></span> copies the repository onto its own server. Nothing is downloaded to or run on your computer.</li>
+          <li>An AI agent reads the code inside a fence. It can look, but anything that could do harm is blocked or held for you to approve.</li>
+          <li>You get a plain answer, with the reasons, in a report you can share.</li>
+        </ol>
+        <a id="more" target="_blank" rel="noopener noreferrer">More about <span data-product-name></span></a>
+      </details>
+    </footer>
+  </body>
+</html>
