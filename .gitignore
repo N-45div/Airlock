@@ -7,3 +7,4 @@ data/
 .env.*
 !.env.example
 extension/*.zip
+deploy/airlock.env
