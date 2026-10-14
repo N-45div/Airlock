@@ -1,0 +1,11 @@
+{
+  "name": "@airlock/extension",
+  "private": true,
+  "type": "module",
+  "description": "Chrome extension: check a GitHub repository before you run it.",
+  "scripts": {
+    "test": "node --test test/",
+    "icons": "node scripts/make-icons.mjs",
+    "zip": "node scripts/zip.mjs"
+  }
+}
