@@ -31,7 +31,11 @@ let the extension talk to it; the permission is handed back when you switch away
 node --test extension/test/             # or: cd extension && npm test
 node extension/scripts/make-icons.mjs   # redraws icons/*.png
 node extension/scripts/zip.mjs          # writes extension/airlock-extension.zip
+node extension/scripts/live-check.mjs   # loads it into headless Chrome, checks placement on live GitHub
 ```
+
+GitHub changes its markup now and then; `live-check.mjs` shows at once whether the button still
+lands in the repository header (it never presses it, so no check starts).
 
 The zip holds only what Chrome runs: `manifest.json`, the root `.js`, `.html` and `.css` files,
 `lib/` and `icons/`. Tests, scripts and these docs stay out. Upload it on the Chrome Web Store
