@@ -36,7 +36,7 @@ tries to run what the repository wants run, and the report shows the policy refu
 
 | Layer | What it does |
 | --- | --- |
-| **ArmorIQ** (ArmorClaude plugin, rules from ArmorTools Policy Studio) | Allows `Read`/`Grep`/`Glob`, holds `WebFetch` for the person's approval, blocks `Bash`, `Write`, `Edit`, sub-agents and web search, denies anything unlisted, locks the server's home folder. Every session is visible in the ArmorIQ console. |
+| **ArmorIQ** (ArmorClaude plugin, rules from ArmorTools Policy Studio) | Allows `Read`/`Grep`/`Glob`, holds `WebFetch` for the person's approval, blocks `Bash`, `Write`, `Edit`, sub-agents and web search, locks the server's home folder. The rules are in [`policy/`](policy/). Every session is visible in the ArmorIQ console. |
 | **Airlock backstop** (a `PreToolUse` hook in the Agent SDK) | Refuses anything that isn't a read inside the repository, whatever the policy says. Catches shell commands Claude Code would wave through as harmless. |
 
 Details, including how each block is credited to the layer that made it:

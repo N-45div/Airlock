@@ -1,0 +1,260 @@
+{
+  "schemaVersion": "armor.policy.v1",
+  "kind": "PolicyProfile",
+  "metadata": {
+    "name": "Airlock reviewer",
+    "description": "Read a stranger's repository, never run it. Reads allowed, page fetches held for the person, commands, edits, sub-agents and web search blocked, the server home folder locked. Unlisted tools are allowed here because the agent's verdict tool must run; Airlock's backstop denies every tool it does not list."
+  },
+  "defaults": {
+    "decision": "allow",
+    "conflictResolution": "deny_overrides"
+  },
+  "statements": [
+    {
+      "id": "tool_editor_1",
+      "effect": "permit",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "Read"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_2",
+      "effect": "permit",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "Grep"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_3",
+      "effect": "permit",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "Glob"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_4",
+      "effect": "require_approval",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "WebFetch"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_5",
+      "effect": "forbid",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "Bash"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_6",
+      "effect": "forbid",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "PowerShell"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_7",
+      "effect": "forbid",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "Write"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_8",
+      "effect": "forbid",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "Edit"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_9",
+      "effect": "forbid",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "MultiEdit"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_10",
+      "effect": "forbid",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "NotebookEdit"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_11",
+      "effect": "forbid",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "Agent"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_12",
+      "effect": "forbid",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "Task"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_13",
+      "effect": "forbid",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "Skill"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "tool_editor_14",
+      "effect": "forbid",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "WebSearch"
+      },
+      "resource": {
+        "type": "workspace"
+      },
+      "conditions": []
+    },
+    {
+      "id": "folder_airlock_home",
+      "effect": "forbid",
+      "principal": {
+        "type": "agent",
+        "id": "*"
+      },
+      "action": {
+        "type": "tool",
+        "eq": "*"
+      },
+      "resource": {
+        "type": "file"
+      },
+      "conditions": [
+        {
+          "field": "file.path",
+          "op": "matches",
+          "value": "^/home/airlock(?:/|$)"
+        }
+      ]
+    }
+  ]
+}

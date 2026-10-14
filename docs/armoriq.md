@@ -19,10 +19,20 @@ The Policy Studio rules Airlock runs with:
 | --- | --- | --- |
 | `Read`, `Grep`, `Glob` | Allow | Reading is the whole job. |
 | `WebFetch` | Hold | Looking at a URL the code downloads can help, but a person decides. |
-| `Bash`, `Write`, `Edit`, `MultiEdit` | Block | The reviewer never runs or changes the code. |
+| `Bash`, `PowerShell`, `Write`, `Edit`, `MultiEdit`, `NotebookEdit` | Block | The reviewer never runs or changes the code. |
 | `Agent`, `Task`, `Skill`, `WebSearch` | Block | No sub-agents, skills or web searches steered by the repo. |
-| anything else | Deny (default for unmatched tools) | Only what's listed may run. |
 | folder `/home/airlock` | Locked | The server's home holds its keys; no tool may touch it. |
+| anything else | Allow (default for unmatched tools) | See below. |
+
+The rules live in [`policy/airlock-reviewer.json`](../policy/airlock-reviewer.json) and are
+staged into Policy Studio with the API key (`PUT /policies/profiles/draft`, then
+`POST /policies/profiles/propose`); a person activates them in the console.
+
+Unmatched tools are allowed at this layer on purpose. Policy Studio accepts only tool names
+it knows, and the agent's verdict arrives through Claude Code's `StructuredOutput` tool,
+which isn't on that list: a "deny unmatched" default would block every verdict. Denying
+everything unlisted is the backstop's job instead (below), so the fence as a whole is still
+deny-by-default.
 
 A **Hold** in Claude Code is a permission prompt. Under the Agent SDK that prompt reaches
 Airlock's `canUseTool` callback, which shows it on the scan page as *Allow once / Decline*
