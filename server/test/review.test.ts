@@ -76,4 +76,6 @@ test('reads a hook answer only when it is a PreToolUse decision', async () => {
 test('shell summaries show the repository as .', () => {
   const root = path.resolve('/work/repo');
   assert.equal(summarize('Bash', { command: `cd "${root}" && cat package.json` }, root), 'cd "." && cat package.json');
+  const forward = root.split(path.sep).join('/');
+  assert.equal(summarize('Bash', { command: `cd "${forward}" && ls` }, root), 'cd "." && ls');
 });
