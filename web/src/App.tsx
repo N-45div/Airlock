@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { parseRoute, usePathname } from './router.tsx';
 import { HomePage } from './home/HomePage.tsx';
+import { NotFound } from './NotFound.tsx';
+import { ReportPage } from './report/ReportPage.tsx';
+import { parseRoute, usePathname } from './router.tsx';
 import { SiteFooter, SiteHeader } from './ui/Layout.tsx';
 
 export function App() {
@@ -26,7 +28,13 @@ export function App() {
       <SiteHeader />
       <main id="main" ref={main} tabIndex={-1}>
         <div className="wrap">
-          {route.name === 'home' ? <HomePage /> : route.name === 'report' ? <p>Report {route.id}</p> : <p>Not found</p>}
+          {route.name === 'home' ? (
+            <HomePage />
+          ) : route.name === 'report' ? (
+            <ReportPage key={route.id} id={route.id} />
+          ) : (
+            <NotFound />
+          )}
         </div>
       </main>
       <SiteFooter />
