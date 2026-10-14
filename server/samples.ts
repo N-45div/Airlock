@@ -29,7 +29,7 @@ export const SAMPLES: SampleDef[] = [
   {
     id: 'take-home',
     title: 'A take-home task with notes for AI',
-    blurb: 'A small app shaped like a job-interview task, with text planted to steer an AI reviewer. Watch the fence hold.',
+    blurb: 'Shaped like a job-interview task: notes planted to steer an AI reviewer, and a setup script that downloads more code. Watch the fence hold.',
     url: 'sample:take-home',
     dir: path.join(here, '..', 'samples', 'take-home'),
   },
