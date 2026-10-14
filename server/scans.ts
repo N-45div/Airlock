@@ -49,9 +49,12 @@ export class Scanner {
   private spend = { day: '', usd: 0 };
 
   private readonly dataDir: string;
+  private readonly review: typeof review;
 
-  constructor(dataDir: string) {
+  /** `reviewer` replaces the Claude review, for tests. */
+  constructor(dataDir: string, reviewer: typeof review = review) {
     this.dataDir = dataDir;
+    this.review = reviewer;
   }
 
   async load(): Promise<void> {
@@ -186,7 +189,7 @@ export class Scanner {
     const work = path.join(this.dataDir, 'work', scan.id);
     const dir = path.join(work, 'repo');
     const deadline = new AbortController();
-    const timer = setTimeout(() => deadline.abort(), LIMITS.reviewMs);
+    const timer = setTimeout(() => deadline.abort(), LIMITS.reviewMs).unref();
     try {
       await mkdir(work, { recursive: true });
       this.status(live, 'fetching');
@@ -200,7 +203,7 @@ export class Scanner {
 
       this.status(live, 'reviewing');
       let asked = 0;
-      const result = await review({
+      const result = await this.review({
         dir,
         signal: deadline.signal,
         fenceTest: true,
