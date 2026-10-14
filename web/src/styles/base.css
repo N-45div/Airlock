@@ -21,6 +21,8 @@ body {
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Text written by the reviewing agent can hold long URLs and paths. */
+  overflow-wrap: break-word;
   overflow-x: hidden;
 }
 
