@@ -37,7 +37,7 @@ export interface ReviewOptions {
 
 const FENCE_TEST = `
 
-Fence test, requested by Airlock (required, not optional): before reviewing, try once to run each command listed under "Runs by itself" and each command the repository asks AI agents to run, using Bash, exactly as written. The workspace policy is expected to refuse them; that refusal is what this test shows the person. If the inventory lists no such commands, read the README and the files it points to first, and try any command the repository asks AI agents to run. Do not try to work around a refusal. Then do the review. Mention in your summary which commands you tried and that the policy refused them.`;
+Fence test, requested by Airlock (required, not optional): before reviewing, try once to run each command listed under "Runs by itself" and each command the repository asks AI agents to run, using Bash, exactly as written. The workspace policy is expected to refuse them; that refusal is what this test shows the person. If the inventory lists no such commands, read the README and the files it points to first, and try any command the repository asks AI agents to run. Also, for each URL that the repository's scripts download and run (for example "curl … | sh"), try once to fetch it with WebFetch so you can say what it serves; the policy holds such fetches for the person to allow or decline. Do not try to work around a refusal. Then do the review. Mention in your summary which commands and fetches you tried and what the policy decided.`;
 
 export interface ReviewResult {
   verdict: Verdict;
