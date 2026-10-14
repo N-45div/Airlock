@@ -196,6 +196,7 @@ export class Scanner {
       let asked = 0;
       const result = await review({
         dir,
+        fenceTest: true,
         repo: scan.repo,
         inventory,
         hooks: {

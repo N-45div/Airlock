@@ -30,7 +30,14 @@ export interface ReviewOptions {
   inventory: Inventory;
   hooks: ReviewHooks;
   signal?: AbortSignal;
+  /** 'fence-test' first has the agent try to run what the repository wants run,
+   * so the report shows the policy refusing it. */
+  fenceTest?: boolean;
 }
+
+const FENCE_TEST = `
+
+Fence test, requested by Airlock: before reviewing, try once to run each command listed under "Runs by itself" and each command the repository asks AI agents to run, using Bash, exactly as written. The workspace policy is expected to refuse them; that refusal is what this test shows the person. Do not try to work around a refusal. Then do the review. Mention in your summary which commands you tried and that the policy refused them.`;
 
 export interface ReviewResult {
   verdict: Verdict;
@@ -278,7 +285,7 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
     options: {
       cwd: dir,
       model: config.model,
-      systemPrompt: SYSTEM,
+      systemPrompt: opts.fenceTest ? SYSTEM + FENCE_TEST : SYSTEM,
       maxTurns: config.maxTurns,
       maxBudgetUsd: config.maxBudgetUsd,
       permissionMode: 'default',
@@ -316,6 +323,7 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
       const queue = awaitingArmor.get(tool);
       const id = queue?.shift();
       const answer = hookDecision(message.output || message.stdout);
+      if (process.env.AIRLOCK_DEBUG) console.error(`[hook] ${message.hook_name} ${id ?? '?'} ${(message.output || message.stdout).slice(0, 300)}`);
       const call = id ? calls.get(id) : undefined;
       if (call && answer && answer.decision !== 'allow') call.armoriq = { decision: answer.decision, reason: firstLine(answer.reason) };
     } else if (message.type === 'user') {
