@@ -1,3 +1,12 @@
+{
+	servers {
+		# The site is also served through a Vercel rewrite, which passes the visitor's address in
+		# X-Forwarded-For. Vercel's edge addresses aren't fixed, so the header is trusted from
+		# anyone: per-visitor limits can be dodged, and the daily spending cap still holds.
+		trusted_proxies static 0.0.0.0/0 ::/0
+	}
+}
+
 {$AIRLOCK_HOST} {
 	encode zstd gzip
 	reverse_proxy airlock:8787 {
