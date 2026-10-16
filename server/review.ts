@@ -177,8 +177,9 @@ function isArmorIq(text: string | undefined): boolean {
 /** ArmorClaude's own MCP tools the reviewer may call: declaring its plan and
  * reading the policy. Nothing that changes the policy. */
 const ARMORCLAUDE_TOOLS = /^mcp__.*armorclaude.*__(register_intent_plan|policy_read)$/i;
-/** Tools that only shape the agent's own output or bookkeeping. */
-const OWN_TOOLS = new Set(['StructuredOutput', 'TodoWrite']);
+/** Tools that only shape the agent's own output or bookkeeping (ToolSearch loads
+ * the definition of a tool such as WebFetch; using that tool is still checked). */
+const OWN_TOOLS = new Set(['StructuredOutput', 'TodoWrite', 'ToolSearch']);
 
 export type BackstopDecision = { pass: true } | { ask: string } | { deny: string };
 

@@ -49,6 +49,7 @@ test('the backstop passes reads inside the repo and its own tools, asks for fetc
     ['mcp__plugin_armorclaude_armorclaude-policy__register_intent_plan', {}, 'pass'],
     ['mcp__plugin_armorclaude_armorclaude-policy__policy_update', {}, 'deny'],
     ['StructuredOutput', {}, 'pass'],
+    ['ToolSearch', { query: 'select:WebFetch' }, 'pass'],
     ['WebFetch', { url: 'https://example.com' }, 'ask'],
     ['Bash', { command: 'echo hi' }, 'deny'],
     ['PowerShell', { command: 'echo hi' }, 'deny'],
