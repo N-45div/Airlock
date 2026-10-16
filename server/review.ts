@@ -249,7 +249,8 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
           cwd: dir,
           timeout: 90_000,
           maxBuffer: 4 * 1024 * 1024,
-          env: { ...process.env, HF_HUB_OFFLINE: process.env.HF_HUB_OFFLINE ?? '1' },
+          // Not offline: sgrep fetches a language's parser the first time it meets one.
+          env: process.env,
         }),
       );
       searches = search.then(() => {}, () => {});
