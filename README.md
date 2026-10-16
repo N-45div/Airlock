@@ -2,7 +2,7 @@
 
 **Before you run a stranger's code, let a fenced agent open it first.**
 
-**Try it: [airlock-check.vercel.app](https://airlock-check.vercel.app)** · Chrome extension: [`extension/`](extension/) (in Chrome Web Store review) · How the fence uses ArmorIQ: [docs/armoriq.md](docs/armoriq.md)
+**Try it: [airlock-check.vercel.app](https://airlock-check.vercel.app)** · Chrome extension: [Chrome Web Store](https://chromewebstore.google.com/detail/bmhbejjhiimlcmpkpeglogijodbhmpgd) · How the fence uses ArmorIQ: [docs/armoriq.md](docs/armoriq.md)
 
 A recruiter sends you a take-home task. A GitHub repo promises a free crypto trading bot. A
 starter kit has 2,000 stars and an install script you haven't read. Running any of them hands
@@ -46,7 +46,7 @@ Details, including how each block is credited to the layer that made it:
 
 ## Chrome extension
 
-[`extension/`](extension/) adds a **Check before you run** button to GitHub repository pages
+[The extension](https://chromewebstore.google.com/detail/bmhbejjhiimlcmpkpeglogijodbhmpgd) ([source](extension/)) adds a **Check before you run** button to GitHub repository pages
 and npm package pages, and shows an earlier verdict as a badge. See its
 [README](extension/README.md).
 

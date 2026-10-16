@@ -1,4 +1,6 @@
-# Chrome Web Store listing (draft)
+# Chrome Web Store listing
+
+Live: https://chromewebstore.google.com/detail/bmhbejjhiimlcmpkpeglogijodbhmpgd
 
 ## Basics
 
