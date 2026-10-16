@@ -87,3 +87,12 @@ test('names the Policy Studio rule that decided', async () => {
   assert.equal(policyReason('ArmorClaude policy requires approval: tool_editor_4', 'WebFetch'), 'Policy Studio rule tool_editor_4: WebFetch → Hold');
   assert.equal(policyReason('something else', 'Read'), 'something else');
 });
+
+test('an intent plan is summarized by its goal, whatever shape it arrives in', () => {
+  const root = path.resolve('/work/repo');
+  const tool = 'mcp__plugin_armorclaude_armorclaude-policy__register_intent_plan';
+  assert.equal(summarize(tool, { goal: 'Review the repo', steps: [] }, root), 'Plan: Review the repo');
+  assert.equal(summarize(tool, { plan: { goal: 'Review it' } }, root), 'Plan: Review it');
+  assert.equal(summarize(tool, { plan: JSON.stringify({ goal: 'As text' }) }, root), 'Plan: As text');
+  assert.equal(summarize('mcp__airlock__search_meaning', { query: 'send data out' }, root), '"send data out"');
+});

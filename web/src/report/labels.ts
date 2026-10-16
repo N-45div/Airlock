@@ -89,6 +89,8 @@ export const KIND_WORDS: Record<ToolKind, [string, string]> = {
 export function toolName(tool: string): string {
   if (!tool.startsWith('mcp__')) return tool;
   const name = tool.slice(tool.lastIndexOf('__') + 2);
+  if (name === 'register_intent_plan') return 'Intent plan';
+  if (name === 'search_meaning') return 'Search';
   return name || tool;
 }
 

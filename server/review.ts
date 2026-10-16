@@ -149,6 +149,23 @@ export function summarize(tool: string, input: Record<string, unknown>, root: st
     case 'WebFetch': return String(input.url ?? '');
     case 'Write': case 'Edit': case 'MultiEdit': return rel(input.file_path);
     default: {
+      if (tool.endsWith('__register_intent_plan')) {
+        // The plan may arrive whole or wrapped in a "plan" field, as an object or as JSON text.
+        const raw = input.plan ?? input;
+        let plan = raw as { goal?: unknown };
+        if (typeof raw === 'string') {
+          try {
+            plan = JSON.parse(raw) as { goal?: unknown };
+          } catch {
+            plan = {};
+          }
+        }
+        const goal = plan.goal ?? input.goal;
+        if (typeof goal === 'string' && goal.trim()) return `Plan: ${goal.trim().slice(0, 150)}`;
+      }
+      if (tool.endsWith('__search_meaning') && typeof input.query === 'string') {
+        return input.query.length > 150 ? `"${input.query.slice(0, 150)}…` : `"${input.query}"`;
+      }
       const text = JSON.stringify(input);
       return text.length > 160 ? `${text.slice(0, 160)}…` : text;
     }
