@@ -44,7 +44,8 @@ What Airlock looks for:
 - Text planted to steer AI coding assistants
 
 Private by design: the extension sends only the address of a repository. No account, no
-cookies, no tracking. You can turn off the automatic lookup of earlier verdicts in Settings.
+cookies, no tracking. Nothing is sent until you press the button (you can turn on showing
+earlier verdicts automatically in Settings).
 
 Free to use.
 
@@ -52,10 +53,9 @@ Free to use.
 
 - **storage:** Saves two settings: the address of the Airlock server and whether repository
   pages look up earlier verdicts.
-- **Host permission for the Airlock server** (`http://localhost/*` during development; the
-  production origin once it exists): The extension's service worker calls the Airlock API to
+- **Host permission for the Airlock server** (`https://airlock-check.vercel.app/*`): The extension's service worker calls the Airlock API to
   start a check and to look up an earlier verdict for a repository.
-- **Optional host permission `https://*/*`:** Never granted at install. Requested for a single
+- **Optional host permissions `https://*/*` and `http://localhost/*`:** Never granted at install. Requested for a single
   origin only when the user types their own Airlock server address in Settings, so the
   extension can reach that server. Handed back when the user switches away.
 - **Content scripts on github.com and www.npmjs.com:** Add the Check before you run button to
@@ -70,7 +70,7 @@ No. All JavaScript ships in the package. The extension only exchanges JSON with 
 
 What the extension sends, and when:
 - The address of a GitHub repository the user chooses to check, when they press the button.
-- When the "Show earlier verdicts" setting is on (the default), the address of the GitHub
+- Only if the user turns on the "Show earlier verdicts" setting (off by default), the address of the GitHub
   repository on the GitHub or npm page the user opens, to look up an earlier verdict.
 
 Dashboard answers:
@@ -78,11 +78,9 @@ Dashboard answers:
   personal communications, location, user activity: **not collected**.
 - Website content: **not collected** (the extension reads only a link from the page, not its
   content).
-- Web history: **collected, limited** while the lookup setting is on. The addresses of GitHub
-  repository pages (and the repository behind npm package pages) the user views are sent to look
-  up earlier verdicts. No other addresses, no titles, no timestamps from the browser. Users can
-  turn it off in Settings. If the default is changed to off before submission, answer "not
-  collected" here.
+- Web history: **not collected** by default. Only if the user turns on "Show earlier verdicts"
+  in Settings are the addresses of GitHub repository pages they open sent, to look up an
+  earlier verdict.
 
 Certifications:
 - I do not sell or transfer user data to third parties, outside of the approved use cases.

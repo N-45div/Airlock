@@ -24,8 +24,8 @@ const ITEMS: { title: string; text: ReactNode }[] = [
     text: (
       <>
         It sends the URL of a repository you check. If the setting “Show earlier verdicts when I open a repository page”
-        is on, which it is by default, it also sends the address of the GitHub and npm repository pages you open, only
-        to look up an earlier verdict. Turn that setting off in the extension’s options to stop it.
+        is on (it is off unless you turn it on), it also sends the address of the GitHub and npm repository pages you open,
+        only to look up an earlier verdict.
       </>
     ),
   },

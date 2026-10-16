@@ -7,7 +7,7 @@ export const PRODUCT_NAME = 'Airlock';
 
 /** Where the Airlock server and web app live. Change this when production
  * has a URL, and add that origin to host_permissions in manifest.json. */
-export const DEFAULT_API_BASE = 'https://65-1-213-193.sslip.io';
+export const DEFAULT_API_BASE = 'https://airlock-check.vercel.app';
 
 /** The web app page that explains how a check works. */
 export const HOW_IT_WORKS_PATH = '/#how-it-works';
@@ -19,7 +19,7 @@ export const STORAGE_KEYS = {
   autoLookup: 'autoLookup',
 };
 
-export const DEFAULT_AUTO_LOOKUP = true;
+export const DEFAULT_AUTO_LOOKUP = false;
 
 export async function getSettings() {
   let stored = {};

@@ -52,9 +52,9 @@ Only the address of a GitHub repository, to the Airlock server you set:
   to start a check (`POST /api/scans`). The report opens in a new tab; the key that lets you
   answer the agent's approval questions is in the link's `#fragment`, which browsers never send
   to a server.
-- **When you open a repository or npm package page**: that repository's address, to look for an
-  earlier verdict (`GET /api/lookup`). You can turn this off in Settings; then nothing is sent
-  until you press the button or open the popup.
+- **When you open a repository or npm package page**, only if you turn on "Show earlier verdicts"
+  in Settings (it is off by default): that repository's address, to look for an earlier verdict
+  (`GET /api/lookup`). Otherwise nothing is sent until you press the button or open the popup.
 
 Requests carry no cookies, no account details and no identifiers. The extension has no
 analytics or tracking, reads nothing else from the pages, and stores only its two settings
