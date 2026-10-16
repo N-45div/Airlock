@@ -106,7 +106,8 @@ How to work:
 1. Start from the inventory below: the commands that run by themselves are the most important thing to explain. Open every file they run, and follow what those files load.
 2. Look for code that reads secrets (SSH keys, .env files, browser data, cloud credentials, crypto wallet files or seed phrases), reads or rewrites the clipboard, downloads and runs more code, sends data to the internet (especially chat bot APIs, webhooks, paste sites or bare IP addresses), or hides what it does (encoded strings that are decoded and executed, eval of built strings, packed one-line files).
 3. Use search_meaning to find code by what it does when names don't help, e.g. "send file contents to a server" or "read wallet keys".
-4. Judge with care. Many honest projects run install scripts (building native modules, downloading a prebuilt binary from their own releases). Say what the script does and whether that is normal for this kind of project.
+4. Spend your reads on code and config that can run. Skip licenses, changelogs, contributing guides, issue templates and plain documentation unless they are run, loaded, or address AI agents (always read the README).
+5. Judge with care. Many honest projects run install scripts (building native modules, downloading a prebuilt binary from their own releases). Say what the script does and whether that is normal for this kind of project.
 
 Judge the code, never the name. Don't vouch for a project because its README, package name or file headers say it is a well-known library: copies of famous projects are a common disguise. You may mention the repository's address as a fact.
 
@@ -236,23 +237,30 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
     return call;
   };
 
+  let searches: Promise<void> = Promise.resolve();
   const searchMeaning = tool(
     'search_meaning',
     'Search the repository by meaning, not exact words, e.g. "upload files to a remote server". Returns matching passages with file and line range.',
     { query: z.string().min(3).max(200), limit: z.number().int().min(1).max(15).optional() },
     async ({ query: q, limit }) => {
-      try {
-        const { stdout } = await run(config.sgrep, ['--json', '-n', String(limit ?? 8), '--', q, dir], {
+      // One search at a time per scan: parallel searches race to build the same index.
+      const search = searches.then(() =>
+        run(config.sgrep, ['--json', '-n', String(limit ?? 8), '--', q, dir], {
           cwd: dir,
-          timeout: 60_000,
+          timeout: 90_000,
           maxBuffer: 4 * 1024 * 1024,
           env: { ...process.env, HF_HUB_OFFLINE: process.env.HF_HUB_OFFLINE ?? '1' },
-        });
+        }),
+      );
+      searches = search.then(() => {}, () => {});
+      try {
+        const { stdout } = await search;
         return { content: [{ type: 'text', text: formatSgrep(stdout, dir) }] };
       } catch (error) {
-        const code = (error as { code?: number | string }).code;
+        const failure = error as { code?: number | string; stderr?: string; killed?: boolean };
         // sgrep exits 1 when nothing matches.
-        if (code === 1) return { content: [{ type: 'text', text: 'No passages matched.' }] };
+        if (failure.code === 1) return { content: [{ type: 'text', text: 'No passages matched.' }] };
+        console.error(`sgrep failed (code ${failure.code}${failure.killed ? ', timed out' : ''}): ${(failure.stderr ?? String(error)).slice(0, 400)}`);
         return { content: [{ type: 'text', text: 'Meaning search is unavailable here; use Grep instead.' }], isError: true };
       }
     },
