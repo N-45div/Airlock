@@ -287,9 +287,10 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
   // Reached only when a call asks for a person: WebFetch, held by ArmorIQ or by the backstop.
   const canUseTool: CanUseTool = async (toolName, input, options) => {
     const call = callFor(options.toolUseID, toolName, input);
-    // Airlock's own read-only search (registered in-process, so its source is 'sdk')
-    // asks once as an MCP tool; it only reads the repository.
-    if (options.mcpServer?.source === 'sdk' && options.mcpServer.name === 'airlock') {
+    // MCP tools ask once by default: Airlock's own search (registered in-process, so its
+    // source is 'sdk') and ArmorClaude's plan tools pass by the same rule as the backstop.
+    const rule = await backstop(toolName, input, dir);
+    if ('pass' in rule && (!toolName.startsWith('mcp__airlock__') || options.mcpServer?.source === 'sdk')) {
       return { behavior: 'allow', updatedInput: input };
     }
     if (!PERSON_TOOLS.has(toolName) || call.backstop) {
@@ -367,7 +368,8 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
         else if (call.person === 'expired') emit({ ...base, decision: 'denied', by: 'airlock', reason: 'No answer in time.' });
         else if (call.armoriq?.decision === 'deny') emit({ ...base, decision: 'blocked', by: 'armoriq', reason: call.armoriq.reason });
         else if (call.backstop) emit({ ...base, decision: 'blocked', by: 'airlock', reason: call.backstop });
-        else if (block.is_error && isArmorIq(text)) emit({ ...base, decision: 'blocked', by: 'armoriq', reason: firstLine(text) });
+        else if (block.is_error && text.includes(BACKSTOP)) emit({ ...base, decision: 'blocked', by: 'airlock', reason: firstLine(text) });
+        else if (block.is_error && isArmorIq(text.replace(/mcp__S+/g, ''))) emit({ ...base, decision: 'blocked', by: 'armoriq', reason: firstLine(text) });
         else if (block.is_error) emit({ ...base, decision: 'failed', by: 'airlock', reason: firstLine(text) });
         else emit({ ...base, decision: 'allowed', by: config.armorClaudeDir ? 'armoriq' : 'airlock' });
         calls.delete(block.tool_use_id);
