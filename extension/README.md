@@ -29,7 +29,7 @@ let the extension talk to it; the permission is handed back when you switch away
 
 ```sh
 node --test extension/test/             # or: cd extension && npm test
-node extension/scripts/make-icons.mjs   # redraws icons/*.png
+node extension/scripts/make-icons.mjs   # redraws icons/*.png from web/public/favicon.svg (needs Chrome)
 node extension/scripts/zip.mjs          # writes extension/airlock-extension.zip
 node extension/scripts/live-check.mjs   # loads it into headless Chrome, checks placement on live GitHub
 ```

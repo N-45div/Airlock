@@ -1,115 +1,74 @@
-// Draws the toolbar and store icons: a rounded square with a closed
-// two-panel airlock door and a small status light. Uses only node:zlib, so
-// it runs anywhere Node does. Run: node extension/scripts/make-icons.mjs
+// Draws the extension's icons from the web app's mark (web/public/favicon.svg),
+// so the toolbar, the store and the site share one design. Renders in a
+// throwaway headless Chrome: node extension/scripts/make-icons.mjs
+// Set CHROME to the browser binary if it isn't in the usual place.
 
-import { writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { spawn } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { crc32, deflateSync } from 'node:zlib';
 
-const COLORS = {
-  body: [21, 72, 112], // deep blue
-  door: [232, 240, 247], // off-white panels
-  light: [242, 169, 59], // amber status light
+const here = path.dirname(fileURLToPath(import.meta.url));
+const ICONS = path.join(here, '..', 'icons');
+const MARK = readFileSync(path.join(here, '..', '..', 'web', 'public', 'favicon.svg'), 'utf8');
+/** [file, canvas, artwork]: the store icon keeps 16 px of clear padding around 96 px of art. */
+const SIZES = [['icon-16.png', 16, 16], ['icon-32.png', 32, 32], ['icon-48.png', 48, 48], ['icon-128.png', 128, 96]];
+
+const CANDIDATES = {
+  win32: ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'],
+  darwin: ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'],
+  linux: ['/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'],
 };
-
-/** Pixel geometry per size. Small sizes are snapped to whole pixels by hand
- * so the gap between the door panels stays crisp. */
-const LAYOUTS = {
-  16: { margin: 0, radius: 3.5, doors: [[3, 3, 7, 13], [9, 3, 13, 13]], doorRadius: 1, light: null },
-  32: { margin: 1, radius: 7, doors: [[7, 8, 15, 26], [17, 8, 25, 26]], doorRadius: 2, light: [16, 5, 1.6] },
-  48: { margin: 3, radius: 10, doors: [[13, 15, 23, 38], [25, 15, 35, 38]], doorRadius: 2.5, light: [24, 10, 2.2] },
-  128: { margin: 16, radius: 22, doors: [[37, 41, 61, 98], [67, 41, 91, 98]], doorRadius: 5, light: [64, 29, 5] },
-};
-
-function inRoundedRect(x, y, x0, y0, x1, y1, r) {
-  if (x < x0 || x > x1 || y < y0 || y > y1) return false;
-  const dx = Math.max(x0 + r - x, 0, x - (x1 - r));
-  const dy = Math.max(y0 + r - y, 0, y - (y1 - r));
-  return dx * dx + dy * dy <= r * r;
+const chrome = process.env.CHROME ?? (CANDIDATES[process.platform] ?? []).find((p) => existsSync(p));
+if (!chrome) {
+  console.error('Chrome not found. Set CHROME to its path.');
+  process.exit(2);
 }
 
-/** Returns RGBA bytes for one icon, anti-aliased with 8x8 samples per pixel. */
-export function renderIcon(size) {
-  const layout = LAYOUTS[size];
-  if (!layout) throw new Error(`No layout for ${size}px`);
-  const { margin, radius, doors, doorRadius, light } = layout;
-  const samples = 8;
-  const rgba = Buffer.alloc(size * size * 4);
-  for (let py = 0; py < size; py++) {
-    for (let px = 0; px < size; px++) {
-      let r = 0;
-      let g = 0;
-      let b = 0;
-      let a = 0;
-      for (let sy = 0; sy < samples; sy++) {
-        for (let sx = 0; sx < samples; sx++) {
-          const x = px + (sx + 0.5) / samples;
-          const y = py + (sy + 0.5) / samples;
-          let color = null;
-          if (inRoundedRect(x, y, margin, margin, size - margin, size - margin, radius)) {
-            color = COLORS.body;
-            if (doors.some(([x0, y0, x1, y1]) => inRoundedRect(x, y, x0, y0, x1, y1, doorRadius))) {
-              color = COLORS.door;
-            } else if (light && (x - light[0]) ** 2 + (y - light[1]) ** 2 <= light[2] ** 2) {
-              color = COLORS.light;
-            }
-          }
-          if (color) {
-            r += color[0];
-            g += color[1];
-            b += color[2];
-            a += 1;
-          }
-        }
-      }
-      const i = (py * size + px) * 4;
-      if (a > 0) {
-        rgba[i] = Math.round(r / a);
-        rgba[i + 1] = Math.round(g / a);
-        rgba[i + 2] = Math.round(b / a);
-        rgba[i + 3] = Math.round((a / (samples * samples)) * 255);
-      }
-    }
+const profile = mkdtempSync(path.join(tmpdir(), 'airlock-icons-'));
+const page = path.join(profile, 'mark.html');
+writeFileSync(page, `<!doctype html><style>html,body{margin:0;background:transparent}svg{display:block}</style>${MARK.replace('<svg ', '<svg id="m" ')}`);
+const child = spawn(chrome, ['--headless=new', `--user-data-dir=${profile}`, '--remote-debugging-pipe', '--no-first-run', 'about:blank'],
+  { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
+
+let buffer = '';
+let nextId = 1;
+const pending = new Map();
+child.stdio[4].on('data', (chunk) => {
+  buffer += chunk.toString('utf8');
+  for (let end = buffer.indexOf('\0'); end >= 0; end = buffer.indexOf('\0')) {
+    const msg = JSON.parse(buffer.slice(0, end));
+    buffer = buffer.slice(end + 1);
+    pending.get(msg.id)?.(msg);
+    pending.delete(msg.id);
   }
-  return rgba;
+});
+function send(method, params = {}, sessionId) {
+  const id = nextId++;
+  child.stdio[3].write(`${JSON.stringify({ id, method, params, sessionId })}\0`);
+  return new Promise((resolve, reject) => {
+    pending.set(id, (msg) => (msg.error ? reject(new Error(`${method}: ${msg.error.message}`)) : resolve(msg.result)));
+  });
 }
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function chunk(type, data) {
-  const head = Buffer.alloc(8);
-  head.writeUInt32BE(data.length, 0);
-  head.write(type, 4, 'ascii');
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(Buffer.concat([head.subarray(4), data])), 0);
-  return Buffer.concat([head, data, crc]);
-}
-
-/** Encodes straight-alpha RGBA bytes as a PNG (colour type 6, 8 bits). */
-export function encodePng(size, rgba) {
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
-  ihdr[8] = 8; // bit depth
-  ihdr[9] = 6; // RGBA
-  const rows = Buffer.alloc(size * (size * 4 + 1));
-  for (let y = 0; y < size; y++) {
-    rows[y * (size * 4 + 1)] = 0; // filter: none
-    rgba.copy(rows, y * (size * 4 + 1) + 1, y * size * 4, (y + 1) * size * 4);
+try {
+  const { targetId } = await send('Target.createTarget', { url: `file:///${page.split(path.sep).join('/')}` });
+  const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
+  await sleep(800);
+  await send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } }, sessionId);
+  for (const [file, canvas, art] of SIZES) {
+    await send('Emulation.setDeviceMetricsOverride', { width: canvas, height: canvas, deviceScaleFactor: 1, mobile: false }, sessionId);
+    const pad = (canvas - art) / 2;
+    await send('Runtime.evaluate', { expression: `Object.assign(document.getElementById('m').style, { width: '${art}px', height: '${art}px', margin: '${pad}px' })` }, sessionId);
+    await sleep(200);
+    const { data } = await send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: canvas, height: canvas, scale: 1 } }, sessionId);
+    writeFileSync(path.join(ICONS, file), Buffer.from(data, 'base64'));
+    console.log(`icons/${file} (mark)`);
   }
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(rows, { level: 9 })),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
-}
-
-export const SIZES = Object.keys(LAYOUTS).map(Number);
-
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  for (const size of SIZES) {
-    const file = new URL(`../icons/icon-${size}.png`, import.meta.url);
-    writeFileSync(file, encodePng(size, renderIcon(size)));
-    console.log(`wrote icons/icon-${size}.png`);
-  }
+} finally {
+  child.kill();
+  await sleep(500);
+  rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 }
