@@ -425,7 +425,7 @@ function resultText(content: unknown): string {
 /** ArmorClaude names the Policy Studio rule that decided ("ArmorClaude policy forbid:
  * tool_editor_5"); say it the way the person set it up. */
 export function policyReason(reason: string, tool: string): string {
-  const m = reason.match(/policy (forbid|requires approval)[^:]*:s*(S+)/i);
+  const m = reason.match(/policy (forbid|requires approval)[^:]*:\s*(\S+)/i);
   if (!m) return reason;
   return `Policy Studio rule ${m[2]}: ${tool} → ${/forbid/i.test(m[1]!) ? 'Block' : 'Hold'}`;
 }
