@@ -9,6 +9,6 @@ export const CTA = 'Check before you run';
 export const TAGLINE = 'Before you run a stranger’s code, let a fenced agent open it first.';
 
 export const LINKS = {
-  extension: '#extension',
-  source: '#source',
+  extension: 'https://github.com/N-45div/Airlock/tree/main/extension#readme',
+  source: 'https://github.com/N-45div/Airlock',
 };

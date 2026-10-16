@@ -2,6 +2,8 @@
 
 **Before you run a stranger's code, let a fenced agent open it first.**
 
+**Try it: [airlock-check.vercel.app](https://airlock-check.vercel.app)** · Chrome extension: [`extension/`](extension/) (in Chrome Web Store review) · How the fence uses ArmorIQ: [docs/armoriq.md](docs/armoriq.md)
+
 A recruiter sends you a take-home task. A GitHub repo promises a free crypto trading bot. A
 starter kit has 2,000 stars and an install script you haven't read. Running any of them hands
 a stranger your SSH keys, your `.env` files and your wallets.
