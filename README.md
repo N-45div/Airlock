@@ -59,6 +59,7 @@ npm install
 npm run build                     # the web app
 export ANTHROPIC_API_KEY=sk-ant-…  # Claude
 export ARMORIQ_API_KEY=ak_live_…   # ArmorIQ; without it ArmorClaude only observes
+export ARMORIQ_ENV=staging          # keys made in the ArmorTools console live on staging
 export ARMORCLAUDE_DIR=/path/to/armorClaude   # git clone https://github.com/armoriq/armorClaude
 npm start                         # http://127.0.0.1:8787
 npm run scan -- https://github.com/owner/name   # one scan in the terminal
@@ -74,7 +75,8 @@ docker run -p 8787:8787 -v airlock-data:/data \
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `AIRLOCK_MODEL` | `claude-opus-5-5` | Claude model for the reviewer |
+| `AIRLOCK_MODEL` | `claude-opus-5-5` | Claude model for the reviewer (the live site runs Sonnet 4.5 on Amazon Bedrock: `CLAUDE_CODE_USE_BEDROCK=1`) |
+| `ARMORIQ_ENV` | `production` | `staging` for keys from the ArmorTools console (see docs/armoriq.md) |
 | `AIRLOCK_MAX_USD_PER_SCAN` | `1.5` | Stop a review that costs more |
 | `AIRLOCK_DAILY_USD` | `25` | Stop starting scans after this much per UTC day |
 | `AIRLOCK_PER_IP_HOUR` | `6` | Scans one address may start per hour |

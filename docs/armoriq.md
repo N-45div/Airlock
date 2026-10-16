@@ -60,6 +60,29 @@ repository wants run (its install hooks, and whatever its text tells AI agents t
 report shows each attempt and the policy refusing it. Nothing from the repository can run
 in the process: the backstop refuses shell tools whatever the policy says.
 
+## Intent plans
+
+With a connected key, ArmorClaude requires the reviewer to declare its plan before it acts: the agent
+calls ArmorClaude's `register_intent_plan` tool (Airlock's backstop and permission handler let
+exactly that and `policy_read` through, nothing that edits the policy). Each plan becomes a signed
+intent plan in the console's **Intent Plans** page, with its steps, risk and verdict. The fence test is
+visible there too: the turn where the agent tries the repository's setup command is the one marked
+**Drifted**.
+
+## Which ArmorIQ backend
+
+Keys made in the ArmorTools console (tools.armoriq.ai) belong to ArmorIQ's staging backend
+(`staging-api.armoriq.io` / `staging-api.armoriq.ai`); the production API (`api.armoriq.ai`) answers
+401 for them. Run Airlock with `ARMORIQ_ENV=staging` so ArmorClaude syncs that workspace's Policy
+Studio profile. Check what a key sees:
+
+```sh
+curl -s -H "Authorization: Bearer $ARMORIQ_API_KEY" https://staging-api.armoriq.ai/policies/profiles/active
+```
+
+The report names the rule that decided each held or blocked call, the way it was set up
+("Policy Studio rule tool_editor_5: Bash → Block").
+
 ## What ArmorIQ sees
 
 For each scan, ArmorClaude registers the reviewer's intent plan and sends a trace of the
