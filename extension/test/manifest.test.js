@@ -26,7 +26,7 @@ describe('manifest.json', () => {
     assert.deepEqual(manifest.permissions, ['storage']);
     assert.deepEqual(manifest.host_permissions, [originPattern(DEFAULT_API_BASE)]);
     // Only a custom https:// server the person types in, requested at that moment.
-    assert.deepEqual(manifest.optional_host_permissions, ['https://*/*']);
+    assert.deepEqual(manifest.optional_host_permissions, ['https://*/*', 'http://localhost/*']);
     assert.equal(manifest.optional_permissions, undefined);
     assert.equal(manifest.web_accessible_resources, undefined);
     assert.equal(manifest.externally_connectable, undefined);

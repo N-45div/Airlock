@@ -7,7 +7,7 @@ export const PRODUCT_NAME = 'Airlock';
 
 /** Where the Airlock server and web app live. Change this when production
  * has a URL, and add that origin to host_permissions in manifest.json. */
-export const DEFAULT_API_BASE = 'http://localhost:8787';
+export const DEFAULT_API_BASE = 'https://65-1-213-193.sslip.io';
 
 /** The web app page that explains how a check works. */
 export const HOW_IT_WORKS_PATH = '/#how-it-works';

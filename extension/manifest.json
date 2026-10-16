@@ -27,13 +27,25 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["storage"],
-  "host_permissions": ["http://localhost/*"],
-  "optional_host_permissions": ["https://*/*"],
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://65-1-213-193.sslip.io/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://localhost/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://github.com/*", "https://www.npmjs.com/*"],
-      "js": ["content.js"],
+      "matches": [
+        "https://github.com/*",
+        "https://www.npmjs.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ]

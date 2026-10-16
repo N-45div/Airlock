@@ -21,7 +21,7 @@ function fill(settings) {
 }
 
 /** Gives back an optional https:// permission the extension no longer needs.
- * Required origins (localhost) can't be removed, which is fine. */
+ * The required origin (Airlock's own server) can't be removed, which is fine. */
 async function releaseOrigin(oldBase, newBase) {
   if (originPattern(oldBase) === originPattern(newBase)) return;
   try {
