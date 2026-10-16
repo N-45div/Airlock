@@ -353,7 +353,7 @@ export async function review(opts: ReviewOptions): Promise<ReviewResult> {
       const answer = hookDecision(message.output || message.stdout);
       if (process.env.AIRLOCK_DEBUG) console.error(`[hook] ${message.hook_name} ${id ?? '?'} ${(message.output || message.stdout).slice(0, 300)}`);
       const call = id ? calls.get(id) : undefined;
-      if (call && answer && answer.decision !== 'allow') call.armoriq = { decision: answer.decision, reason: firstLine(answer.reason) };
+      if (call && answer && answer.decision !== 'allow') call.armoriq = { decision: answer.decision, reason: policyReason(firstLine(answer.reason), call.tool) };
     } else if (message.type === 'user') {
       const content = message.message.content;
       if (!Array.isArray(content)) return;
@@ -420,6 +420,14 @@ function resultText(content: unknown): string {
     return content.map((c) => (c && typeof c === 'object' && 'text' in c ? String((c as { text: unknown }).text) : '')).join('\n');
   }
   return '';
+}
+
+/** ArmorClaude names the Policy Studio rule that decided ("ArmorClaude policy forbid:
+ * tool_editor_5"); say it the way the person set it up. */
+export function policyReason(reason: string, tool: string): string {
+  const m = reason.match(/policy (forbid|requires approval)[^:]*:s*(S+)/i);
+  if (!m) return reason;
+  return `Policy Studio rule ${m[2]}: ${tool} → ${/forbid/i.test(m[1]!) ? 'Block' : 'Hold'}`;
 }
 
 function firstLine(text: string): string {

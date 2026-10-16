@@ -80,3 +80,10 @@ test('shell summaries show the repository as .', () => {
   const forward = root.split(path.sep).join('/');
   assert.equal(summarize('Bash', { command: `cd "${forward}" && ls` }, root), 'cd "." && ls');
 });
+
+test('names the Policy Studio rule that decided', async () => {
+  const { policyReason } = await import('../review.ts');
+  assert.equal(policyReason('ArmorClaude policy forbid: tool_editor_5', 'Bash'), 'Policy Studio rule tool_editor_5: Bash → Block');
+  assert.equal(policyReason('ArmorClaude policy requires approval: tool_editor_4', 'WebFetch'), 'Policy Studio rule tool_editor_4: WebFetch → Hold');
+  assert.equal(policyReason('something else', 'Read'), 'something else');
+});
