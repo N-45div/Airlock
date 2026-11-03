@@ -2,7 +2,8 @@
 //   npm run scan:private -- take-home                       Airlock's sample take-home task
 //   npm run scan:private -- https://github.com/owner/name   a public GitHub repository
 //   npm run scan:private -- ./path/to/folder                a folder on this machine (read in place)
-// Options: --model <id>   --out <file.json>   --allow-gateway-signature   --no-tls-pinning
+// Options: --model <id>   --max-usd <dollars, default 0.05>   --out <file.json>
+//          --allow-gateway-signature   --no-tls-pinning
 // Needs NEARAI_API_KEY (cloud.near.ai).
 //
 // --no-tls-pinning is for networks that intercept TLS (corporate or sandbox proxies). The
@@ -22,7 +23,7 @@ import { takeInventory } from './inventory.ts';
 import { SAMPLES, sampleRepo } from './samples.ts';
 import type { RepoInfo } from './types.ts';
 import { listPrivateModels } from './near-models.ts';
-import { type PrivateChatClient, reviewPrivately } from './private-review.ts';
+import { BUDGET, type PrivateChatClient, reviewPrivately } from './private-review.ts';
 
 const run = promisify(execFile);
 export const DEFAULT_MODEL = 'z-ai/glm-5.3-flash';
@@ -33,6 +34,7 @@ interface Args {
   out?: string;
   allowGateway: boolean;
   tlsPinning: boolean;
+  maxUsd: number;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -42,6 +44,7 @@ function parseArgs(argv: string[]): Args {
     model: process.env.AIRLOCK_NEAR_MODEL || DEFAULT_MODEL,
     allowGateway: false,
     tlsPinning: process.env.AIRLOCK_NEAR_TLS_PINNING !== '0',
+    maxUsd: Number(process.env.AIRLOCK_NEAR_MAX_USD ?? BUDGET.maxUsd),
   };
   while (rest.length) {
     const a = rest.shift()!;
@@ -49,6 +52,7 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--out') args.out = rest.shift();
     else if (a === '--allow-gateway-signature') args.allowGateway = true;
     else if (a === '--no-tls-pinning') args.tlsPinning = false;
+    else if (a === '--max-usd') args.maxUsd = Number(rest.shift());
     else if (!args.target) args.target = a;
   }
   return args;
@@ -84,6 +88,10 @@ async function main(): Promise<void> {
     console.error('Set NEARAI_API_KEY (create one at cloud.near.ai) to run a live private review.');
     process.exit(2);
   }
+  if (!Number.isFinite(args.maxUsd) || args.maxUsd <= 0) {
+    console.error('--max-usd must be a positive number of dollars, e.g. 0.05');
+    process.exit(2);
+  }
   const models = await listPrivateModels();
   const chosen = models.find((m) => m.id === args.model);
   if (!chosen) {
@@ -97,6 +105,7 @@ async function main(): Promise<void> {
     const inventory = await takeInventory(dir);
     console.log(`${repo.url} @ ${repo.commit}: ${inventory.files.length} files, ${inventory.findings.length} static findings`);
     console.log(`model ${chosen.id}, end-to-end encrypted, every reply checked against its TEE signature`);
+    console.log(`budget $${args.maxUsd.toFixed(2)} for this scan ($${chosen.inputPerMillion}/M input, $${chosen.cachedInputPerMillion}/M cached input, $${chosen.outputPerMillion}/M output)`);
     if (!args.tlsPinning) console.log('TLS pinning to the attested Gateway is off (--no-tls-pinning); all other checks run');
     console.log('');
 
@@ -109,11 +118,13 @@ async function main(): Promise<void> {
       client,
       model: chosen.id,
       prices: chosen,
+      maxUsd: args.maxUsd,
       allowGatewaySignature: args.allowGateway,
       hooks: {
         onTool: (e) => console.log(`  ${e.decision.padEnd(8)} ${e.tool} ${e.summary}${e.reason ? `  (${e.reason})` : ''}`),
         onThought: (t) => console.log(`  … ${t.split('\n')[0]}`),
         onTurn: (p) => console.log(`  verified ${p.signatureKind} ${p.signingAlgo} ${p.signingAddress.slice(0, 16)}…${p.tcbStatus ? ` tcb=${p.tcbStatus}` : ''}`),
+        onUsage: (u) => console.log(`  spent $${u.costUsd.toFixed(4)} of $${args.maxUsd.toFixed(2)} after reply ${u.turn}`),
       },
     });
 
@@ -122,7 +133,10 @@ async function main(): Promise<void> {
       console.log(`- [${f.severity}] ${f.title}${f.file ? ` (${f.file}${f.line ? `:${f.line}` : ''})` : ''}`);
     }
     const kinds = [...new Set(result.turns.map((t) => t.signatureKind))].join(', ');
-    console.log(`\n${result.turns.length} replies, all verified (${kinds}). ${result.usage.inputTokens} in / ${result.usage.outputTokens} out tokens, about $${result.costUsd.toFixed(4)}`);
+    console.log(`\n${result.turns.length} replies, all verified (${kinds}).`);
+    console.log(
+      `${result.usage.inputTokens} input tokens (${result.usage.cachedInputTokens} from cache), ${result.usage.outputTokens} output, about $${result.costUsd.toFixed(4)}${result.budgetReached ? ' (budget reached: the verdict came early)' : ''}`,
+    );
     if (args.out) {
       await writeFile(args.out, `${JSON.stringify({ repo, model: chosen.id, inventory: inventory.findings, ...result }, null, 2)}\n`);
       console.log(`wrote ${args.out}`);

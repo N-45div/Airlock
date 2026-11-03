@@ -32,8 +32,13 @@ Try it (Node 24.22 or later):
    context size and price. No key needed.
 2. Do: `NEARAI_API_KEY=… npm run scan:private -- take-home`
    See: each file the model reads, any blocked attempt to run something, `verified provider_tee`
-   for every reply, then the verdict for Airlock's sample take-home task.
+   and the running cost for every reply, then the verdict for Airlock's sample take-home task.
    Behind a proxy that intercepts TLS, add `--no-tls-pinning` (all other checks still run).
+
+Each scan has a budget, $0.05 by default (`--max-usd` to change it). When it is spent, the
+model must give its verdict on the next reply. The default model, `z-ai/glm-5.3-flash`, costs
+$0.08 per million input tokens, $0.012 when cached, and $0.50 per million output tokens; the
+conversation only grows at the end, so most input after the first reply comes from the cache.
 
 A recruiter sends you a take-home task. A GitHub repo promises a free crypto trading bot. A
 starter kit has 2,000 stars and an install script you haven't read. Running any of them hands

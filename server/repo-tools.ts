@@ -7,12 +7,13 @@
 import { open, readdir, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 
+// Kept small: every tool result is sent back to the model and paid for as input tokens.
 export const LIMITS = {
-  readLines: 400,
-  readBytes: 64 * 1024,
-  grepMatches: 120,
+  readLines: 250,
+  readBytes: 24 * 1024,
+  grepMatches: 60,
   grepFileBytes: 2 * 1024 * 1024,
-  listEntries: 500,
+  listEntries: 300,
 };
 
 const SKIP_DIRS = new Set(['.git', 'node_modules']);

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import type { Inventory } from '../inventory.ts';
 import type { ToolEvent } from '../types.ts';
-import { type ChatCompletion, type ChatRequest, type PrivateChatClient, VerificationFailed, parseVerdict, reviewPrivately } from '../private-review.ts';
+import { BUDGET, type ChatCompletion, type ChatRequest, type PrivateChatClient, VerificationFailed, cost, parseVerdict, reviewPrivately } from '../private-review.ts';
 
 let root: string;
 const inventory: Inventory = { files: [{ path: 'README.md', bytes: 40 }], autoRuns: [], findings: [] };
@@ -27,9 +27,13 @@ const VERDICT = {
   findings: [{ severity: 'high', category: 'ai-instructions', title: 'Planted instruction', detail: 'The README asks AI to run setup.sh.', file: 'README.md', line: 1 }],
 };
 
-function completion(id: string, message: ChatCompletion['choices'][number]['message']): ChatCompletion {
-  return { id, model: 'z-ai/glm-5.3-flash', choices: [{ index: 0, finish_reason: 'stop', message }], usage: { prompt_tokens: 1000, completion_tokens: 100 } };
+function completion(id: string, message: ChatCompletion['choices'][number]['message'], usage: ChatCompletion['usage'] = { prompt_tokens: 1000, completion_tokens: 100 }): ChatCompletion {
+  return { id, model: 'z-ai/glm-5.3-flash', choices: [{ index: 0, finish_reason: 'stop', message }], usage };
 }
+
+const PRICES = { inputPerMillion: 0.08, cachedInputPerMillion: 0.012, outputPerMillion: 0.5 };
+/** A reply that costs about $0.06 on its own, over the default $0.05 budget. */
+const EXPENSIVE = { prompt_tokens: 750_000, completion_tokens: 100 };
 
 function call(id: string, name: string, args: unknown) {
   return { id, type: 'function' as const, function: { name, arguments: JSON.stringify(args) } };
@@ -126,6 +130,72 @@ describe('reviewPrivately', () => {
     ]);
     const result = await reviewPrivately({ dir: root, repo, inventory, client, model: 'm' });
     assert.equal(result.turns.length, 2);
+  });
+});
+
+describe('cost controls', () => {
+  it('bills cached input at the cached rate', () => {
+    const usage = { inputTokens: 1_000_000, cachedInputTokens: 900_000, outputTokens: 10_000 };
+    assert.ok(Math.abs(cost(usage, PRICES) - (100_000 * 0.08 + 900_000 * 0.012 + 10_000 * 0.5) / 1e6) < 1e-12);
+    assert.equal(cost(usage), 0, 'no prices, no cost');
+    assert.ok(Math.abs(cost(usage, { inputPerMillion: 0.08, outputPerMillion: 0.5 }) - (1_000_000 * 0.08 + 10_000 * 0.5) / 1e6) < 1e-12, 'no cached price: full rate');
+  });
+
+  it('caps reply length and reports spend after every reply', async () => {
+    const { client, requests } = fakeClient([
+      completion('c1', { role: 'assistant', content: null, tool_calls: [call('t1', 'read_file', { path: 'README.md' })] }, { prompt_tokens: 1000, completion_tokens: 50, prompt_tokens_details: { cached_tokens: 0 } }),
+      completion('c2', { role: 'assistant', content: null, tool_calls: [call('t2', 'submit_verdict', VERDICT)] }, { prompt_tokens: 1200, completion_tokens: 80, prompt_tokens_details: { cached_tokens: 1000 } }),
+    ]);
+    const spend: number[] = [];
+    const result = await reviewPrivately({ dir: root, repo, inventory, client, model: 'm', prices: PRICES, hooks: { onUsage: (u) => spend.push(u.costUsd) } });
+    assert.equal(requests[0]!.max_tokens, BUDGET.maxReplyTokens);
+    assert.equal(result.usage.cachedInputTokens, 1000);
+    assert.equal(spend.length, 2);
+    assert.ok(spend[1]! > spend[0]!);
+    assert.equal(result.budgetReached, false);
+  });
+
+  it('asks for the verdict once the budget is spent', async () => {
+    const { client, requests } = fakeClient([
+      completion('c1', { role: 'assistant', content: null, tool_calls: [call('t1', 'read_file', { path: 'README.md' })] }, EXPENSIVE),
+      completion('c2', { role: 'assistant', content: null, tool_calls: [call('t2', 'submit_verdict', VERDICT)] }),
+    ]);
+    const events: ToolEvent[] = [];
+    const result = await reviewPrivately({ dir: root, repo, inventory, client, model: 'm', prices: PRICES, hooks: { onTool: (e) => events.push(e) } });
+    assert.equal(result.budgetReached, true);
+    assert.equal(result.verdict, 'dangerous');
+    assert.deepEqual(requests[1]!.tool_choice, { type: 'function', function: { name: 'submit_verdict' } });
+    const second = requests[1]!.messages;
+    assert.equal(second.find((m) => m.role === 'tool')?.content, 'Not run: the scan budget is used up.');
+    assert.match(second.at(-1)!.content as string, /budget is used up/);
+    assert.equal(events.length, 0, 'the read was not run');
+  });
+
+  it('keeps a verdict that arrives with the reply that spends the budget', async () => {
+    const { client, requests } = fakeClient([
+      completion('c1', { role: 'assistant', content: null, tool_calls: [call('t1', 'submit_verdict', VERDICT)] }, EXPENSIVE),
+    ]);
+    const result = await reviewPrivately({ dir: root, repo, inventory, client, model: 'm', prices: PRICES });
+    assert.equal(result.verdict, 'dangerous');
+    assert.equal(requests.length, 1);
+  });
+
+  it('stops without spending more when the forced reply has no verdict', async () => {
+    const { client, requests } = fakeClient([
+      completion('c1', { role: 'assistant', content: null, tool_calls: [call('t1', 'read_file', { path: 'README.md' })] }, EXPENSIVE),
+      completion('c2', { role: 'assistant', content: 'I need to read more.' }),
+    ]);
+    await assert.rejects(reviewPrivately({ dir: root, repo, inventory, client, model: 'm', prices: PRICES }), /\$0\.05 budget/);
+    assert.equal(requests.length, 2);
+  });
+
+  it('honours a custom budget', async () => {
+    const { client } = fakeClient([
+      completion('c1', { role: 'assistant', content: null, tool_calls: [call('t1', 'read_file', { path: 'README.md' })] }, EXPENSIVE),
+      completion('c2', { role: 'assistant', content: null, tool_calls: [call('t2', 'submit_verdict', VERDICT)] }),
+    ]);
+    const result = await reviewPrivately({ dir: root, repo, inventory, client, model: 'm', prices: PRICES, maxUsd: 1 });
+    assert.equal(result.budgetReached, false);
   });
 });
 

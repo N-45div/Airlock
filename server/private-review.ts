@@ -24,7 +24,7 @@ export interface ChatCompletion {
   id: string;
   model: string;
   choices: { index: number; finish_reason: string | null; message: { role: 'assistant'; content: string | null; tool_calls?: ToolCall[] } }[];
-  usage?: { prompt_tokens?: number; completion_tokens?: number };
+  usage?: { prompt_tokens?: number; completion_tokens?: number; prompt_tokens_details?: { cached_tokens?: number } | null };
 }
 
 export interface ChatRequest {
@@ -59,11 +59,34 @@ export interface TurnProof {
   tcbStatus?: string;
 }
 
+export interface Usage {
+  inputTokens: number;
+  /** Input tokens served from the prompt cache, billed at the cheaper cached rate. */
+  cachedInputTokens: number;
+  outputTokens: number;
+}
+
 export interface PrivateReviewHooks {
   onTool?(event: ToolEvent): void;
   onThought?(text: string): void;
   onTurn?(proof: TurnProof): void;
+  /** After every reply: what the scan has cost so far. */
+  onUsage?(usage: Usage & { turn: number; costUsd: number }): void;
 }
+
+export interface Prices {
+  /** US dollars per million tokens. */
+  inputPerMillion: number;
+  outputPerMillion: number;
+  cachedInputPerMillion?: number;
+}
+
+/** Defaults sized for a few cents per scan. */
+export const BUDGET = {
+  maxTurns: 20,
+  maxUsd: 0.05,
+  maxReplyTokens: 4096,
+};
 
 export interface PrivateReviewOptions {
   dir: string;
@@ -73,8 +96,11 @@ export interface PrivateReviewOptions {
   model: string;
   hooks?: PrivateReviewHooks;
   maxTurns?: number;
-  /** Prices in US dollars per million tokens, for the cost line. */
-  prices?: { inputPerMillion: number; outputPerMillion: number };
+  /** Once the scan has cost this much, the next reply must be the verdict. Needs `prices`. */
+  maxUsd?: number;
+  /** Cap on each reply's length, in tokens. */
+  maxReplyTokens?: number;
+  prices?: Prices;
   /** Accept Gateway signatures when the model's own TEE signature is missing. Off by default. */
   allowGatewaySignature?: boolean;
 }
@@ -85,8 +111,10 @@ export interface PrivateReviewResult {
   summary: string;
   findings: Finding[];
   turns: TurnProof[];
-  usage: { inputTokens: number; outputTokens: number };
+  usage: Usage;
   costUsd: number;
+  /** True when the budget ran out and the model was told to give its verdict early. */
+  budgetReached: boolean;
 }
 
 export class VerificationFailed extends Error {}
@@ -165,7 +193,7 @@ export function describeInventory(inv: Inventory, repo: RepoInfo): string {
   if (inv.findings.length === 0) lines.push('- nothing');
   for (const f of inv.findings) lines.push(`- [${f.severity}] ${f.title}${f.file ? ` (${f.file}${f.line ? `:${f.line}` : ''})` : ''}`);
   lines.push('', 'Files (path, bytes):');
-  const shown = inv.files.slice(0, 400);
+  const shown = inv.files.slice(0, 250);
   for (const f of shown) lines.push(`${f.path} ${f.bytes}`);
   if (inv.files.length > shown.length) lines.push(`... and ${inv.files.length - shown.length} more; use list_files to see them.`);
   return lines.join('\n');
@@ -176,33 +204,58 @@ const NUDGE = 'Finish by calling submit_verdict with your verdict, headline, sum
 export async function reviewPrivately(opts: PrivateReviewOptions): Promise<PrivateReviewResult> {
   const { client, model, hooks = {} } = opts;
   const tools = new RepoTools(opts.dir);
-  const maxTurns = opts.maxTurns ?? 40;
+  const maxTurns = opts.maxTurns ?? BUDGET.maxTurns;
+  const maxUsd = opts.maxUsd ?? BUDGET.maxUsd;
   const messages: ChatMessage[] = [
     { role: 'system', content: SYSTEM },
     { role: 'user', content: `${describeInventory(opts.inventory, opts.repo)}\n\nReview this repository and give your verdict with submit_verdict.` },
   ];
   const turns: TurnProof[] = [];
-  const usage = { inputTokens: 0, outputTokens: 0 };
+  const usage: Usage = { inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
   let events = 0;
   let nudges = 0;
+  let budgetReached = false;
   const emit = (e: Omit<ToolEvent, 'id' | 'at'>) => hooks.onTool?.({ ...e, id: `n${++events}`, at: new Date().toISOString() });
+  const done = (parsed: NonNullable<ReturnType<typeof parseVerdict>>): PrivateReviewResult => ({ ...parsed, turns, usage, costUsd: cost(usage, opts.prices), budgetReached });
 
+  // The conversation only ever grows at the end, so each request repeats the previous one as
+  // its prefix and most input tokens come from the prompt cache at a fraction of the price.
   for (let turn = 1; turn <= maxTurns; turn++) {
-    const last = turn === maxTurns;
+    const mustAnswer = turn === maxTurns || budgetReached;
     const completion = await client.chat.completions.create(
       {
         model,
         messages,
         tools: [...TOOL_DEFINITIONS, SUBMIT_VERDICT],
-        tool_choice: last ? { type: 'function', function: { name: 'submit_verdict' } } : 'auto',
+        tool_choice: mustAnswer ? { type: 'function', function: { name: 'submit_verdict' } } : 'auto',
         temperature: 0,
+        max_tokens: opts.maxReplyTokens ?? BUDGET.maxReplyTokens,
       },
       // Ask for the exact model, never an alias, so replies carry the model TEE's own signature.
       { headers: { 'x-no-aliasing': 'true' } },
     );
     turns.push(await verify(client, completion, opts.allowGatewaySignature ?? false, hooks));
     usage.inputTokens += completion.usage?.prompt_tokens ?? 0;
+    usage.cachedInputTokens += completion.usage?.prompt_tokens_details?.cached_tokens ?? 0;
     usage.outputTokens += completion.usage?.completion_tokens ?? 0;
+    const spent = cost(usage, opts.prices);
+    hooks.onUsage?.({ ...usage, turn, costUsd: spent });
+    const overBudget = !!opts.prices && spent >= maxUsd;
+    if (budgetReached || overBudget) {
+      // No budget for further reading: take the verdict if this reply has one.
+      const verdictCall = completion.choices[0]?.message.tool_calls?.find((c) => c.function.name === 'submit_verdict');
+      const parsed = verdictCall ? parseVerdict(verdictCall.function.arguments) : null;
+      if (parsed) return done(parsed);
+    }
+    if (budgetReached) {
+      // That was the forced verdict turn; there is no budget left for another.
+      throw new Error(`The scan reached its $${maxUsd.toFixed(2)} budget and the model gave no usable verdict.`);
+    }
+    if (overBudget) {
+      budgetReached = true;
+      messages.push(...pendingToolResults(completion), { role: 'user', content: `The scan's budget is used up. Give your verdict now with submit_verdict, based on what you have read.` });
+      continue;
+    }
 
     const reply = completion.choices[0]?.message;
     if (!reply) throw new Error('The model sent an empty reply.');
@@ -220,9 +273,7 @@ export async function reviewPrivately(opts: PrivateReviewOptions): Promise<Priva
       const name = call.function.name;
       if (name === 'submit_verdict') {
         const parsed = parseVerdict(call.function.arguments);
-        if (parsed) {
-          return { ...parsed, turns, usage, costUsd: cost(usage, opts.prices) };
-        }
+        if (parsed) return done(parsed);
         messages.push({ role: 'tool', tool_call_id: call.id, content: 'Error: the verdict did not match the schema. Call submit_verdict again with verdict, headline, summary and findings.' });
         continue;
       }
@@ -268,7 +319,7 @@ async function verify(client: PrivateChatClient, completion: ChatCompletion, all
   return proof;
 }
 
-export function parseVerdict(raw: string): Omit<PrivateReviewResult, 'turns' | 'usage' | 'costUsd'> | null {
+export function parseVerdict(raw: string): Omit<PrivateReviewResult, 'turns' | 'usage' | 'costUsd' | 'budgetReached'> | null {
   let value: unknown;
   try {
     value = JSON.parse(raw);
@@ -313,7 +364,19 @@ function summarize(tool: string, rawArgs: string): string {
   }
 }
 
-function cost(usage: { inputTokens: number; outputTokens: number }, prices?: { inputPerMillion: number; outputPerMillion: number }): number {
+/** When the budget runs out mid-turn, the assistant's tool calls still need answers before the
+ * next request, or the API rejects the conversation. They get a short note instead of output. */
+function pendingToolResults(completion: ChatCompletion): ChatMessage[] {
+  const reply = completion.choices[0]?.message;
+  if (!reply) return [];
+  const calls = reply.tool_calls ?? [];
+  const assistant: ChatMessage = { role: 'assistant', content: reply.content ?? null, ...(calls.length ? { tool_calls: calls } : {}) };
+  return [assistant, ...calls.map((c): ChatMessage => ({ role: 'tool', tool_call_id: c.id, content: 'Not run: the scan budget is used up.' }))];
+}
+
+export function cost(usage: Usage, prices?: Prices): number {
   if (!prices) return 0;
-  return (usage.inputTokens * prices.inputPerMillion + usage.outputTokens * prices.outputPerMillion) / 1_000_000;
+  const cached = Math.min(usage.cachedInputTokens, usage.inputTokens);
+  const cachedRate = prices.cachedInputPerMillion ?? prices.inputPerMillion;
+  return ((usage.inputTokens - cached) * prices.inputPerMillion + cached * cachedRate + usage.outputTokens * prices.outputPerMillion) / 1_000_000;
 }

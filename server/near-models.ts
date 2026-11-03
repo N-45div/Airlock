@@ -14,6 +14,7 @@ interface CatalogModel {
   modelId: string;
   inputCostPerToken: Cost;
   outputCostPerToken: Cost;
+  cacheReadCostPerToken?: Cost;
   metadata: {
     verifiable?: boolean;
     attestationSupported?: boolean;
@@ -29,6 +30,8 @@ export interface PrivateModel {
   /** US dollars per million tokens. */
   inputPerMillion: number;
   outputPerMillion: number;
+  /** Price of input tokens served from the prompt cache; the full input price when there is none. */
+  cachedInputPerMillion: number;
   structuredOutputs: boolean;
 }
 
@@ -46,6 +49,7 @@ export async function listPrivateModels(fetchImpl: typeof fetch = fetch): Promis
       contextLength: m.metadata.contextLength ?? 0,
       inputPerMillion: perMillion(m.inputCostPerToken),
       outputPerMillion: perMillion(m.outputCostPerToken),
+      cachedInputPerMillion: m.cacheReadCostPerToken ? perMillion(m.cacheReadCostPerToken) : perMillion(m.inputCostPerToken),
       structuredOutputs: !!m.metadata.supportedFeatures?.some((f) => f === 'structured_outputs' || f === 'json_mode'),
     }))
     .sort((a, b) => a.inputPerMillion - b.inputPerMillion || a.id.localeCompare(b.id));
@@ -54,10 +58,10 @@ export async function listPrivateModels(fetchImpl: typeof fetch = fetch): Promis
 if (import.meta.main) {
   const models = await listPrivateModels();
   console.log(`${models.length} NEAR AI Cloud models with TEE attestation and tool calls:\n`);
-  console.log(`${'model'.padEnd(48)} ${'context'.padStart(9)}  ${'$/M in'.padStart(7)}  ${'$/M out'.padStart(7)}  json`);
+  console.log(`${'model'.padEnd(48)} ${'context'.padStart(9)}  ${'$/M in'.padStart(7)}  ${'cached'.padStart(7)}  ${'$/M out'.padStart(7)}  json`);
   for (const m of models) {
     console.log(
-      `${m.id.padEnd(48)} ${String(m.contextLength).padStart(9)}  ${m.inputPerMillion.toFixed(2).padStart(7)}  ${m.outputPerMillion.toFixed(2).padStart(7)}  ${m.structuredOutputs ? 'yes' : 'no'}`,
+      `${m.id.padEnd(48)} ${String(m.contextLength).padStart(9)}  ${m.inputPerMillion.toFixed(3).padStart(7)}  ${m.cachedInputPerMillion.toFixed(3).padStart(7)}  ${m.outputPerMillion.toFixed(2).padStart(7)}  ${m.structuredOutputs ? 'yes' : 'no'}`,
     );
   }
 }
