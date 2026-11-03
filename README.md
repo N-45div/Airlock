@@ -4,6 +4,37 @@
 
 **Try it: [airlock-check.vercel.app](https://airlock-check.vercel.app)** · Chrome extension: [Chrome Web Store](https://chromewebstore.google.com/detail/bmhbejjhiimlcmpkpeglogijodbhmpgd) · How the fence uses ArmorIQ: [docs/armoriq.md](docs/armoriq.md)
 
+## NEAR HACKATHON: private reviews on NEAR AI Cloud
+
+Built for NEAR HACKATHON (Nov 1-14, 2026). Tracks: Privacy & Private AI, AI Security &
+Defense, Open Innovation. Work in progress.
+
+Airlock existed before the hackathon: everything up to the tag
+[`pre-hackathon`](https://github.com/N-45div/Airlock/tree/pre-hackathon) (commit `3047c7f`,
+Oct 16, 2026) is the baseline. Only what comes after it is hackathon work:
+[see the diff](https://github.com/N-45div/Airlock/compare/pre-hackathon...main).
+
+What the hackathon adds:
+
+- **A private review engine.** The code is reviewed by a model running in a TEE on NEAR AI
+  Cloud. Prompts, file contents and tool calls are end-to-end encrypted to the attested model,
+  and every reply is checked against the model TEE's signature before it is used. The model
+  can only list, read and search files inside the repository; no tool runs code.
+  (`server/private-review.ts`, `server/repo-tools.ts`)
+- **Private repositories and local folders**, reviewed from your own machine, so the code
+  never passes through Airlock's server. (`server/private-cli.ts`)
+- Coming next: signed receipts you can check without a key, and verdicts recorded on NEAR.
+
+Try it (Node 24.22 or later):
+
+1. Do: `npm install && npm run models`
+   See: the NEAR AI Cloud models that run in a TEE with attestation and tool calls, with
+   context size and price. No key needed.
+2. Do: `NEARAI_API_KEY=… npm run scan:private -- take-home`
+   See: each file the model reads, any blocked attempt to run something, `verified provider_tee`
+   for every reply, then the verdict for Airlock's sample take-home task.
+   Behind a proxy that intercepts TLS, add `--no-tls-pinning` (all other checks still run).
+
 A recruiter sends you a take-home task. A GitHub repo promises a free crypto trading bot. A
 starter kit has 2,000 stars and an install script you haven't read. Running any of them hands
 a stranger your SSH keys, your `.env` files and your wallets.
