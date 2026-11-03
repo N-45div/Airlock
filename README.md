@@ -9,9 +9,9 @@
 Built for NEAR HACKATHON (Nov 1-14, 2026). Tracks: Privacy & Private AI, AI Security &
 Defense, Open Innovation. Work in progress.
 
-Airlock existed before the hackathon: everything up to the tag
-[`pre-hackathon`](https://github.com/N-45div/Airlock/tree/pre-hackathon) (commit `3047c7f`,
-Oct 16, 2026) is the baseline. Only what comes after it is hackathon work:
+Airlock existed before the hackathon: the
+[`pre-hackathon`](https://github.com/N-45div/Airlock/tree/pre-hackathon) branch (commit
+`3047c7f`, Oct 16, 2026) is the baseline. Only what comes after it is hackathon work:
 [see the diff](https://github.com/N-45div/Airlock/compare/pre-hackathon...main).
 
 What the hackathon adds:
