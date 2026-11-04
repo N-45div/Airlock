@@ -29,6 +29,9 @@ What the hackathon adds:
   no key and no network. (`server/near-client.ts`, `server/receipt.ts`,
   `server/verify-receipt.ts`, [docs/receipts.md](docs/receipts.md),
   [THREAT_MODEL.md](THREAT_MODEL.md))
+- **A benchmark with receipts.** Five repositories with known traits, reviewed by two models;
+  both gave 5/5 right verdicts, and none tried to run anything. All 10 receipts verify
+  offline. ([METRICS.md](METRICS.md), `server/bench.ts`, `bench/`)
 - Coming next: verdicts recorded on NEAR.
 
 Try it (Node 24.22 or later). Steps 1 to 3 need no key:
@@ -41,9 +44,10 @@ Try it (Node 24.22 or later). Steps 1 to 3 need no key:
 2. Do: `npm test`
    See: all tests pass, including tampered copies of that receipt (changed verdict, forged
    signature, wrong nonce, altered quote or collateral, other files) each failing its check.
-3. Do: `npm run models`
-   See: the NEAR AI Cloud models that run in a TEE with attestation and tool calls, with
-   context size and price.
+3. Do: `npm run verify:receipt -- bench/receipts/*.json`
+   See: `VERIFIED` for each of the 10 benchmark reviews in [METRICS.md](METRICS.md).
+   `npm run metrics` rebuilds METRICS.md from `bench/results.json`; `npm run models` lists the
+   NEAR AI Cloud models that run in a TEE with attestation and tool calls, with price.
 4. Do: `NEARAI_API_KEY=… npm run scan:private -- take-home --receipt receipt.json`
    See: each file the model reads, any blocked attempt to run something, `verified provider_tee`
    and the running cost for every reply, the verdict, then the receipt's hash. Then
@@ -51,10 +55,11 @@ Try it (Node 24.22 or later). Steps 1 to 3 need no key:
    Behind a proxy that intercepts TLS, add `--no-tls-pinning` (all other checks still run).
 
 Each scan has a budget, $0.05 by default (`--max-usd` to change it). When it is spent, the
-model must give its verdict on the next reply. The default model, `z-ai/glm-5.3-flash`, costs
-$0.08 per million input tokens and $0.50 per million output tokens. A review of the sample
-takes 2 or 3 replies and costs under $0.002. Encrypted requests don't use NEAR AI's prompt
-cache, so every reply pays the full input price.
+model must give its verdict on the next reply. The default model, `Qwen/Qwen3.8-27B` ($0.04
+per million input tokens, $1.35 per million output), averaged $0.0044 per review in the
+benchmark; `--model z-ai/glm-5.3-flash` has four times the context for very large
+repositories. Encrypted requests don't use NEAR AI's prompt cache, so every reply pays the
+full input price.
 
 A recruiter sends you a take-home task. A GitHub repo promises a free crypto trading bot. A
 starter kit has 2,000 stars and an install script you haven't read. Running any of them hands

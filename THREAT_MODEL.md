@@ -53,7 +53,7 @@ doesn't prove which model produced the reply.
 
 | Attack | Result |
 | --- | --- |
-| The repository tells the AI to run a setup script, fetch a URL, or call it safe | The model has three tools: list, read and search files inside the repository. Nothing can run code, write files or reach the network. Unknown tool calls are refused and shown. At worst a steered model gives a wrong verdict, which is a quality risk, measured separately (METRICS.md, in progress). |
+| The repository tells the AI to run a setup script, fetch a URL, or call it safe | The model has three tools: list, read and search files inside the repository. Nothing can run code, write files or reach the network. Unknown tool calls are refused and shown. At worst a steered model gives a wrong verdict, which is a quality risk, measured in [METRICS.md](METRICS.md). |
 | A symlink in the repository points at your SSH keys | Paths are resolved and must stay inside the repository; symlinks are never followed. |
 | A server pretends to be NEAR AI's model | Its quote won't verify, or won't contain the nonce and key, and the scan stops. |
 | Someone edits a receipt to flip the verdict | The final reply no longer decrypts to that verdict; `verify:receipt` fails. |

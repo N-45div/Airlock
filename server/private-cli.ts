@@ -28,7 +28,8 @@ import { BUDGET, reviewPrivately } from './private-review.ts';
 import { buildReceipt, receiptHash, treeHash } from './receipt.ts';
 
 const run = promisify(execFile);
-export const DEFAULT_MODEL = 'z-ai/glm-5.3-flash';
+// Picked from the benchmark (METRICS.md): same verdicts as glm-5.3-flash, cheaper per review.
+export const DEFAULT_MODEL = 'Qwen/Qwen3.8-27B';
 
 interface Args {
   target: string;

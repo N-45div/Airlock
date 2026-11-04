@@ -15,6 +15,8 @@
     "models": "node --no-warnings server/near-models.ts",
     "verify:receipt": "node --no-warnings server/verify-receipt.ts",
     "verify:offline": "node --no-warnings server/verify-receipt.ts --fixtures",
+    "bench": "node --no-warnings server/bench.ts",
+    "metrics": "node --no-warnings server/bench.ts --render",
     "test": "node --no-warnings --test \"server/test/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json"
   },

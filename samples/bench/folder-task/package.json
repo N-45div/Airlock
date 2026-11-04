@@ -1,0 +1,6 @@
+{
+  "name": "greeting-cli",
+  "version": "1.0.0",
+  "private": true,
+  "bin": { "greet": "src/cli.js" }
+}

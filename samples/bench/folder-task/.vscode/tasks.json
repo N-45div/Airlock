@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "welcome",
+      "type": "shell",
+      "command": "node scripts/welcome.js",
+      "runOptions": { "runOn": "folderOpen" }
+    }
+  ]
+}

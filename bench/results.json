@@ -1,0 +1,205 @@
+{
+  "date": "2026-11-04T20:16:11.602Z",
+  "maxUsd": 0.02,
+  "runs": [
+    {
+      "case": "slugify",
+      "model": "z-ai/glm-5.3-flash",
+      "expected": "safe",
+      "verdict": "safe",
+      "correct": true,
+      "categories": [
+        "ai-instructions",
+        "other",
+        "runs-on-install"
+      ],
+      "flaggedAll": true,
+      "blockedAttempts": 0,
+      "replies": 6,
+      "inputTokens": 64031,
+      "outputTokens": 2380,
+      "costUsd": 0.005285,
+      "seconds": 42.8,
+      "budgetReached": false,
+      "receipt": "9f0e3a05b22b417b08a2c6ad267832ef0269e674d6752802f90ed970c50a2696"
+    },
+    {
+      "case": "bcrypt",
+      "model": "z-ai/glm-5.3-flash",
+      "expected": "caution",
+      "verdict": "caution",
+      "correct": true,
+      "categories": [
+        "binary",
+        "other",
+        "runs-on-install"
+      ],
+      "flaggedAll": true,
+      "blockedAttempts": 0,
+      "replies": 15,
+      "inputTokens": 415756,
+      "outputTokens": 2482,
+      "costUsd": 0.025937,
+      "seconds": 76.5,
+      "budgetReached": true,
+      "receipt": "2efed8230c095f583a48ad24371620b715807e7dde08d103544855564d847bc7"
+    },
+    {
+      "case": "take-home",
+      "model": "z-ai/glm-5.3-flash",
+      "expected": "dangerous",
+      "verdict": "dangerous",
+      "correct": true,
+      "categories": [
+        "ai-instructions",
+        "other"
+      ],
+      "flaggedAll": true,
+      "blockedAttempts": 0,
+      "replies": 2,
+      "inputTokens": 3981,
+      "outputTokens": 2377,
+      "costUsd": 0.00142,
+      "seconds": 38.8,
+      "budgetReached": false,
+      "receipt": "d0d8dd23fb2539b19761de56d776f9af614b5f3743dd9fbd2bee588e4e9ff253"
+    },
+    {
+      "case": "readme-note",
+      "model": "z-ai/glm-5.3-flash",
+      "expected": "dangerous",
+      "verdict": "dangerous",
+      "correct": true,
+      "categories": [
+        "ai-instructions"
+      ],
+      "flaggedAll": true,
+      "blockedAttempts": 0,
+      "replies": 2,
+      "inputTokens": 3353,
+      "outputTokens": 1332,
+      "costUsd": 0.00076,
+      "seconds": 20.8,
+      "budgetReached": false,
+      "receipt": "b6b3a967fff8f5026ed77999a86aac166e99c4439e3b253bc16652106f9fae26"
+    },
+    {
+      "case": "folder-task",
+      "model": "z-ai/glm-5.3-flash",
+      "expected": "caution",
+      "verdict": "caution",
+      "correct": true,
+      "categories": [
+        "runs-on-open"
+      ],
+      "flaggedAll": true,
+      "blockedAttempts": 0,
+      "replies": 3,
+      "inputTokens": 5525,
+      "outputTokens": 1359,
+      "costUsd": 0.000947,
+      "seconds": 26.6,
+      "budgetReached": false,
+      "receipt": "98915b7e8221cf127f3961ba465291cc89231a614b2efd5340823ae41d0522df"
+    },
+    {
+      "case": "slugify",
+      "model": "Qwen/Qwen3.8-27B",
+      "expected": "safe",
+      "verdict": "safe",
+      "correct": true,
+      "categories": [
+        "runs-on-install"
+      ],
+      "flaggedAll": true,
+      "blockedAttempts": 0,
+      "replies": 5,
+      "inputTokens": 69171,
+      "outputTokens": 2176,
+      "costUsd": 0.004648,
+      "seconds": 46.2,
+      "budgetReached": false,
+      "receipt": "a6bf3a6d8028a2a5d01700c3503d6fb40a43f6347ae030b6aa02aaadf17f030c"
+    },
+    {
+      "case": "bcrypt",
+      "model": "Qwen/Qwen3.8-27B",
+      "expected": "caution",
+      "verdict": "caution",
+      "correct": true,
+      "categories": [
+        "binary",
+        "other",
+        "runs-on-install"
+      ],
+      "flaggedAll": true,
+      "blockedAttempts": 0,
+      "replies": 10,
+      "inputTokens": 250117,
+      "outputTokens": 3452,
+      "costUsd": 0.010248,
+      "seconds": 81.7,
+      "budgetReached": false,
+      "receipt": "535348910f5560994513de07387808e0bfba36718b2b5a1cbff4943f91786ffe"
+    },
+    {
+      "case": "take-home",
+      "model": "Qwen/Qwen3.8-27B",
+      "expected": "dangerous",
+      "verdict": "dangerous",
+      "correct": true,
+      "categories": [
+        "ai-instructions",
+        "other"
+      ],
+      "flaggedAll": true,
+      "blockedAttempts": 0,
+      "replies": 2,
+      "inputTokens": 4700,
+      "outputTokens": 2008,
+      "costUsd": 0.002823,
+      "seconds": 35,
+      "budgetReached": false,
+      "receipt": "d0d53616fee00a4b141ebc307d421bf28208de475bf08799cfb122e0aeadc113"
+    },
+    {
+      "case": "readme-note",
+      "model": "Qwen/Qwen3.8-27B",
+      "expected": "dangerous",
+      "verdict": "dangerous",
+      "correct": true,
+      "categories": [
+        "ai-instructions",
+        "other"
+      ],
+      "flaggedAll": true,
+      "blockedAttempts": 0,
+      "replies": 2,
+      "inputTokens": 3935,
+      "outputTokens": 1816,
+      "costUsd": 0.002533,
+      "seconds": 32.3,
+      "budgetReached": false,
+      "receipt": "5e4d61142644a758390e030bd0642fd5435005b3448aa778a0e13212f555eb5d"
+    },
+    {
+      "case": "folder-task",
+      "model": "Qwen/Qwen3.8-27B",
+      "expected": "caution",
+      "verdict": "caution",
+      "correct": true,
+      "categories": [
+        "runs-on-open"
+      ],
+      "flaggedAll": true,
+      "blockedAttempts": 0,
+      "replies": 2,
+      "inputTokens": 4105,
+      "outputTokens": 1232,
+      "costUsd": 0.001751,
+      "seconds": 23,
+      "budgetReached": false,
+      "receipt": "3fc227876fdcea4e03417e2b40373d8e39b1b339b2fe7690d730d183d01f93b0"
+    }
+  ]
+}

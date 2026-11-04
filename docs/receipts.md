@@ -36,7 +36,7 @@ gets recorded on NEAR.
   measured compose file and measurements (`attestation.deployment`), but nothing compares
   them to an allowlist. NEAR AI's SDK doesn't either, by default.
 - **That the verdict is right.** A receipt proves who produced the verdict, not that the
-  model judged well. How well it judges is measured separately (METRICS.md, in progress).
+  model judged well. How well it judges is measured in [METRICS.md](../METRICS.md).
 
 ## The one-time key
 

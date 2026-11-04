@@ -198,19 +198,31 @@ export class RecordingClient implements PrivateChatClient {
     return { id, signatureKind: 'gateway', signature, attestation: { tcbStatus: this.#gateway.tcbStatus } };
   }
 
+  /** A reply's signature can appear a few seconds after the reply: some models answer 404 at
+   * first (seen with Qwen/Qwen3.8-27B). Waits up to about 30 seconds in all. */
   async #fetchSignature(id: string): Promise<CompletionSignature> {
     for (let attempt = 0; ; attempt++) {
       try {
         return await this.#api.fetchCompletionSignature({ completionId: id, signingAlgo: 'ed25519' });
       } catch (error) {
-        const sdk = getSdkError(error);
-        const code = sdk && 'failure' in sdk ? sdk.failure.code : undefined;
-        const retryable = !!sdk && 'retryable' in sdk && sdk.retryable;
-        if (attempt >= 5 || !(retryable || code === 'api.completion_signature_unavailable')) throw error;
-        await sleep(500 * 2 ** attempt);
+        if (attempt >= 6 || !signatureMayStillCome(error)) throw error;
+        await sleep(Math.min(500 * 2 ** attempt, 8000));
       }
     }
   }
+}
+
+/** True for signature lookups worth retrying: retryable errors, "not available yet", and 404. */
+export function signatureMayStillCome(error: unknown): boolean {
+  // The SDK's browser and Node bundles each have their own ApiError class, so look at the
+  // error's shape along the cause chain rather than trusting instanceof.
+  for (let e: unknown = getSdkError(error) ?? error, depth = 0; e && depth < 5; e = (e as { cause?: unknown }).cause, depth++) {
+    const failure = (e as { failure?: { code?: string; details?: { status?: number } } }).failure;
+    if (!failure?.code) continue;
+    if ((e as { retryable?: boolean }).retryable || failure.code === 'api.completion_signature_unavailable') return true;
+    return failure.code === 'api.http_status' && failure.details?.status === 404;
+  }
+  return false;
 }
 
 /** Uint8Arrays to hex and bigints to strings, so evidence survives JSON. */
