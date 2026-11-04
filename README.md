@@ -23,22 +23,38 @@ What the hackathon adds:
   (`server/private-review.ts`, `server/repo-tools.ts`)
 - **Private repositories and local folders**, reviewed from your own machine, so the code
   never passes through Airlock's server. (`server/private-cli.ts`)
-- Coming next: signed receipts you can check without a key, and verdicts recorded on NEAR.
+- **Receipts anyone can check offline.** Each private review can write a receipt: the model's
+  Intel TDX quote with the Intel collateral it verifies against, every reply's TEE signature,
+  and the final encrypted reply with its one-time key. `npm run verify:receipt` checks it with
+  no key and no network. (`server/near-client.ts`, `server/receipt.ts`,
+  `server/verify-receipt.ts`, [docs/receipts.md](docs/receipts.md),
+  [THREAT_MODEL.md](THREAT_MODEL.md))
+- Coming next: verdicts recorded on NEAR.
 
-Try it (Node 24.22 or later):
+Try it (Node 24.22 or later). Steps 1 to 3 need no key:
 
-1. Do: `npm install && npm run models`
+1. Do: `npm install && npm run verify:offline`
+   See: `fixtures/receipts/take-home.json`, a receipt from a live review of the sample
+   take-home task, with six checks marked `PASS` and then `VERIFIED`: the Intel TDX quote,
+   the key and nonce inside it, 3 reply signatures, the decrypted verdict (`"dangerous"`, 4
+   findings), and the sample's 5 files.
+2. Do: `npm test`
+   See: all tests pass, including tampered copies of that receipt (changed verdict, forged
+   signature, wrong nonce, altered quote or collateral, other files) each failing its check.
+3. Do: `npm run models`
    See: the NEAR AI Cloud models that run in a TEE with attestation and tool calls, with
-   context size and price. No key needed.
-2. Do: `NEARAI_API_KEY=… npm run scan:private -- take-home`
+   context size and price.
+4. Do: `NEARAI_API_KEY=… npm run scan:private -- take-home --receipt receipt.json`
    See: each file the model reads, any blocked attempt to run something, `verified provider_tee`
-   and the running cost for every reply, then the verdict for Airlock's sample take-home task.
+   and the running cost for every reply, the verdict, then the receipt's hash. Then
+   `npm run verify:receipt -- receipt.json --repo-dir samples/take-home` shows `VERIFIED`.
    Behind a proxy that intercepts TLS, add `--no-tls-pinning` (all other checks still run).
 
 Each scan has a budget, $0.05 by default (`--max-usd` to change it). When it is spent, the
 model must give its verdict on the next reply. The default model, `z-ai/glm-5.3-flash`, costs
-$0.08 per million input tokens, $0.012 when cached, and $0.50 per million output tokens; the
-conversation only grows at the end, so most input after the first reply comes from the cache.
+$0.08 per million input tokens and $0.50 per million output tokens. A review of the sample
+takes 2 or 3 replies and costs under $0.002. Encrypted requests don't use NEAR AI's prompt
+cache, so every reply pays the full input price.
 
 A recruiter sends you a take-home task. A GitHub repo promises a free crypto trading bot. A
 starter kit has 2,000 stars and an install script you haven't read. Running any of them hands

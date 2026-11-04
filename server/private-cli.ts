@@ -2,28 +2,30 @@
 //   npm run scan:private -- take-home                       Airlock's sample take-home task
 //   npm run scan:private -- https://github.com/owner/name   a public GitHub repository
 //   npm run scan:private -- ./path/to/folder                a folder on this machine (read in place)
-// Options: --model <id>   --max-usd <dollars, default 0.05>   --out <file.json>
-//          --allow-gateway-signature   --no-tls-pinning
+// Options: --model <id>   --max-usd <dollars, default 0.05>   --receipt <file.json>
+//          --out <file.json>   --allow-gateway-signature   --no-tls-pinning
 // Needs NEARAI_API_KEY (cloud.near.ai).
 //
 // --no-tls-pinning is for networks that intercept TLS (corporate or sandbox proxies). The
 // Node client normally checks that the TLS certificate it sees is the one the Gateway's
 // attestation names; behind such a proxy it sees the proxy's certificate and stops. With the
 // flag, attestation, encryption and signature checks all still run; only that pin is skipped.
+//
+// --receipt writes evidence anyone can check offline with npm run verify:receipt (docs/receipts.md).
 
 import { execFile } from 'node:child_process';
 import { mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { InferenceClient as UnpinnedClient } from '@nearai/inference-sdk';
-import { InferenceClient } from '@nearai/inference-sdk/node';
 import { fetchRepo, fetchSample, parseRepoUrl } from './fetch-repo.ts';
 import { takeInventory } from './inventory.ts';
 import { SAMPLES, sampleRepo } from './samples.ts';
 import type { RepoInfo } from './types.ts';
+import { RecordingClient } from './near-client.ts';
 import { listPrivateModels } from './near-models.ts';
-import { BUDGET, type PrivateChatClient, reviewPrivately } from './private-review.ts';
+import { BUDGET, reviewPrivately } from './private-review.ts';
+import { buildReceipt, receiptHash, treeHash } from './receipt.ts';
 
 const run = promisify(execFile);
 export const DEFAULT_MODEL = 'z-ai/glm-5.3-flash';
@@ -32,6 +34,7 @@ interface Args {
   target: string;
   model: string;
   out?: string;
+  receipt?: string;
   allowGateway: boolean;
   tlsPinning: boolean;
   maxUsd: number;
@@ -50,6 +53,7 @@ function parseArgs(argv: string[]): Args {
     const a = rest.shift()!;
     if (a === '--model') args.model = rest.shift() ?? args.model;
     else if (a === '--out') args.out = rest.shift();
+    else if (a === '--receipt') args.receipt = rest.shift();
     else if (a === '--allow-gateway-signature') args.allowGateway = true;
     else if (a === '--no-tls-pinning') args.tlsPinning = false;
     else if (a === '--max-usd') args.maxUsd = Number(rest.shift());
@@ -80,7 +84,7 @@ async function locate(target: string, work: string): Promise<{ dir: string; repo
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   if (!args.target) {
-    console.error('usage: npm run scan:private -- <github url | sample id | folder> [--model <id>] [--out <file.json>]');
+    console.error('usage: npm run scan:private -- <github url | sample id | folder> [--model <id>] [--max-usd <dollars>] [--receipt <file.json>]');
     process.exit(2);
   }
   const apiKey = process.env.NEARAI_API_KEY;
@@ -103,14 +107,16 @@ async function main(): Promise<void> {
   try {
     const { dir, repo } = await locate(args.target, work);
     const inventory = await takeInventory(dir);
+    const tree = await treeHash(dir);
     console.log(`${repo.url} @ ${repo.commit}: ${inventory.files.length} files, ${inventory.findings.length} static findings`);
     console.log(`model ${chosen.id}, end-to-end encrypted, every reply checked against its TEE signature`);
     console.log(`budget $${args.maxUsd.toFixed(2)} for this scan ($${chosen.inputPerMillion}/M input, $${chosen.cachedInputPerMillion}/M cached input, $${chosen.outputPerMillion}/M output)`);
     if (!args.tlsPinning) console.log('TLS pinning to the attested Gateway is off (--no-tls-pinning); all other checks run');
     console.log('');
 
-    const Client = args.tlsPinning ? InferenceClient : UnpinnedClient;
-    const client = new Client({ apiKey, e2ee: true }) as unknown as PrivateChatClient;
+    const client = await RecordingClient.connect({ apiKey, model: chosen.id, tlsPinning: args.tlsPinning });
+    const att = client.attestation;
+    console.log(`  attested ${att.model}: Intel TDX ${att.tcbStatus}, GPU evidence ${att.gpuEvidence}, key ${att.signer.slice(0, 16)}…`);
     const result = await reviewPrivately({
       dir,
       repo,
@@ -137,6 +143,11 @@ async function main(): Promise<void> {
     console.log(
       `${result.usage.inputTokens} input tokens (${result.usage.cachedInputTokens} from cache), ${result.usage.outputTokens} output, about $${result.costUsd.toFixed(4)}${result.budgetReached ? ' (budget reached: the verdict came early)' : ''}`,
     );
+    if (args.receipt) {
+      const receipt = buildReceipt({ repo, tree, result, attestation: client.attestation, exchanges: client.exchanges });
+      await writeFile(args.receipt, `${JSON.stringify(receipt, null, 2)}\n`);
+      console.log(`receipt ${receiptHash(receipt)} written to ${args.receipt}; check it with npm run verify:receipt -- ${args.receipt}`);
+    }
     if (args.out) {
       await writeFile(args.out, `${JSON.stringify({ repo, model: chosen.id, inventory: inventory.findings, ...result }, null, 2)}\n`);
       console.log(`wrote ${args.out}`);

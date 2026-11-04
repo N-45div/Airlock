@@ -115,6 +115,9 @@ export interface PrivateReviewResult {
   costUsd: number;
   /** True when the budget ran out and the model was told to give its verdict early. */
   budgetReached: boolean;
+  /** The submit_verdict arguments exactly as the model sent them, and the reply that carried them. */
+  verdictArguments: string;
+  verdictCompletionId: string;
 }
 
 export class VerificationFailed extends Error {}
@@ -216,7 +219,15 @@ export async function reviewPrivately(opts: PrivateReviewOptions): Promise<Priva
   let nudges = 0;
   let budgetReached = false;
   const emit = (e: Omit<ToolEvent, 'id' | 'at'>) => hooks.onTool?.({ ...e, id: `n${++events}`, at: new Date().toISOString() });
-  const done = (parsed: NonNullable<ReturnType<typeof parseVerdict>>): PrivateReviewResult => ({ ...parsed, turns, usage, costUsd: cost(usage, opts.prices), budgetReached });
+  const done = (parsed: NonNullable<ReturnType<typeof parseVerdict>>, args: string, completionId: string): PrivateReviewResult => ({
+    ...parsed,
+    turns,
+    usage,
+    costUsd: cost(usage, opts.prices),
+    budgetReached,
+    verdictArguments: args,
+    verdictCompletionId: completionId,
+  });
 
   // The conversation only ever grows at the end, so each request repeats the previous one as
   // its prefix and most input tokens come from the prompt cache at a fraction of the price.
@@ -245,7 +256,7 @@ export async function reviewPrivately(opts: PrivateReviewOptions): Promise<Priva
       // No budget for further reading: take the verdict if this reply has one.
       const verdictCall = completion.choices[0]?.message.tool_calls?.find((c) => c.function.name === 'submit_verdict');
       const parsed = verdictCall ? parseVerdict(verdictCall.function.arguments) : null;
-      if (parsed) return done(parsed);
+      if (parsed && verdictCall) return done(parsed, verdictCall.function.arguments, completion.id);
     }
     if (budgetReached) {
       // That was the forced verdict turn; there is no budget left for another.
@@ -273,7 +284,7 @@ export async function reviewPrivately(opts: PrivateReviewOptions): Promise<Priva
       const name = call.function.name;
       if (name === 'submit_verdict') {
         const parsed = parseVerdict(call.function.arguments);
-        if (parsed) return done(parsed);
+        if (parsed) return done(parsed, call.function.arguments, completion.id);
         messages.push({ role: 'tool', tool_call_id: call.id, content: 'Error: the verdict did not match the schema. Call submit_verdict again with verdict, headline, summary and findings.' });
         continue;
       }
@@ -319,7 +330,7 @@ async function verify(client: PrivateChatClient, completion: ChatCompletion, all
   return proof;
 }
 
-export function parseVerdict(raw: string): Omit<PrivateReviewResult, 'turns' | 'usage' | 'costUsd' | 'budgetReached'> | null {
+export function parseVerdict(raw: string): Omit<PrivateReviewResult, 'turns' | 'usage' | 'costUsd' | 'budgetReached' | 'verdictArguments' | 'verdictCompletionId'> | null {
   let value: unknown;
   try {
     value = JSON.parse(raw);
