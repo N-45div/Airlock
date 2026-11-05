@@ -4,10 +4,16 @@
 
 **Try it: [airlock-check.vercel.app](https://airlock-check.vercel.app)** · Chrome extension: [Chrome Web Store](https://chromewebstore.google.com/detail/bmhbejjhiimlcmpkpeglogijodbhmpgd) · How the fence uses ArmorIQ: [docs/armoriq.md](docs/armoriq.md)
 
-## NEAR HACKATHON: private reviews on NEAR AI Cloud
+## NEAR HACKATHON: private reviews on NEAR AI Cloud, verdicts on NEAR
 
 Built for NEAR HACKATHON (Nov 1-14, 2026). Tracks: Privacy & Private AI, AI Security &
 Defense, Open Innovation. Work in progress.
+
+Airlock checks a stranger's repository before you, or your AI coding agent, runs it. For this
+hackathon the review runs on a model inside a TEE on NEAR AI Cloud that reads the code
+end-to-end encrypted and can't run anything, and the verdict comes with proof: a receipt anyone
+can check offline, and a record on NEAR that the contract accepts only with the model's
+signature.
 
 Airlock existed before the hackathon: the
 [`pre-hackathon`](https://github.com/N-45div/Airlock/tree/pre-hackathon) branch (commit
@@ -29,30 +35,49 @@ What the hackathon adds:
   no key and no network. (`server/near-client.ts`, `server/receipt.ts`,
   `server/verify-receipt.ts`, [docs/receipts.md](docs/receipts.md),
   [THREAT_MODEL.md](THREAT_MODEL.md))
+- **Verdicts on NEAR, checked by the contract.**
+  [`airlock-verdicts.testnet`](https://testnet.nearblocks.io/address/airlock-verdicts.testnet)
+  stores a verdict only if the NEAR AI model's Ed25519 signature over that exchange verifies
+  on chain, from a model key whose Intel TDX attestation was checked before it was registered,
+  sent by an allowed recorder whose key can only call `record_verdict`. Reading is free and
+  needs no key. ([docs/registry.md](docs/registry.md), `contracts/verdict-registry`,
+  `server/registry.ts`)
 - **A benchmark with receipts.** Five repositories with known traits, reviewed by two models;
   both gave 5/5 right verdicts, and none tried to run anything. All 10 receipts verify
   offline. ([METRICS.md](METRICS.md), `server/bench.ts`, `bench/`)
-- Coming next: verdicts recorded on NEAR.
 
-Try it (Node 24.22 or later). Steps 1 to 3 need no key:
+Not shown yet: the Chrome extension and the hosted site reading verdicts from NEAR, a hook
+that makes coding agents check a repository before cloning or installing it, a GitHub Action,
+checking Intel quotes inside the contract, and a larger benchmark.
 
-1. Do: `npm install && npm run verify:offline`
-   See: `fixtures/receipts/take-home.json`, a receipt from a live review of the sample
-   take-home task, with six checks marked `PASS` and then `VERIFIED`: the Intel TDX quote,
-   the key and nonce inside it, 3 reply signatures, the decrypted verdict (`"dangerous"`, 4
-   findings), and the sample's 5 files.
-2. Do: `npm test`
-   See: all tests pass, including tampered copies of that receipt (changed verdict, forged
-   signature, wrong nonce, altered quote or collateral, other files) each failing its check.
-3. Do: `npm run verify:receipt -- bench/receipts/*.json`
-   See: `VERIFIED` for each of the 10 benchmark reviews in [METRICS.md](METRICS.md).
-   `npm run metrics` rebuilds METRICS.md from `bench/results.json`; `npm run models` lists the
-   NEAR AI Cloud models that run in a TEE with attestation and tool calls, with price.
+Try it (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
+
+1. Do: `npm ci && npm run judge`
+   See: `receipts 11/11 verified offline` (the Intel TDX quote, the key and nonce inside it,
+   every reply signature, the decrypted verdict, and the sample files), `tests … passed`
+   (including tampered receipts that must fail, and the fixture hygiene check), then `PASS`.
+   No key, and no network.
+2. Do: `npm run registry -- check fixtures/receipts/take-home.json`
+   See: `ON CHAIN: #0 DANGEROUS sample:take-home …` with that receipt's hash: the testnet
+   contract stored this verdict after verifying the model's reply signature. A public RPC read;
+   no key. `npm run registry -- recent` lists every verdict.
+3. Do: `npm run verify:receipt -- fixtures/receipts/take-home.json`
+   See: each check marked `PASS`, then `VERIFIED`, for a receipt from a live review of the
+   sample take-home task: `"dangerous"`, 4 findings.
 4. Do: `NEARAI_API_KEY=… npm run scan:private -- take-home --receipt receipt.json`
    See: each file the model reads, any blocked attempt to run something, `verified provider_tee`
-   and the running cost for every reply, the verdict, then the receipt's hash. Then
-   `npm run verify:receipt -- receipt.json --repo-dir samples/take-home` shows `VERIFIED`.
-   Behind a proxy that intercepts TLS, add `--no-tls-pinning` (all other checks still run).
+   and the running cost for every reply, the verdict, then the receipt's hash; then
+   `npm run verify:receipt -- receipt.json` shows `VERIFIED`. Add `--record` with a recorder key
+   to put it on NEAR (docs/registry.md). Behind a proxy that intercepts TLS, add
+   `--no-tls-pinning` (all other checks still run).
+5. Do: `npm run test:contract` (needs Rust; `rust-toolchain.toml` pins 1.93)
+   See: 11 contract tests pass, including a real NEAR AI signature accepted and a forged one,
+   a swapped response hash, an unregistered key and a stranger refused.
+
+Test fixtures: two samples contain text written to steer AI reviewers, which is what Airlock
+detects. They are kept packed (`samples/packed/`) and unpacked only into a temporary folder
+for scans, tests and the benchmark, so no readable file here addresses an AI agent, and a test
+keeps it that way. Details: [THREAT_MODEL.md](THREAT_MODEL.md#test-fixtures).
 
 Each scan has a budget, $0.05 by default (`--max-usd` to change it). When it is spent, the
 model must give its verdict on the next reply. The default model, `Qwen/Qwen3.8-27B` ($0.04

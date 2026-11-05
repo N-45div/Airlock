@@ -8,7 +8,7 @@ import path from 'node:path';
 import { FetchError, fetchRepo, fetchSample, parseRepoUrl } from './fetch-repo.ts';
 import { takeInventory } from './inventory.ts';
 import { review } from './review.ts';
-import { SAMPLES, sampleRepo } from './samples.ts';
+import { SAMPLES, sampleRepo, sampleSource } from './samples.ts';
 import type { Approval, Finding, RepoInfo, Scan, ScanEvent, ScanStatus, ToolEvent } from './types.ts';
 
 export const LIMITS = {
@@ -194,7 +194,8 @@ export class Scanner {
       await mkdir(work, { recursive: true });
       this.status(live, 'fetching');
       const sample = SAMPLES.find((s) => s.url === scan.repo.url);
-      scan.repo = sample?.dir ? await fetchSample(scan.repo, sample.dir, dir) : await fetchRepo(scan.repo, dir);
+      const source = await sampleSource(sample);
+      scan.repo = source ? await fetchSample(scan.repo, source, dir) : await fetchRepo(scan.repo, dir);
       this.emit(live, { type: 'scan', scan });
 
       this.status(live, 'prescanning');

@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fetchRepo, fetchSample, parseRepoUrl } from './fetch-repo.ts';
 import { takeInventory } from './inventory.ts';
 import { review } from './review.ts';
-import { SAMPLES, sampleRepo } from './samples.ts';
+import { SAMPLES, sampleRepo, sampleSource } from './samples.ts';
 
 const input = process.argv[2];
 if (!input) {
@@ -20,8 +20,9 @@ const sample = SAMPLES.find((s) => s.id === input);
 const work = await mkdtemp(path.join(os.tmpdir(), 'airlock-cli-'));
 const dir = path.join(work, 'repo');
 try {
-  const repo = sample?.dir
-    ? await fetchSample(sampleRepo(sample), sample.dir, dir)
+  const source = await sampleSource(sample);
+  const repo = source && sample
+    ? await fetchSample(sampleRepo(sample), source, dir)
     : await fetchRepo(sample ? sampleRepo(sample) : parseRepoUrl(input), dir);
   const inventory = await takeInventory(dir);
   console.log(`${repo.url} @ ${repo.commit}: ${repo.files} files, ${inventory.findings.length} static findings`);

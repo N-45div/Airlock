@@ -17,7 +17,8 @@ import { fileURLToPath } from 'node:url';
 import * as dcap from '@phala/dcap-qvl';
 import { prepareE2eeChatRequest } from '@nearai/inference-sdk';
 import { withSeedReplay } from './nacl-rng.ts';
-import { RECEIPT_SCHEMA, type Receipt, canonicalJson, receiptHash, sha256Hex, treeHash } from './receipt.ts';
+import { RECEIPT_SCHEMA, type Receipt, canonicalJson, receiptHash, sha256Hex, treeHash, verdictDigest } from './receipt.ts';
+import { packedSampleDir, packedSampleIds } from './sample-pack.ts';
 
 export interface Check {
   name: string;
@@ -30,7 +31,11 @@ export const ACCEPTED_TCB = ['UpToDate'];
 
 const ED25519_SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
 
+/** The verdict decrypted by the last verifyReceipt call, for callers that show the findings. */
+export let lastDecrypted: unknown;
+
 export async function verifyReceipt(receipt: Receipt, opts: { repoDir?: string } = {}): Promise<Check[]> {
+  lastDecrypted = undefined;
   const checks: Check[] = [];
   const add = (name: string, ok: boolean, detail: string) => checks.push({ name, ok, detail });
   const attempt = async (name: string, fn: () => Promise<string> | string) => {
@@ -96,16 +101,19 @@ export async function verifyReceipt(receipt: Receipt, opts: { repoDir?: string }
     const plain = await decryptFinal(receipt);
     const call = plain.choices?.[0]?.message?.tool_calls?.find((c) => c.function?.name === 'submit_verdict');
     if (!call) throw new Error('the decrypted reply has no submit_verdict call');
-    if (canonicalJson(JSON.parse(call.function.arguments)) !== canonicalJson(receipt.verdict)) throw new Error('the decrypted verdict differs from the receipt');
-    const v = receipt.verdict as { verdict?: string; findings?: unknown[] };
-    return `decrypted with the disclosed one-time key: "${v.verdict}", ${v.findings?.length ?? 0} findings`;
+    const args = JSON.parse(call.function.arguments) as unknown;
+    if (canonicalJson(verdictDigest(args)) !== canonicalJson(receipt.verdict)) throw new Error('the decrypted verdict differs from the receipt');
+    lastDecrypted = args;
+    return `decrypted with the disclosed one-time key: "${receipt.verdict.verdict}", ${receipt.verdict.findings} findings, hash matches`;
   });
 
   if (opts.repoDir) {
     await attempt('repository files', async () => {
       const tree = await treeHash(opts.repoDir!);
       if (tree.sha256 !== receipt.repo.tree.sha256) throw new Error(`${opts.repoDir} hashes to ${tree.sha256.slice(0, 16)}…, the receipt names ${receipt.repo.tree.sha256.slice(0, 16)}…`);
-      return `${tree.files} files in ${path.relative(process.cwd(), opts.repoDir!) || '.'} match the reviewed tree`;
+      const rel = path.relative(process.cwd(), opts.repoDir!) || '.';
+      const where = opts.repoDir!.includes(`${path.sep}airlock-samples${path.sep}`) ? `the packed sample ${receipt.repo.id.replace(/^sample:/, '')}` : rel;
+      return `${tree.files} files in ${where} match the reviewed tree`;
     });
   }
   return checks;
@@ -145,8 +153,11 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const FIXTURES = path.join(here, '..', 'fixtures', 'receipts');
 
 /** For a sample receipt, the sample folder it was made from. */
-export function sampleDir(receipt: Receipt): string | undefined {
-  return receipt.repo.id.startsWith('sample:') ? path.join(here, '..', 'samples', receipt.repo.id.slice('sample:'.length)) : undefined;
+export async function sampleDir(receipt: Receipt): Promise<string | undefined> {
+  if (!receipt.repo.id.startsWith('sample:')) return undefined;
+  const id = receipt.repo.id.slice('sample:'.length);
+  if ((await packedSampleIds()).includes(id)) return packedSampleDir(id);
+  return path.join(here, '..', 'samples', 'bench', id);
 }
 
 if (import.meta.main) {
@@ -168,7 +179,7 @@ if (import.meta.main) {
   let all = true;
   for (const file of files) {
     const receipt = JSON.parse(await readFile(file, 'utf8')) as Receipt;
-    const dir = repoDir ?? (offline ? sampleDir(receipt) : undefined);
+    const dir = repoDir ?? (await sampleDir(receipt));
     all = printChecks(path.relative(process.cwd(), file) || file, receipt, await verifyReceipt(receipt, dir ? { repoDir: dir } : {})) && all;
   }
   process.exit(all ? 0 : 1);

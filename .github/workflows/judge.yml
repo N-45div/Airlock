@@ -1,0 +1,31 @@
+name: judge
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  judge:
+    name: npm run judge (no key, no network calls)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm run judge
+
+  contract:
+    name: verdict registry contract tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts/verdict-registry
+    steps:
+      - uses: actions/checkout@v4
+      # rust-toolchain.toml in that folder pins Rust 1.93.0; rustup installs it on first use.
+      - run: cargo test

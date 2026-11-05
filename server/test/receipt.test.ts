@@ -36,7 +36,7 @@ const flipHex = (hex: string, at: number) => hex.slice(0, at) + (hex[at] === '0'
 
 describe('verifyReceipt on the recorded take-home receipt', () => {
   it('passes every check offline, including the sample files', async () => {
-    const checks = await verifyReceipt(fixture, { repoDir: sampleDir(fixture)! });
+    const checks = await verifyReceipt(fixture, { repoDir: (await sampleDir(fixture))! });
     assert.deepEqual(failed(checks), [], JSON.stringify(checks, null, 2));
     assert.equal(checks.length, 6);
   });

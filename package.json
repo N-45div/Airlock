@@ -17,6 +17,9 @@
     "verify:offline": "node --no-warnings server/verify-receipt.ts --fixtures",
     "bench": "node --no-warnings server/bench.ts",
     "metrics": "node --no-warnings server/bench.ts --render",
+    "judge": "node --no-warnings server/judge.ts",
+    "registry": "node --no-warnings server/registry.ts",
+    "test:contract": "cd contracts/verdict-registry && cargo test",
     "test": "node --no-warnings --test \"server/test/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json"
   },
@@ -26,6 +29,7 @@
     "@nearai/inference-sdk": "0.2.1",
     "@phala/dcap-qvl": "0.7.0",
     "hono": "^4.13.13",
+    "near-api-js": "7.4.0",
     "tweetnacl": "1.0.3",
     "zod": "^4.6.7"
   },

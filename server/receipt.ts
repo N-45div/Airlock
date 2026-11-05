@@ -9,7 +9,7 @@ import type { PrivateReviewResult } from './private-review.ts';
 import { RepoTools } from './repo-tools.ts';
 import type { RepoInfo } from './types.ts';
 
-export const RECEIPT_SCHEMA = 'airlock.receipt.v1';
+export const RECEIPT_SCHEMA = 'airlock.receipt.v2';
 
 export interface ReceiptTurn {
   completionId: string;
@@ -38,8 +38,11 @@ export interface Receipt {
     /** SHA-256 of a manifest of every file the reviewer could read. */
     tree: { files: number; sha256: string };
   };
-  /** The submit_verdict arguments, as the model sent them in the final signed reply. */
-  verdict: unknown;
+  /** The verdict label in the clear, and a hash of the model's exact submit_verdict arguments.
+   * The findings themselves are only in the encrypted final reply: checking the receipt
+   * decrypts it, compares, and shows them. So a receipt never carries repository text in the
+   * clear (some samples quote text written to steer AI reviewers). */
+  verdict: { verdict: string; findings: number; sha256: string };
   attestation: AttestationRecord;
   turns: ReceiptTurn[];
   /** The final reply exactly as received, encrypted, with the seed of its one-time key. */
@@ -49,6 +52,16 @@ export interface Receipt {
 }
 
 export const sha256Hex = (data: Uint8Array | string) => createHash('sha256').update(data).digest('hex');
+
+/** What a receipt keeps of the model's verdict: its label, findings count and a hash of the whole. */
+export function verdictDigest(args: unknown): Receipt['verdict'] {
+  const v = (args ?? {}) as { verdict?: unknown; findings?: unknown };
+  return {
+    verdict: String(v.verdict ?? ''),
+    findings: Array.isArray(v.findings) ? v.findings.length : 0,
+    sha256: sha256Hex(canonicalJson(args)),
+  };
+}
 
 /** JSON with object keys sorted at every level and no extra whitespace, so a hash is stable. */
 export function canonicalJson(value: unknown): string {
@@ -123,7 +136,7 @@ export function buildReceipt(input: {
     engine: 'near-ai-tee',
     model: attestation.model,
     repo: { ...repoIdentity(input.repo), ...(commit ? { commit } : {}), tree: input.tree },
-    verdict: JSON.parse(result.verdictArguments) as unknown,
+    verdict: verdictDigest(JSON.parse(result.verdictArguments) as unknown),
     attestation,
     turns,
     final: { completionId: final.completionId, responseBody: final.responseBody, clientSeed: final.clientSeed },

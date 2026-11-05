@@ -3,7 +3,7 @@
 //   npm run scan:private -- https://github.com/owner/name   a public GitHub repository
 //   npm run scan:private -- ./path/to/folder                a folder on this machine (read in place)
 // Options: --model <id>   --max-usd <dollars, default 0.05>   --receipt <file.json>
-//          --out <file.json>   --allow-gateway-signature   --no-tls-pinning
+//          --record   --out <file.json>   --allow-gateway-signature   --no-tls-pinning
 // Needs NEARAI_API_KEY (cloud.near.ai).
 //
 // --no-tls-pinning is for networks that intercept TLS (corporate or sandbox proxies). The
@@ -12,6 +12,8 @@
 // flag, attestation, encryption and signature checks all still run; only that pin is skipped.
 //
 // --receipt writes evidence anyone can check offline with npm run verify:receipt (docs/receipts.md).
+// --record also records the verdict on Airlock's NEAR testnet registry (docs/registry.md), with
+// the recorder key in NEAR_KEY_FILE; the contract verifies the model's signature before storing it.
 
 import { execFile } from 'node:child_process';
 import { mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
@@ -20,12 +22,13 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { fetchRepo, fetchSample, parseRepoUrl } from './fetch-repo.ts';
 import { takeInventory } from './inventory.ts';
-import { SAMPLES, sampleRepo } from './samples.ts';
+import { SAMPLES, sampleRepo, sampleSource } from './samples.ts';
 import type { RepoInfo } from './types.ts';
 import { RecordingClient } from './near-client.ts';
 import { listPrivateModels } from './near-models.ts';
 import { BUDGET, reviewPrivately } from './private-review.ts';
 import { buildReceipt, receiptHash, treeHash } from './receipt.ts';
+import { EXPLORER, REGISTRY, recordReceipt } from './registry.ts';
 
 const run = promisify(execFile);
 // Picked from the benchmark (METRICS.md): same verdicts as glm-5.3-flash, cheaper per review.
@@ -36,6 +39,7 @@ interface Args {
   model: string;
   out?: string;
   receipt?: string;
+  record: boolean;
   allowGateway: boolean;
   tlsPinning: boolean;
   maxUsd: number;
@@ -46,6 +50,7 @@ function parseArgs(argv: string[]): Args {
   const args: Args = {
     target: '',
     model: process.env.AIRLOCK_NEAR_MODEL || DEFAULT_MODEL,
+    record: false,
     allowGateway: false,
     tlsPinning: process.env.AIRLOCK_NEAR_TLS_PINNING !== '0',
     maxUsd: Number(process.env.AIRLOCK_NEAR_MAX_USD ?? BUDGET.maxUsd),
@@ -55,6 +60,7 @@ function parseArgs(argv: string[]): Args {
     if (a === '--model') args.model = rest.shift() ?? args.model;
     else if (a === '--out') args.out = rest.shift();
     else if (a === '--receipt') args.receipt = rest.shift();
+    else if (a === '--record') args.record = true;
     else if (a === '--allow-gateway-signature') args.allowGateway = true;
     else if (a === '--no-tls-pinning') args.tlsPinning = false;
     else if (a === '--max-usd') args.maxUsd = Number(rest.shift());
@@ -66,9 +72,10 @@ function parseArgs(argv: string[]): Args {
 /** Gets the target onto disk (or points at it in place) and says what it is. */
 async function locate(target: string, work: string): Promise<{ dir: string; repo: RepoInfo }> {
   const sample = SAMPLES.find((s) => s.id === target);
-  if (sample?.dir) {
+  const source = await sampleSource(sample);
+  if (sample && source) {
     const dir = path.join(work, 'repo');
-    return { dir, repo: await fetchSample(sampleRepo(sample), sample.dir, dir) };
+    return { dir, repo: await fetchSample(sampleRepo(sample), source, dir) };
   }
   if (sample) target = sample.url;
   const local = await stat(target).catch(() => null);
@@ -85,7 +92,7 @@ async function locate(target: string, work: string): Promise<{ dir: string; repo
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   if (!args.target) {
-    console.error('usage: npm run scan:private -- <github url | sample id | folder> [--model <id>] [--max-usd <dollars>] [--receipt <file.json>]');
+    console.error('usage: npm run scan:private -- <github url | sample id | folder> [--model <id>] [--max-usd <dollars>] [--receipt <file.json>] [--record]');
     process.exit(2);
   }
   const apiKey = process.env.NEARAI_API_KEY;
@@ -144,10 +151,25 @@ async function main(): Promise<void> {
     console.log(
       `${result.usage.inputTokens} input tokens (${result.usage.cachedInputTokens} from cache), ${result.usage.outputTokens} output, about $${result.costUsd.toFixed(4)}${result.budgetReached ? ' (budget reached: the verdict came early)' : ''}`,
     );
-    if (args.receipt) {
+    if (args.receipt || args.record) {
       const receipt = buildReceipt({ repo, tree, result, attestation: client.attestation, exchanges: client.exchanges });
-      await writeFile(args.receipt, `${JSON.stringify(receipt, null, 2)}\n`);
-      console.log(`receipt ${receiptHash(receipt)} written to ${args.receipt}; check it with npm run verify:receipt -- ${args.receipt}`);
+      if (args.receipt) {
+        await writeFile(args.receipt, `${JSON.stringify(receipt, null, 2)}\n`);
+        console.log(`receipt ${receiptHash(receipt)} written to ${args.receipt}; check it with npm run verify:receipt -- ${args.receipt}`);
+      }
+      if (args.record) {
+        try {
+          const tx = await recordReceipt(receipt);
+          console.log(`recorded on ${REGISTRY}: ${EXPLORER}/txns/${tx}`);
+        } catch (error) {
+          const message = (error as Error).message;
+          console.error(`not recorded: ${message}`);
+          if (message.includes('not a registered model key')) {
+            console.error(`The registry's owner trusts a model key after checking its attestation: npm run registry -- register-key ${args.receipt ?? '<receipt.json>'}`);
+          }
+          process.exitCode = 1;
+        }
+      }
     }
     if (args.out) {
       await writeFile(args.out, `${JSON.stringify({ repo, model: chosen.id, inventory: inventory.findings, ...result }, null, 2)}\n`);
