@@ -45,15 +45,27 @@ What the hackathon adds:
 - **A benchmark with receipts.** Five repositories with known traits, reviewed by two models;
   both gave 5/5 right verdicts, and none tried to run anything. All 10 receipts verify
   offline. ([METRICS.md](METRICS.md), `server/bench.ts`, `bench/`)
+- **The web app runs reviews on NEAR AI Cloud.** With `NEARAI_API_KEY` set, hosted scans use the
+  same engine: each report gets a "Verified review" panel (attestation, signed replies, the
+  receipt to download, the NEAR transaction), and the verdict is recorded on NEAR when a recorder
+  key is configured. A new `/near` page lists every verdict, read in the browser straight from
+  NEAR RPC. The hosted site still fetches the repository, so it is not private; the command line
+  is. (`server/near-engine.ts`, `web/src/near/`, `web/src/report/Proof.tsx`)
+- **The Chrome extension shows verdicts from NEAR.** On a GitHub repository with a verdict on
+  chain, the button reads "Looks safe · on NEAR" (or "Be careful", "Don't run it"), and the popup
+  shows the model, date and findings with links to the verdict and the contract. It reads the
+  registry over public RPC, with no key or wallet. ([extension/README.md](extension/README.md),
+  `extension/lib/near.js`)
 
-Not shown yet: the Chrome extension and the hosted site reading verdicts from NEAR, a hook
-that makes coding agents check a repository before cloning or installing it, a GitHub Action,
-checking Intel quotes inside the contract, and a larger benchmark.
+Not shown yet: a hook that makes coding agents check a repository before cloning or installing
+it, a GitHub Action, checking Intel quotes inside the contract, and a larger benchmark. The
+public site at airlock-check.vercel.app and the Chrome Web Store listing still run the
+pre-hackathon versions until they are redeployed.
 
 Try it (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
 
 1. Do: `npm ci && npm run judge`
-   See: `receipts 11/11 verified offline` (the Intel TDX quote, the key and nonce inside it,
+   See: `receipts 12/12 verified offline` (the Intel TDX quote, the key and nonce inside it,
    every reply signature, the decrypted verdict, and the sample files), `tests … passed`
    (including tampered receipts that must fail, and the fixture hygiene check), then `PASS`.
    No key, and no network.
@@ -73,6 +85,14 @@ Try it (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
 5. Do: `npm run test:contract` (needs Rust; `rust-toolchain.toml` pins 1.93)
    See: 11 contract tests pass, including a real NEAR AI signature accepted and a forged one,
    a swapped response hash, an unregistered key and a stranger refused.
+6. Do: `npm run build && npm start`, then open http://127.0.0.1:8787/near
+   See: every verdict on NEAR, newest first, read by your browser from public NEAR RPC, each
+   with its receipt to download. Without a key, `npm start` serves the pages; scanning needs
+   `NEARAI_API_KEY`.
+7. Do: load `extension/` unpacked in Chrome (`chrome://extensions`, Developer mode), open the
+   extension's popup on https://github.com/sindresorhus/slugify
+   See: "Recorded on NEAR testnet: Looks safe", with the model, date and findings. Turn on
+   "Show earlier verdicts" in its Settings and the button on the page reads "Looks safe · on NEAR".
 
 Test fixtures: two samples contain text written to steer AI reviewers, which is what Airlock
 detects. They are kept packed (`samples/packed/`) and unpacked only into a temporary folder

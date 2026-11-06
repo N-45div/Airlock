@@ -11,6 +11,9 @@ const view = {
   repoUrl: null,
   /** verdictView from lib/api.js */
   result: null,
+  /** chainView from lib/near.js, and its links */
+  chain: null,
+  chainLinks: null,
   busy: false,
 };
 
@@ -42,7 +45,7 @@ async function pageRepo() {
 }
 
 function render() {
-  const { repoUrl, result, busy } = view;
+  const { repoUrl, result, busy, chain, chainLinks } = view;
   $('repo').hidden = !repoUrl;
   if (!repoUrl) return;
   $('repo-link').textContent = repoLabel(repoUrl);
@@ -53,6 +56,15 @@ function render() {
     $('verdict-chip').dataset.tone = result.verdict;
     $('verdict-headline').textContent = result.headline;
     $('verdict-headline').hidden = !result.headline;
+  }
+  $('chain').hidden = !chain;
+  if (chain) {
+    $('chain-chip').textContent = chain.label;
+    $('chain-chip').dataset.tone = chain.verdict;
+    const date = chain.recordedAt ? new Date(chain.recordedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+    $('chain-meta').textContent = [`${chain.findings} finding${chain.findings === 1 ? '' : 's'}`, chain.model, date].filter(Boolean).join(' · ');
+    $('chain-page').href = chainLinks.page;
+    $('chain-contract').href = chainLinks.contract;
   }
   const primary = $('primary');
   if (busy) primary.textContent = 'Starting a check…';
@@ -67,9 +79,11 @@ async function lookup() {
   const res = await send({ type: 'airlock:lookup', url: repoUrl, reason: 'popup' });
   if (view.repoUrl !== repoUrl) return res;
   view.result = res.ok ? res.result || null : null;
+  view.chain = res.ok && res.chain && res.chainLinks ? res.chain : null;
+  view.chainLinks = view.chain ? res.chainLinks : null;
   let note = '';
   if (!res.ok) note = `Could not look for earlier checks. ${res.error}`;
-  else if (!view.result) note = 'No one has checked this repository yet.';
+  else if (!view.result && !view.chain) note = 'No one has checked this repository yet.';
   $('lookup-note').textContent = note;
   render();
   return res;
@@ -97,6 +111,8 @@ async function openReport() {
 function showRepo(repoUrl, source) {
   view.repoUrl = repoUrl;
   view.result = null;
+  view.chain = null;
+  view.chainLinks = null;
   $('repo-source').textContent = source === 'page' ? 'Repository on this page' : 'Repository';
   render();
 }

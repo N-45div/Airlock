@@ -74,6 +74,9 @@ What the extension sends, and when:
 - The address of a GitHub repository the user chooses to check, when they press the button.
 - Only if the user turns on the "Show earlier verdicts" setting (off by default), the address of the GitHub
   repository on the GitHub or npm page the user opens, to look up an earlier verdict.
+- When looking up an earlier verdict (that setting, or opening the popup), the repository's address is also
+  sent to a public NEAR testnet RPC node (test.rpc.fastnear.com) as a read-only query to Airlock's verdict
+  registry. No key, wallet or account is involved.
 
 Dashboard answers:
 - Personally identifiable information, health, financial and payment, authentication,

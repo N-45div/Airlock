@@ -46,7 +46,9 @@ When production has a URL, set `DEFAULT_API_BASE` in `config.js` and put the sam
 
 ## What it sends
 
-Only the address of a GitHub repository, to the Airlock server you set:
+Only the address of a GitHub repository: to the Airlock server you set, and, when looking up an
+earlier verdict, to a public NEAR testnet RPC node (`test.rpc.fastnear.com`) that reads Airlock's
+verdict registry:
 
 - **When you press Check before you run** (on the page or in the popup): the repository's address,
   to start a check (`POST /api/scans`). The report opens in a new tab; the key that lets you
@@ -54,7 +56,18 @@ Only the address of a GitHub repository, to the Airlock server you set:
   to a server.
 - **When you open a repository or npm package page**, only if you turn on "Show earlier verdicts"
   in Settings (it is off by default): that repository's address, to look for an earlier verdict
-  (`GET /api/lookup`). Otherwise nothing is sent until you press the button or open the popup.
+  (`GET /api/lookup` on the server, and a `get_latest` view call on the NEAR registry).
+  Otherwise nothing is sent until you press the button or open the popup.
+
+## Verdicts on NEAR
+
+The extension reads Airlock's latest verdict for a repository from the
+[verdict registry](../docs/registry.md) on NEAR testnet (`airlock-verdicts.testnet`), as recorded by
+`airlock-recorder.testnet`. The contract stored each verdict only after verifying, on chain, the
+signature of a NEAR AI Cloud model running in an attested TEE. When there is one, the button reads
+"Looks safe · on NEAR" (or "Be careful", "Don't run it"); its tooltip and the popup say when, by
+which model and with how many findings, and link to the verdict's page and receipt. Reading needs no
+key and no wallet (`lib/near.js`).
 
 Requests carry no cookies, no account details and no identifiers. The extension has no
 analytics or tracking, reads nothing else from the pages, and stores only its two settings
@@ -65,7 +78,8 @@ analytics or tracking, reads nothing else from the pages, and stores only its tw
 | Permission | Why |
 | --- | --- |
 | `storage` | Keeps the server address and the lookup setting. |
-| `http://localhost/*` (host) | Talks to the Airlock server. Replace or extend with the production origin. |
+| `https://airlock-check.vercel.app/*` (host) | Talks to the Airlock server. |
+| `https://test.rpc.fastnear.com/*` (host) | Reads verdicts from the NEAR registry (view calls only; no key). |
 | `https://*/*` (optional host) | Only requested, origin by origin, when you enter your own `https://` server in Settings. |
 | Content scripts on `github.com` and `www.npmjs.com` | Shows the button. npm is matched site-wide (not just `/package/*`) because npm moves between pages without reloading; the script does nothing off package pages. |
 
@@ -82,6 +96,7 @@ tab's repository by asking the content script.
 | `content.js` | The button. A classic script, so it asks the worker to detect the repository. |
 | `lib/repo.js` | Which repository a page is about (GitHub path, npm sidebar link, pasted text). |
 | `lib/api.js` | The server routes from `server/types.ts`, verdict labels, plain error sentences. |
+| `lib/near.js` | Reads the NEAR verdict registry over public RPC. |
 | `lib/settings.js` | Server address validation. |
 | `popup.*`, `options.*` | The toolbar popup and the settings page. |
 

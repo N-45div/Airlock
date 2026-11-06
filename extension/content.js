@@ -30,6 +30,8 @@
     repoUrl: null,
     /** verdictView from lib/api.js, or null */
     result: null,
+    /** { view: chainView, links, summary } from the NEAR registry, or null */
+    chain: null,
     /** repoUrl -> { id, key } for checks started from this tab */
     started: new Map(),
     dismissed: new Set(),
@@ -271,6 +273,7 @@
     const { main, label, msg } = ui;
     const started = state.repoUrl ? state.started.get(state.repoUrl) : null;
     const result = state.result;
+    const chain = state.chain;
     let text;
     let title;
     let spoken;
@@ -278,9 +281,15 @@
       text = 'Starting a check…';
       title = '';
     } else if (result) {
-      text = result.label;
-      title = result.headline ? `${result.headline}\n\nOpen the ${PRODUCT} report.` : `Open the ${PRODUCT} report.`;
+      text = chain ? `${result.label} · on NEAR` : result.label;
+      const onNear = chain ? `\n\n${chain.summary}` : '';
+      title = `${result.headline ? `${result.headline}\n\n` : ''}Open the ${PRODUCT} report.${onNear}`;
       spoken = `${PRODUCT}: ${result.label}. ${result.headline} Open the report.`;
+    } else if (chain) {
+      // A verdict on NEAR but no report on this server: show it, and open its page on click.
+      text = `${chain.view.label} · on NEAR`;
+      title = `${chain.summary}\nThe registry contract stored it only after checking the reviewing model's signature.\n\nSee the verdict and its receipt.`;
+      spoken = `${PRODUCT}: ${chain.view.label}, recorded on NEAR. See the verdict.`;
     } else if (started) {
       text = 'Check in progress';
       title = `Open the live ${PRODUCT} report.`;
@@ -291,7 +300,8 @@
     label.textContent = text;
     main.title = title;
     main.setAttribute('aria-label', spoken || `${PRODUCT}: ${text}`);
-    if (result && !state.busy) main.dataset.tone = result.verdict;
+    const tone = result ? result.verdict : chain ? chain.view.verdict : null;
+    if (tone && !state.busy) main.dataset.tone = tone;
     else delete main.dataset.tone;
     main.setAttribute('aria-disabled', String(state.busy));
     msg.textContent = state.message;
@@ -315,6 +325,11 @@
     if (state.busy || !repoUrl) return;
     showMessage('');
     const started = state.started.get(repoUrl);
+    if (!state.result && !started && state.chain) {
+      const res = await send({ type: 'airlock:open-url', url: state.chain.links.page });
+      if (!res.ok) showMessage(res.error);
+      return;
+    }
     if (state.result || started) {
       const report = state.result ? { id: state.result.id } : { id: started.id, key: started.key };
       const res = await send({ type: 'airlock:open-report', ...report });
@@ -394,6 +409,7 @@
     const res = await send({ type: 'airlock:lookup', url: repoUrl, reason: 'page' });
     if (dead || state.repoUrl !== repoUrl) return;
     state.result = res.ok ? res.result || null : null;
+    state.chain = res.ok && res.chain && res.chainLinks ? { view: res.chain, links: res.chainLinks, summary: res.chainSummary || '' } : null;
     render();
   }
 
@@ -405,6 +421,7 @@
     if (repoUrl === state.repoUrl) return;
     state.repoUrl = repoUrl;
     state.result = null;
+    state.chain = null;
     state.busy = false;
     showMessage('');
     if (repoUrl) void lookup(repoUrl);

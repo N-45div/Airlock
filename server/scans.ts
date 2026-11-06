@@ -5,11 +5,17 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { FetchError, fetchRepo, fetchSample, parseRepoUrl } from './fetch-repo.ts';
 import { takeInventory } from './inventory.ts';
+import { type Receipt, receiptHash } from './receipt.ts';
 import { review } from './review.ts';
+import type { ReviewOptions, ReviewResult } from './review.ts';
 import { SAMPLES, sampleRepo, sampleSource } from './samples.ts';
-import type { Approval, Finding, RepoInfo, Scan, ScanEvent, ScanStatus, ToolEvent } from './types.ts';
+import type { Approval, Finding, RepoInfo, Scan, ScanEvent, ScanProof, ScanStatus, ToolEvent } from './types.ts';
+
+/** A review engine: Claude (review.ts) or NEAR AI Cloud (near-engine.ts), which adds a proof. */
+export type Reviewer = (opts: ReviewOptions) => Promise<ReviewResult & { proof?: ScanProof }>;
 
 export const LIMITS = {
   /** Scans running at once; the rest wait in line. */
@@ -49,10 +55,10 @@ export class Scanner {
   private spend = { day: '', usd: 0 };
 
   private readonly dataDir: string;
-  private readonly review: typeof review;
+  private readonly review: Reviewer;
 
-  /** `reviewer` replaces the Claude review, for tests. */
-  constructor(dataDir: string, reviewer: typeof review = review) {
+  /** `reviewer` replaces the Claude review: the NEAR AI Cloud engine, or a stand-in for tests. */
+  constructor(dataDir: string, reviewer: Reviewer = review) {
     this.dataDir = dataDir;
     this.review = reviewer;
   }
@@ -68,6 +74,13 @@ export class Scanner {
         // A half-written report is skipped, not fatal.
       }
     }
+  }
+
+  /** A stored receipt, by its SHA-256: from a hosted NEAR AI review, or one shipped in the repository. */
+  async receipt(hash: string): Promise<string | null> {
+    if (!/^[0-9a-f]{64}$/.test(hash)) return null;
+    const own = await readFile(path.join(this.dataDir, 'receipts', `${hash}.json`), 'utf8').catch(() => null);
+    return own ?? (await bundledReceipts()).get(hash) ?? null;
   }
 
   get(id: string): Scan | undefined {
@@ -247,6 +260,7 @@ export class Scanner {
       scan.verdict = result.verdict;
       scan.headline = result.headline;
       scan.summary = result.summary;
+      if (result.proof) scan.proof = result.proof;
       scan.status = 'done';
     } catch (error) {
       scan.status = 'failed';
@@ -269,6 +283,25 @@ export class Scanner {
       await rm(work, { recursive: true, force: true }).catch(() => {});
     }
   }
+}
+
+let bundled: Promise<Map<string, string>> | undefined;
+
+/** Receipts committed with Airlock (fixtures/, bench/), so verdicts already on NEAR link to them. */
+function bundledReceipts(): Promise<Map<string, string>> {
+  bundled ??= (async () => {
+    const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+    const map = new Map<string, string>();
+    for (const dir of ['fixtures/receipts', 'bench/receipts']) {
+      for (const name of await readdir(path.join(root, dir)).catch(() => [] as string[])) {
+        if (!name.endsWith('.json')) continue;
+        const text = await readFile(path.join(root, dir, name), 'utf8');
+        map.set(receiptHash(JSON.parse(text) as Receipt), text);
+      }
+    }
+    return map;
+  })();
+  return bundled;
 }
 
 function sameKey(given: string, expected: string): boolean {

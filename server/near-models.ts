@@ -4,6 +4,9 @@
 
 export const CLOUD_API = process.env.NEARAI_BASE_URL ?? 'https://cloud-api.near.ai/v1';
 
+/** Picked from the benchmark (METRICS.md): same verdicts as glm-5.3-flash, cheaper per review. */
+export const DEFAULT_MODEL = 'Qwen/Qwen3.8-27B';
+
 interface Cost {
   amount: number;
   scale: number;

@@ -89,6 +89,9 @@ p { margin: 0; }
 .chip[data-tone="caution"] { background: var(--caution-bg); border-color: var(--caution-border); color: var(--caution-fg); }
 .chip[data-tone="dangerous"] { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger-fg); }
 .headline { margin-top: 6px; }
+.chain { display: grid; gap: 4px; }
+.chain__row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.chain__links { font-size: 13px; }
 
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 

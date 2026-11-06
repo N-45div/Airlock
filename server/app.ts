@@ -23,7 +23,8 @@ export function createApp(scanner: Scanner, webDir: string): Hono {
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:'],
-        connectSrc: ["'self'"],
+        // The NEAR page reads the verdict registry straight from public RPC.
+        connectSrc: ["'self'", 'https://test.rpc.fastnear.com'],
         frameAncestors: ["'none'"],
       },
     }),
@@ -94,6 +95,14 @@ export function createApp(scanner: Scanner, webDir: string): Hono {
   });
 
   app.get('/api/lookup', (c) => c.json({ scan: scanner.latest(c.req.query('url') ?? '') }));
+
+  app.get('/api/receipts/:hash', async (c) => {
+    const receipt = await scanner.receipt(c.req.param('hash'));
+    if (!receipt) return c.json({ error: 'No receipt with that hash.' }, 404);
+    c.header('content-type', 'application/json; charset=utf-8');
+    c.header('cache-control', 'public, max-age=31536000, immutable');
+    return c.body(receipt);
+  });
 
   // The web app: built files, with the report and scan pages served by the app's router.
   app.use('/assets/*', serveStatic({ root: path.relative(process.cwd(), webDir) }));

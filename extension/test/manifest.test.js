@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { DEFAULT_API_BASE, PRODUCT_NAME } from '../config.js';
+import { NEAR_RPC } from '../lib/near.js';
 import { originPattern } from '../lib/settings.js';
 import { EXTENSION_DIR, readManifest, referencedFiles, runtimeFiles } from '../scripts/files.mjs';
 
@@ -13,18 +14,18 @@ const scripts = files.filter((f) => f.endsWith('.js'));
 const pages = files.filter((f) => f.endsWith('.html'));
 
 describe('manifest.json', () => {
-  it('is Manifest V3 at 0.1.0, named by the product constant', () => {
+  it('is Manifest V3 at 0.2.0, named by the product constant', () => {
     assert.equal(manifest.manifest_version, 3);
-    assert.equal(manifest.version, '0.1.0');
+    assert.equal(manifest.version, '0.2.0');
     assert.equal(manifest.name, PRODUCT_NAME);
     assert.equal(manifest.short_name, PRODUCT_NAME);
     assert.ok(manifest.action.default_title.startsWith(PRODUCT_NAME));
     assert.ok(manifest.description.length <= 132, `description is ${manifest.description.length} characters`);
   });
 
-  it('asks for storage only, plus the server origin', () => {
+  it('asks for storage only, plus the server origin and the NEAR RPC it reads verdicts from', () => {
     assert.deepEqual(manifest.permissions, ['storage']);
-    assert.deepEqual(manifest.host_permissions, [originPattern(DEFAULT_API_BASE)]);
+    assert.deepEqual(manifest.host_permissions, [originPattern(DEFAULT_API_BASE), originPattern(NEAR_RPC)]);
     // Only a custom https:// server the person types in, requested at that moment.
     assert.deepEqual(manifest.optional_host_permissions, ['https://*/*', 'http://localhost/*']);
     assert.equal(manifest.optional_permissions, undefined);

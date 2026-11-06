@@ -12,6 +12,7 @@ export function SiteHeader() {
         </Link>
         <nav className="site-nav" aria-label="Main">
           <Link to="/#how-it-works">How it works</Link>
+          <a href="/near">On NEAR</a>
           <a href={LINKS.extension}>Chrome extension</a>
         </nav>
       </div>

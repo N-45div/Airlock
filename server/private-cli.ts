@@ -25,14 +25,12 @@ import { takeInventory } from './inventory.ts';
 import { SAMPLES, sampleRepo, sampleSource } from './samples.ts';
 import type { RepoInfo } from './types.ts';
 import { RecordingClient } from './near-client.ts';
-import { listPrivateModels } from './near-models.ts';
+import { DEFAULT_MODEL, listPrivateModels } from './near-models.ts';
 import { BUDGET, reviewPrivately } from './private-review.ts';
 import { buildReceipt, receiptHash, treeHash } from './receipt.ts';
 import { EXPLORER, REGISTRY, recordReceipt } from './registry.ts';
 
 const run = promisify(execFile);
-// Picked from the benchmark (METRICS.md): same verdicts as glm-5.3-flash, cheaper per review.
-export const DEFAULT_MODEL = 'Qwen/Qwen3.8-27B';
 
 interface Args {
   target: string;

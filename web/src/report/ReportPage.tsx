@@ -10,6 +10,7 @@ import { Findings } from './Findings.tsx';
 import { formatCost, formatDuration } from './format.ts';
 import { fenceRows, repoName, VERDICT } from './labels.ts';
 import { LiveStatus } from './Progress.tsx';
+import { ProofPanel } from './Proof.tsx';
 import { RepoHeader } from './RepoHeader.tsx';
 import { isFinished, useScan } from './useScan.ts';
 import { FailedCard, VerdictCard } from './Verdict.tsx';
@@ -58,6 +59,7 @@ export function ReportPage({ id }: { id: string }) {
       <div className="page page--report">
         <RepoHeader scan={scan} />
         {scan.status === 'done' ? <VerdictCard scan={scan} rows={rows} /> : <FailedCard scan={scan} />}
+        <ProofPanel scan={scan} />
         <Findings scan={scan} />
         <FencePanel rows={rows} live={false} thoughts={state.thoughts} />
         <ReportFooter scan={scan} />

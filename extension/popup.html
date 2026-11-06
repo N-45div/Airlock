@@ -25,6 +25,16 @@
           <span id="verdict-chip" class="chip"></span>
           <p id="verdict-headline" class="headline"></p>
         </div>
+        <div id="chain" class="verdict chain" hidden>
+          <p class="eyebrow">Recorded on NEAR testnet</p>
+          <p class="chain__row"><span id="chain-chip" class="chip"></span> <span id="chain-meta" class="muted"></span></p>
+          <p class="muted">The registry contract stored this verdict only after checking the reviewing model's signature.</p>
+          <p class="chain__links">
+            <a id="chain-page" target="_blank" rel="noopener noreferrer">See it with its receipt</a>
+            ·
+            <a id="chain-contract" target="_blank" rel="noopener noreferrer">The contract</a>
+          </p>
+        </div>
         <div class="actions">
           <button type="button" id="primary" class="primary">Check before you run</button>
           <button type="button" id="again" class="secondary" hidden>Check again</button>
@@ -62,6 +72,7 @@
           <li><span data-product-name></span> copies the repository onto its own server. Nothing is downloaded to or run on your computer.</li>
           <li>An AI agent reads the code inside a fence. It can look, but anything that could do harm is blocked or held for you to approve.</li>
           <li>You get a plain answer, with the reasons, in a report you can share.</li>
+          <li>Verdicts are also recorded on NEAR, where a contract checks the reviewing model's signature before storing one. The extension reads them from a public NEAR node.</li>
         </ol>
         <a id="more" target="_blank" rel="noopener noreferrer">More about <span data-product-name></span></a>
       </details>

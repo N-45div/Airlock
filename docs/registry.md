@@ -15,6 +15,8 @@ npm run registry -- recent                         # newest verdicts
 npm run registry -- config                         # owner, recorders, cap, trusted model keys
 ```
 
+The web app's `/near` page and the Chrome extension read the same way, from the browser.
+
 These are plain JSON-RPC view calls to `https://test.rpc.fastnear.com`. With near-cli-rs:
 `near contract call-function as-read-only airlock-verdicts.testnet get_latest json-args '{"repo":"sample:take-home","recorder":"airlock-recorder.testnet"}' network-config testnet now`.
 

@@ -79,6 +79,22 @@ export interface RepoInfo {
   bytes?: number;
 }
 
+/** Proof for a review made by the NEAR AI Cloud engine (server/near-engine.ts). */
+export interface ScanProof {
+  engine: 'near-ai-tee';
+  model: string;
+  /** SHA-256 of the receipt: GET /api/receipts/:hash, check with npm run verify:receipt. */
+  receiptHash: string;
+  /** The model TEE's signing key. */
+  signer: string;
+  tcbStatus: string;
+  gpuEvidence: string;
+  /** Replies, every one signed by the model TEE and verified. */
+  replies: number;
+  /** Set when the verdict was recorded on NEAR. */
+  onchain?: { registry: string; recorder: string; tx: string };
+}
+
 export interface Scan {
   id: string;
   repo: RepoInfo;
@@ -94,6 +110,8 @@ export interface Scan {
   finishedAt?: string;
   costUsd?: number;
   error?: string;
+  /** Present when the NEAR AI Cloud engine made the review. */
+  proof?: ScanProof;
 }
 
 /** Server-sent events on GET /api/scans/:id/stream. */
@@ -115,6 +133,7 @@ export type ScanEvent =
 // POST /api/scans/:id/approvals/:aid    { decision: 'approve' | 'deny' }, header x-airlock-key -> Approval
 // GET  /api/lookup?url=<repo url>       -> { scan: Scan | null }  latest finished scan of that repo
 // GET  /api/samples                     -> Sample[]
+// GET  /api/receipts/:sha256            -> the receipt of a NEAR AI Cloud review (docs/receipts.md)
 // GET  /r/:id                           the shareable report page
 
 export interface CreateScanResponse {

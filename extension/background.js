@@ -3,12 +3,14 @@
 //
 // Messages (all answer { ok: true, ... } or { ok: false, error }):
 //   airlock:detect       { href, repositoryLinks }  -> { repoUrl }
-//   airlock:lookup       { url, reason }            -> { result: verdictView | null }
+//   airlock:lookup       { url, reason }            -> { result: verdictView | null, chain: chainView | null, chainLinks }
 //   airlock:check        { url }                    -> { id, key }  and opens the report
 //   airlock:open-report  { id, key? }               -> {}           opens the report
+//   airlock:open-url     { url }                    -> {}           opens a NEAR verdict page (Airlock or the explorer)
 
 import { getSettings } from './config.js';
 import { ApiError, createScan, isScanId, lookupScan, reportUrl } from './lib/api.js';
+import { chainLinks, chainSummary, EXPLORER, fetchChainVerdict } from './lib/near.js';
 import { parseRepoInput, repoFromPage } from './lib/repo.js';
 
 const LOOKUP_TTL_MS = 60_000;
@@ -52,11 +54,21 @@ const handlers = {
     if (msg.reason === 'page' && !autoLookup) return { result: null, skipped: true };
     const cacheKey = `${apiBase} ${repoUrl}`;
     const cached = lookups.get(cacheKey);
-    if (cached && Date.now() - cached.at < LOOKUP_TTL_MS) return { result: cached.result };
-    const result = await lookupScan(apiBase, repoUrl);
-    lookups.set(cacheKey, { at: Date.now(), result });
+    if (cached && Date.now() - cached.at < LOOKUP_TTL_MS) return cached.result;
+    // Two sources, asked together: Airlock's server (its latest report) and the verdict registry
+    // on NEAR (read over public RPC; its contract checked the reviewing model's signature).
+    const [server, near] = await Promise.allSettled([lookupScan(apiBase, repoUrl), fetchChainVerdict(repoUrl)]);
+    if (server.status === 'rejected' && near.status === 'rejected') throw server.reason;
+    const chain = near.status === 'fulfilled' ? near.value : null;
+    const answer = {
+      result: server.status === 'fulfilled' ? server.value : null,
+      chain,
+      chainLinks: chain ? chainLinks(apiBase, chain) : null,
+      chainSummary: chainSummary(chain),
+    };
+    lookups.set(cacheKey, { at: Date.now(), result: answer });
     if (lookups.size > 200) lookups.delete(lookups.keys().next().value);
-    return { result };
+    return answer;
   },
 
   async 'airlock:check'(msg, sender) {
@@ -66,6 +78,15 @@ const handlers = {
     lookups.delete(`${apiBase} ${repoUrl}`);
     await openTab(reportUrl(apiBase, id, key), sender);
     return { id, key };
+  },
+
+  async 'airlock:open-url'(msg, sender) {
+    const { apiBase } = await getSettings();
+    const url = typeof msg.url === 'string' ? msg.url : '';
+    // Only pages about verdicts: the Airlock web app or the NEAR explorer.
+    if (!url.startsWith(`${apiBase}/`) && !url.startsWith(`${EXPLORER}/`)) throw new ApiError('That link is not one the extension opens.');
+    await openTab(url, sender);
+    return {};
   },
 
   async 'airlock:open-report'(msg, sender) {

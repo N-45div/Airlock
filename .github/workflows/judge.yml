@@ -18,6 +18,7 @@ jobs:
           node-version-file: .nvmrc
       - run: npm ci
       - run: npm run judge
+      - run: node --test extension/test/
 
   contract:
     name: verdict registry contract tests
