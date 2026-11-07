@@ -287,14 +287,16 @@ export class Scanner {
 
 let bundled: Promise<Map<string, string>> | undefined;
 
-/** Receipts committed with Airlock (fixtures/, bench/), so verdicts already on NEAR link to them. */
+/** Receipts committed with Airlock (fixtures/, bench/ and earlier benchmark runs in bench/archive/), so
+ * every verdict already on NEAR links to one. */
 function bundledReceipts(): Promise<Map<string, string>> {
   bundled ??= (async () => {
     const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
     const map = new Map<string, string>();
-    for (const dir of ['fixtures/receipts', 'bench/receipts']) {
+    const archive = (await readdir(path.join(root, 'bench', 'archive')).catch(() => [] as string[])).map((d) => `bench/archive/${d}`);
+    for (const dir of ['fixtures/receipts', 'bench/receipts', ...archive]) {
       for (const name of await readdir(path.join(root, dir)).catch(() => [] as string[])) {
-        if (!name.endsWith('.json')) continue;
+        if (!name.endsWith('.json') || name === 'results.json') continue;
         const text = await readFile(path.join(root, dir, name), 'utf8');
         map.set(receiptHash(JSON.parse(text) as Receipt), text);
       }

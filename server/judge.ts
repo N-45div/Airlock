@@ -21,7 +21,12 @@ async function receiptFiles(dir: string): Promise<string[]> {
   return (await readdir(dir).catch(() => [] as string[])).filter((f) => f.endsWith('.json')).sort().map((f) => path.join(dir, f));
 }
 
-const files = [...(await receiptFiles(FIXTURES)), ...(await receiptFiles(BENCH))];
+const ARCHIVE = path.join(root, 'bench', 'archive');
+const archived: string[] = [];
+for (const run of (await readdir(ARCHIVE).catch(() => [] as string[])).sort()) {
+  archived.push(...(await receiptFiles(path.join(ARCHIVE, run))).filter((f) => !f.endsWith('results.json')));
+}
+const files = [...(await receiptFiles(FIXTURES)), ...(await receiptFiles(BENCH)), ...archived];
 let verified = 0;
 const failures: string[] = [];
 for (const file of files) {
@@ -41,7 +46,7 @@ const passed = count('pass');
 const testsOk = test.status === 0 && tests > 0 && passed === tests;
 
 console.log('Airlock Private: judge check (no key, no network)\n');
-console.log(`  receipts  ${verified}/${files.length} verified offline (${(await receiptFiles(FIXTURES)).length} fixture, ${(await receiptFiles(BENCH)).length} benchmark)`);
+console.log(`  receipts  ${verified}/${files.length} verified offline (${(await receiptFiles(FIXTURES)).length} fixture, ${(await receiptFiles(BENCH)).length} benchmark, ${archived.length} from earlier runs)`);
 console.log(`  tests     ${passed}/${tests} passed (receipts, tampering, private engine, fixture hygiene, baseline)`);
 for (const f of failures) console.log(`  FAIL      ${f}`);
 if (!testsOk) console.log(out.split('\n').filter((l) => /✖|not ok|Error/.test(l)).slice(0, 20).map((l) => `  ${l}`).join('\n'));

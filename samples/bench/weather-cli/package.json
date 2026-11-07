@@ -1,0 +1,7 @@
+{
+  "name": "weather-cli",
+  "version": "1.0.0",
+  "private": true,
+  "bin": { "weather": "src/cli.js" },
+  "scripts": { "start": "node src/cli.js" }
+}

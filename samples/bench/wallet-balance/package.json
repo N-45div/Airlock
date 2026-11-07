@@ -1,0 +1,6 @@
+{
+  "name": "near-balance",
+  "version": "1.0.0",
+  "private": true,
+  "bin": { "near-balance": "src/balance.js" }
+}

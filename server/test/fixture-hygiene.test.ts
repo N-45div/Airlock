@@ -45,9 +45,11 @@ describe('fixture hygiene', () => {
   });
 
   it('the pack holds the samples that need it, and the patterns catch them', async () => {
-    assert.deepEqual(await packedSampleIds(), ['readme-note', 'take-home']);
+    // Agent-steering samples carry AI-addressed text; claude-hook is an agent config file with none.
+    const steering = ['agents-md-run', 'claude-md-note', 'cursor-rules', 'fake-audit-doc', 'pkg-description-note', 'readme-note', 'take-home'];
+    assert.deepEqual(await packedSampleIds(), [...steering, 'claude-hook'].sort());
     const pack = await readPack();
-    for (const id of ['readme-note', 'take-home']) {
+    for (const id of steering) {
       const text = Object.values(pack[id]!).map((b64) => Buffer.from(b64, 'base64').toString('utf8')).join('\n');
       assert.ok(ADDRESSED_TO_AI.some((re) => re.test(text)), `${id}: the hygiene patterns should match its planted text`);
       assert.doesNotMatch(text, /https?:\/\/[^\s/]*example\.com/, `${id}: download hosts must be .invalid`);

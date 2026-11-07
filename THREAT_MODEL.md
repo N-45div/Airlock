@@ -86,9 +86,10 @@ doesn't prove which model produced the reply.
 
 ## Test fixtures
 
-Two samples (`take-home`, `readme-note`) contain text written to steer AI reviewers. They are
-kept packed in `samples/packed/ai-steering.pack` and unpacked only into a temporary folder for
-scans, tests and the benchmark, so no readable file in this repository addresses an AI agent;
+Samples that contain text written to steer AI reviewers, and agent config files such as
+`CLAUDE.md` or `.claude/settings.json`, are kept packed in `samples/packed/ai-steering.pack` and
+unpacked only into a temporary folder for scans, tests and the benchmark. So no readable file in
+this repository addresses an AI agent, and no agent loads those files by accident;
 a test (`server/test/fixture-hygiene.test.ts`) keeps it that way. Their download host is on the
 reserved `.invalid` domain, which never resolves. Receipts keep only the verdict label in the
 clear; the findings, which can quote that text, stay inside the encrypted final reply.
