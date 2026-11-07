@@ -284,6 +284,10 @@ export function renderMetrics(results: BenchResults, cases: BenchCase[] = CASES)
   }
   const all = results.runs.filter((r) => !r.error && byCase.has(r.case));
   lines.push(`Total spent on this run: ${usd(all.reduce((s, r) => s + r.costUsd, 0))} for ${all.length} reviews.`, '');
+  lines.push('Every verdict above is recorded on NEAR testnet by `airlock-recorder.testnet`, misses included. The Chrome');
+  lines.push("extension shows the newest one per repository. Where a model missed (glm-5.3-flash on bcrypt and prepare-husky), the default");
+  lines.push("model's verdict was recorded again afterwards, so the extension shows the right one. Earlier runs, with");
+  lines.push('their receipts, are in `bench/archive/`.', '');
   return lines.join('\n');
 }
 

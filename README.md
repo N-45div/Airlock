@@ -42,9 +42,12 @@ What the hackathon adds:
   sent by an allowed recorder whose key can only call `record_verdict`. Reading is free and
   needs no key. ([docs/registry.md](docs/registry.md), `contracts/verdict-registry`,
   `server/registry.ts`)
-- **A benchmark with receipts.** Five repositories with known traits, reviewed by two models;
-  both gave 5/5 right verdicts, and none tried to run anything. All 10 receipts verify
-  offline. ([METRICS.md](METRICS.md), `server/bench.ts`, `bench/`)
+- **A benchmark with receipts.** 26 harmless repositories: 11 clean (including apps whose
+  code looks risky out of context), 8 where something runs by itself, and 7 with notes aimed
+  at AI agents. The default model got 26/26 with no false alarms; `glm-5.3-flash` got 24/26;
+  Airlock's static inventory alone got 17/26 and caught none of the planted notes. No model
+  tried to run anything. All 52 receipts verify offline and all 52 verdicts are on NEAR.
+  ([METRICS.md](METRICS.md), `server/bench.ts`, `samples/`, `bench/`)
 - **The web app runs reviews on NEAR AI Cloud.** With `NEARAI_API_KEY` set, hosted scans use the
   same engine: each report gets a "Verified review" panel (attestation, signed replies, the
   receipt to download, the NEAR transaction), and the verdict is recorded on NEAR when a recorder
@@ -58,14 +61,14 @@ What the hackathon adds:
   `extension/lib/near.js`)
 
 Not shown yet: a hook that makes coding agents check a repository before cloning or installing
-it, a GitHub Action, checking Intel quotes inside the contract, and a larger benchmark. The
+it, a GitHub Action, and checking Intel quotes inside the contract. The
 public site at airlock-check.vercel.app and the Chrome Web Store listing still run the
 pre-hackathon versions until they are redeployed.
 
 Try it (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
 
 1. Do: `npm ci && npm run judge`
-   See: `receipts 12/12 verified offline` (the Intel TDX quote, the key and nonce inside it,
+   See: `receipts 64/64 verified offline` (the Intel TDX quote, the key and nonce inside it,
    every reply signature, the decrypted verdict, and the sample files), `tests … passed`
    (including tampered receipts that must fail, and the fixture hygiene check), then `PASS`.
    No key, and no network.
