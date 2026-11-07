@@ -61,9 +61,9 @@ What the hackathon adds:
   `extension/lib/near.js`)
 
 Not shown yet: a hook that makes coding agents check a repository before cloning or installing
-it, a GitHub Action, and checking Intel quotes inside the contract. The
-public site at airlock-check.vercel.app and the Chrome Web Store listing still run the
-pre-hackathon versions until they are redeployed.
+it, a GitHub Action, and checking Intel quotes inside the contract. The web app at
+airlock-check.vercel.app is current (its `/near` page reads the registry); its scanning server and
+the Chrome Web Store listing still run the pre-hackathon versions until they are updated.
 
 Try it (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
 
