@@ -38,6 +38,9 @@ RUN npm ci --omit=dev --ignore-scripts=false --no-audit --no-fund \
  && npm cache clean --force
 COPY server server
 COPY samples samples
+# Receipts committed with Airlock, served at /api/receipts/:hash for verdicts already on NEAR.
+COPY fixtures/receipts fixtures/receipts
+COPY bench bench
 COPY --from=web /app/web/dist web/dist
 
 USER airlock
