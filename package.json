@@ -19,6 +19,7 @@
     "metrics": "node --no-warnings server/bench.ts --render",
     "judge": "node --no-warnings server/judge.ts",
     "registry": "node --no-warnings server/registry.ts",
+    "guard": "node --no-warnings server/guard.ts",
     "test:contract": "cd contracts/verdict-registry && cargo test",
     "test": "node --no-warnings --test \"server/test/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json"

@@ -59,9 +59,14 @@ What the hackathon adds:
   shows the model, date and findings with links to the verdict and the contract. It reads the
   registry over public RPC, with no key or wallet. ([extension/README.md](extension/README.md),
   `extension/lib/near.js`)
+- **A guard for coding agents.** A Claude Code (or Codex) hook that runs before the agent's shell
+  commands. When one would clone a GitHub repository, install it or pipe its script into a shell,
+  it reads the verdict from NEAR: *Don't run it* is blocked, *Be careful*, a repository that changed
+  since it was checked, or one never checked waits for you, and *Looks safe* goes ahead with a
+  note. npm package names are matched to their repositories. ([docs/guard.md](docs/guard.md),
+  `server/guard.ts`)
 
-Not shown yet: a hook that makes coding agents check a repository before cloning or installing
-it, a GitHub Action, and checking Intel quotes inside the contract. The Chrome Web Store listing
+Not shown yet: a GitHub Action, and checking Intel quotes inside the contract. The Chrome Web Store listing
 has the pre-hackathon extension until its update is approved; step 7 below loads the current one.
 
 Try it live, with nothing to install:
@@ -108,6 +113,12 @@ Try it locally (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
    extension's popup on https://github.com/sindresorhus/slugify
    See: "Recorded on NEAR testnet: Looks safe", with the model, date and findings. Turn on
    "Show earlier verdicts" in its Settings and the button on the page reads "Looks safe · on NEAR".
+8. Do: `npm run guard -- check "git clone https://github.com/kelektiv/node.bcrypt.js"`
+   See: `ASK  Airlock: "Be careful" for github.com/kelektiv/node.bcrypt.js (verdict #…` with the
+   report's link, and exit code 1: as a Claude Code hook, this clone waits for you.
+   `npm run guard -- check "npm install escape-string-regexp"` finds the package's repository and
+   shows `ALLOW … "Looks safe"`. `npm run guard -- --config` prints the hook settings for Claude
+   Code ([docs/guard.md](docs/guard.md)). Public NEAR RPC and the npm registry; no key.
 
 Test fixtures: two samples contain text written to steer AI reviewers, which is what Airlock
 detects. They are kept packed (`samples/packed/`) and unpacked only into a temporary folder
