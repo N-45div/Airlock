@@ -93,7 +93,7 @@
   color: var(--text-2);
 }
 
-.proof__facts {
+.proof__checks {
   list-style: none;
   margin: 12px 0 0;
   padding: 0;
@@ -102,8 +102,34 @@
   color: var(--text-2);
 }
 
-.proof__facts .chip {
-  margin: 0 6px 6px 0;
+.proof__check {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  overflow-wrap: anywhere;
+}
+
+.proof__check strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.proof__mark {
+  margin-top: 2px;
+  color: var(--safe);
+}
+
+.proof__check--none .proof__mark {
+  color: var(--text-3);
+}
+
+.proof__receipt {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  color: var(--text-2);
+  overflow-wrap: anywhere;
 }
 
 .proof__note {

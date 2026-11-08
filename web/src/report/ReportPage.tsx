@@ -8,7 +8,7 @@ import { Approvals } from './Approvals.tsx';
 import { FencePanel } from './Fence.tsx';
 import { Findings } from './Findings.tsx';
 import { formatCost, formatDuration } from './format.ts';
-import { fenceRows, repoName, VERDICT } from './labels.ts';
+import { fenceRows, repoName, TEE_TOOLS, VERDICT } from './labels.ts';
 import { LiveStatus } from './Progress.tsx';
 import { ProofPanel } from './Proof.tsx';
 import { RepoHeader } from './RepoHeader.tsx';
@@ -25,6 +25,8 @@ export function ReportPage({ id }: { id: string }) {
   const { scan } = state;
   const finished = isFinished(scan);
   const rows = useMemo(() => (scan ? fenceRows(scan.events, scan.approvals) : []), [scan]);
+  // Reviewed on NEAR AI Cloud: known from the proof once done, and from the tools while it runs.
+  const tee = !!scan?.proof || rows.some((r) => TEE_TOOLS.has(r.event.tool));
 
   useEffect(() => {
     if (state.missing) {
@@ -61,7 +63,7 @@ export function ReportPage({ id }: { id: string }) {
         {scan.status === 'done' ? <VerdictCard scan={scan} rows={rows} /> : <FailedCard scan={scan} />}
         <ProofPanel scan={scan} />
         <Findings scan={scan} />
-        <FencePanel rows={rows} live={false} thoughts={state.thoughts} />
+        <FencePanel rows={rows} live={false} thoughts={state.thoughts} tee={tee} />
         <ReportFooter scan={scan} />
       </div>
     );
@@ -73,7 +75,7 @@ export function ReportPage({ id }: { id: string }) {
       <RepoHeader scan={scan} />
       <LiveStatus state={state} canAnswer={!!key} />
       <Approvals scan={scan} seen={state.seen} scanKey={key} onAnswered={answered} />
-      <FencePanel rows={rows} live thoughts={state.thoughts} />
+      <FencePanel rows={rows} live thoughts={state.thoughts} tee={tee} />
       <Findings scan={scan} />
     </div>
   );

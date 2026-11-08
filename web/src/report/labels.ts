@@ -62,7 +62,9 @@ export function githubLineUrl(repo: RepoInfo, file: string, line?: number): stri
 
 // The fence
 
-const READ_TOOLS = new Set(['Read', 'Grep', 'Glob', 'LS', 'NotebookRead']);
+/** The private reviewer's only tools, on NEAR AI Cloud (server/repo-tools.ts). */
+export const TEE_TOOLS = new Set(['list_files', 'read_file', 'grep']);
+const READ_TOOLS = new Set(['Read', 'Grep', 'Glob', 'LS', 'NotebookRead', ...TEE_TOOLS]);
 const COMMAND_TOOLS = new Set(['Bash', 'PowerShell', 'BashOutput', 'KillShell', 'KillBash']);
 const FETCH_TOOLS = new Set(['WebFetch', 'WebSearch']);
 const EDIT_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit']);

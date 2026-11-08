@@ -99,10 +99,15 @@ function AgentNotes({ thoughts }: { thoughts: Thought[] }) {
   );
 }
 
-export function FencePanel({ rows, live, thoughts }: { rows: FenceRow[]; live: boolean; thoughts: Thought[] }) {
+export function FencePanel({ rows, live, thoughts, tee = false }: { rows: FenceRow[]; live: boolean; thoughts: Thought[]; tee?: boolean }) {
   const counts = fenceCounts(rows);
   const blocked = rows.filter((r) => r.event.decision === 'blocked' && toolKind(r.event.tool) === 'command');
   const armorIq = rows.length === 0 || rows.some((r) => r.event.by === 'armoriq' || r.held?.by === 'armoriq');
+  const intro = tee
+    ? `The model in the TEE has three tools: list, read and search files inside the repository. None of them runs code, writes a file or reaches the network, and a call to anything else is refused and shown here.`
+    : armorIq
+      ? `ArmorIQ’s policy decides each call the agent makes: reads are allowed, commands are blocked, and fetching a page waits for you. ${PRODUCT}’s backstop sits behind it and refuses anything that is not a read inside the repository.`
+      : `${PRODUCT}’s backstop decided each call the agent made: reads inside the repository are allowed, fetching a page waits for you, and everything else is refused.`;
 
   return (
     <section aria-labelledby="fence-title">
@@ -113,11 +118,7 @@ export function FencePanel({ rows, live, thoughts }: { rows: FenceRow[]; live: b
         aside={counts || (live ? 'Waiting for the first call' : 'No tool calls')}
       />
       <Card pad="none" className="fence">
-        <p className="fence__intro">
-          {armorIq
-            ? `ArmorIQ’s policy decides each call the agent makes: reads are allowed, commands are blocked, and fetching a page waits for you. ${PRODUCT}’s backstop sits behind it and refuses anything that is not a read inside the repository.`
-            : `${PRODUCT}’s backstop decided each call the agent made: reads inside the repository are allowed, fetching a page waits for you, and everything else is refused.`}
-        </p>
+        <p className="fence__intro">{intro}</p>
         {blocked.length > 0 ? (
           <div className="fence-test">
             <span className="fence-test__icon">
