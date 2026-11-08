@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
@@ -7,6 +7,7 @@ import { publicKeyOfSeed, withSeedCapture, withSeedReplay } from '../nacl-rng.ts
 import { type Receipt, canonicalJson, receiptHash, repoIdentity, treeHash } from '../receipt.ts';
 import { FIXTURES, type Check, sampleDir, verifyReceipt } from '../verify-receipt.ts';
 import nacl from 'tweetnacl';
+import { trySymlink } from './symlink.ts';
 
 let fixture: Receipt;
 let base: string;
@@ -115,7 +116,8 @@ describe('receipt building blocks', () => {
     await writeFile(path.join(dir, '.git', 'HEAD'), 'x');
     await mkdir(path.join(dir, 'node_modules'));
     await writeFile(path.join(dir, 'node_modules', 'x.js'), 'x');
-    await symlink(path.join(dir, 'src', 'a.js'), path.join(dir, 'link.js'));
+    // Where symlinks can't be made (Windows without Developer Mode), the rest still holds.
+    await trySymlink(path.join(dir, 'src', 'a.js'), path.join(dir, 'link.js'));
     assert.deepEqual(await treeHash(dir), first);
     await writeFile(path.join(dir, 'src', 'a.js'), 'b\n');
     assert.notEqual((await treeHash(dir)).sha256, first.sha256);

@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { LIMITS, RepoTools } from '../repo-tools.ts';
+import { NO_SYMLINKS, trySymlink } from './symlink.ts';
 
 let base: string;
 let root: string;
 let tools: RepoTools;
+let linked = false;
 
 before(async () => {
   base = await mkdtemp(path.join(os.tmpdir(), 'tools-test-'));
@@ -20,7 +22,7 @@ before(async () => {
   await writeFile(path.join(root, 'node_modules', 'dep', 'index.js'), 'exec("ignored")\n');
   await writeFile(path.join(root, 'blob.bin'), Buffer.from([0x7f, 0x45, 0x4c, 0x46, 0, 1, 2]));
   await writeFile(path.join(root, 'long.txt'), Array.from({ length: LIMITS.readLines + 50 }, (_, i) => `line ${i + 1}`).join('\n'));
-  await symlink(path.join(base, 'secret.txt'), path.join(root, 'link.txt'));
+  linked = await trySymlink(path.join(base, 'secret.txt'), path.join(root, 'link.txt'));
   tools = new RepoTools(root);
 });
 
@@ -50,12 +52,14 @@ describe('RepoTools', () => {
     }
   });
 
-  it('refuses a symlink that points outside', async () => {
+  it('refuses a symlink that points outside', async (t) => {
+    if (!linked) return t.skip(NO_SYMLINKS);
     const out = await tools.call('read_file', { path: 'link.txt' });
     assert.match(out, /outside the repository/);
   });
 
-  it('does not follow symlinks when listing or searching', async () => {
+  it('does not follow symlinks when listing or searching', async (t) => {
+    if (!linked) return t.skip(NO_SYMLINKS);
     const list = await tools.call('list_files', {});
     assert.doesNotMatch(list, /link\.txt/);
     const hits = await tools.call('grep', { pattern: 'outside the repo' });

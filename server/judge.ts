@@ -43,11 +43,14 @@ const out = `${test.stdout}\n${test.stderr}`;
 const count = (label: string) => Number(out.match(new RegExp(`^ℹ ${label} (\\d+)`, 'm'))?.[1] ?? NaN);
 const tests = count('tests');
 const passed = count('pass');
-const testsOk = test.status === 0 && tests > 0 && passed === tests;
+// Only the symlink tests skip, and only where the system refuses to make symlinks (Windows).
+const skipped = count('skipped') || 0;
+const testsOk = test.status === 0 && tests > 0 && passed + skipped === tests;
 
 console.log('Airlock Private: judge check (no key, no network)\n');
 console.log(`  receipts  ${verified}/${files.length} verified offline (${(await receiptFiles(FIXTURES)).length} fixture, ${(await receiptFiles(BENCH)).length} benchmark, ${archived.length} from earlier runs)`);
 console.log(`  tests     ${passed}/${tests} passed (receipts, tampering, private engine, fixture hygiene, baseline)`);
+if (skipped) console.log(`            ${skipped} skipped: this system refuses to create symlinks (Windows without Developer Mode)`);
 for (const f of failures) console.log(`  FAIL      ${f}`);
 if (!testsOk) console.log(out.split('\n').filter((l) => /✖|not ok|Error/.test(l)).slice(0, 20).map((l) => `  ${l}`).join('\n'));
 const ok = files.length > 0 && failures.length === 0 && testsOk;
