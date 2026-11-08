@@ -61,17 +61,29 @@ What the hackathon adds:
   `extension/lib/near.js`)
 
 Not shown yet: a hook that makes coding agents check a repository before cloning or installing
-it, a GitHub Action, and checking Intel quotes inside the contract. The web app at
-airlock-check.vercel.app is current (its `/near` page reads the registry); its scanning server and
-the Chrome Web Store listing still run the pre-hackathon versions until they are updated.
+it, a GitHub Action, and checking Intel quotes inside the contract. The Chrome Web Store listing
+has the pre-hackathon extension until its update is approved; step 7 below loads the current one.
 
-Try it (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
+Try it live, with nothing to install:
+
+- Do: open [airlock-check.vercel.app](https://airlock-check.vercel.app), paste a public GitHub
+  repository link (or pick a sample) and press the button.
+  See: the review as it happens, then the verdict and a "Verified review" panel: Intel TDX
+  `UpToDate`, GPU evidence verified, every reply signed by the model, the receipt to download, and
+  the NEAR transaction that recorded the verdict. About a minute and under a cent per review; six
+  reviews per hour per visitor. A finished one:
+  [sindresorhus/escape-string-regexp](https://airlock-check.vercel.app/r/5tkEtxSf).
+- Do: open [airlock-check.vercel.app/near](https://airlock-check.vercel.app/near)
+  See: every verdict on NEAR, newest first, read by your browser from public NEAR RPC.
+
+Try it locally (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
 
 1. Do: `npm ci && npm run judge`
    See: `receipts 64/64 verified offline` (the Intel TDX quote, the key and nonce inside it,
    every reply signature, the decrypted verdict, and the sample files), `tests … passed`
    (including tampered receipts that must fail, and the fixture hygiene check), then `PASS`.
-   No key, and no network.
+   No key, and no network. On Windows without Developer Mode, the two tests that need a symlink
+   are skipped and the judge says so.
 2. Do: `npm run registry -- check fixtures/receipts/take-home.json`
    See: `ON CHAIN: #0 DANGEROUS sample:take-home …` with that receipt's hash: the testnet
    contract stored this verdict after verifying the model's reply signature. A public RPC read;
@@ -139,6 +151,11 @@ tries to run what the repository wants run, and the report shows the policy refu
 5. **Verdict.** *Looks safe*, *Be careful* or *Don't run it*, a one-sentence answer, a short
    summary, and each finding with file, line and snippet.
 
+On NEAR AI Cloud (the live site, and `npm run scan:private`), step 3 is the private reviewer: a
+model in a TEE whose only tools list, read and search files inside the repository. Nothing it can
+call runs code, so there is no fence test; a call to any other tool is refused and shown in the
+report. Steps 1, 2 and 5 are the same.
+
 ## The fence
 
 | Layer | What it does |
@@ -180,7 +197,12 @@ docker run -p 8787:8787 -v airlock-data:/data \
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `AIRLOCK_MODEL` | `claude-opus-5-5` | Claude model for the reviewer (the live site runs Sonnet 4.5 on Amazon Bedrock: `CLAUDE_CODE_USE_BEDROCK=1`) |
+| `NEARAI_API_KEY` | unset | Set it and reviews run on NEAR AI Cloud, privately in a TEE, with a receipt per scan (the live site does) |
+| `AIRLOCK_NEAR_MODEL` | `Qwen/Qwen3.8-27B` | NEAR AI Cloud model; `npm run models` lists those that qualify |
+| `AIRLOCK_NEAR_MAX_USD` | `0.05` | Budget per private review; when it is spent, the next reply must be the verdict |
+| `NEAR_ACCOUNT_ID`, `NEAR_PRIVATE_KEY` | unset | A recorder's function-call key: record every verdict on NEAR (or `NEAR_KEY_FILE`, a near-cli credentials file) |
+| `AIRLOCK_ENGINE` | `near` with a NEAR AI key, else `claude` | `claude` keeps the pre-hackathon Claude reviewer even when `NEARAI_API_KEY` is set |
+| `AIRLOCK_MODEL` | `claude-opus-5-5` | Claude model for the Claude reviewer (on Amazon Bedrock: `CLAUDE_CODE_USE_BEDROCK=1`) |
 | `ARMORIQ_ENV` | `production` | `staging` for keys from the ArmorTools console (see docs/armoriq.md) |
 | `AIRLOCK_MAX_USD_PER_SCAN` | `1.5` | Stop a review that costs more |
 | `AIRLOCK_DAILY_USD` | `25` | Stop starting scans after this much per UTC day |
@@ -199,9 +221,29 @@ docker run -p 8787:8787 -v airlock-data:/data \
 
 ## Privacy
 
-Airlock keeps the repository URL and the scan report so its link keeps working. The code is
-deleted after the scan. Claude reads it, and ArmorIQ receives a sanitized trace of the
-reviewer's tool calls. No accounts, no cookies, no tracking.
+What each way of reviewing sends, and what is kept afterwards:
+
+| Way | Who can read the code | Kept after the review |
+| --- | --- | --- |
+| `npm run scan:private` on your machine | Only the model inside the attested TEE: files, prompts and tool calls are encrypted to its key before they leave your machine. No Airlock server is involved. | **Nothing**: a local folder is read in place, and a cloned repository is deleted when the review ends (`server/private-cli.ts`). Only if you ask: `--receipt` writes a file on your machine, and `--record` puts the verdict label, the number of findings and hashes on NEAR, never code or what the findings say. |
+| The live site, NEAR AI engine | Airlock's server clones the public repository and sends it encrypted to the same TEE model. | The clone is deleted after the scan (`server/scans.ts`). The repository URL, the report and the receipt stay on the server so the report's link keeps working; the verdict and hashes go on NEAR. |
+| Claude engine (pre-hackathon, `AIRLOCK_ENGINE=claude`) | Claude reads it; ArmorIQ receives a sanitized trace of the reviewer's tool calls. | As on the live site, without a receipt. |
+
+What the NEAR AI Gateway still sees (request sizes, timing, the model, your account), and what
+you have to trust for the TEE: [THREAT_MODEL.md](THREAT_MODEL.md). No accounts, no cookies, no
+tracking.
+
+## Built with
+
+- [NEAR AI Cloud](https://cloud.near.ai) through `@nearai/inference-sdk` 0.2.1: models in TEEs,
+  end-to-end encryption, attestation and per-reply signatures.
+- `@phala/dcap-qvl` 0.7.0: Intel TDX quote verification, at scan time and offline.
+- `near-sdk` 5.29.1 for the registry contract (Rust), and `near-api-js` 7.4.0 to record and read
+  verdicts; `tweetnacl` for the receipt's one-time key.
+- Hono (server), React 19 and Vite (web app), zod.
+- From before the hackathon: the Claude Agent SDK, ArmorClaude and sgrep (the fenced Claude
+  reviewer).
+- Much of the code, tests and docs were written with Claude Code (Anthropic).
 
 ## License
 
