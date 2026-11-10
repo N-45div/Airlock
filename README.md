@@ -13,7 +13,9 @@ Airlock checks a stranger's repository before you, or your AI coding agent, runs
 hackathon the review runs on a model inside a TEE on NEAR AI Cloud that reads the code
 end-to-end encrypted and can't run anything, and the verdict comes with proof: a receipt anyone
 can check offline, and a record on NEAR that the contract accepts only with the model's
-signature.
+signature. And before the model judges, Airlock can run the repository's install steps in a
+throwaway VM full of decoy wallets: a stealer gets caught sending them, and the report names
+every wallet in the request it sent.
 
 Airlock existed before the hackathon: the
 [`pre-hackathon`](https://github.com/N-45div/Airlock/tree/pre-hackathon) branch (commit
@@ -65,6 +67,18 @@ What the hackathon adds:
   since it was checked, or one never checked waits for you, and *Looks safe* goes ahead with a
   note. npm package names are matched to their repositories. ([docs/guard.md](docs/guard.md),
   `server/guard.ts`)
+- **A sandbox that catches wallet stealers red-handed.** The repository's own install and setup
+  steps (`npm install`, `setup.py`, folder-open VS Code tasks, dev container commands, setup
+  scripts) run in a throwaway Vercel Sandbox VM. Its home folder holds decoy wallets and keys where
+  real ones live: MetaMask, Phantom, Rabby and other browser wallets, NEAR and Solana CLI keys,
+  Ethereum and Foundry keystores, SSH and cloud keys, another project's `.env`. Package registries
+  resolve for real; every other host is answered from inside the VM, HTTPS included, so what the
+  code sends is kept. Each decoy carries its own token, so a caught request says which wallets were
+  inside it, through base64, gzip, hex or JSON. The code runs as a user that can't touch the tracer
+  or its logs. The model in the TEE sees this evidence with the code, the receipt binds its hash,
+  and `verify:receipt` checks it. In the benchmark, all four stealer samples were caught with the
+  exact wallets each took; reading alone also flagged them, and the honest control touched nothing
+  ([METRICS.md](METRICS.md#sandbox-reading-the-code-vs-running-it-2026-11-10), `server/sandbox/`).
 
 Not shown yet: a GitHub Action, and checking Intel quotes inside the contract. The Chrome Web Store listing
 has the pre-hackathon extension until its update is approved; step 7 below loads the current one.
@@ -84,7 +98,7 @@ Try it live, with nothing to install:
 Try it locally (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
 
 1. Do: `npm ci && npm run judge`
-   See: `receipts 64/64 verified offline` (the Intel TDX quote, the key and nonce inside it,
+   See: `receipts 74/74 verified offline` (the Intel TDX quote, the key and nonce inside it,
    every reply signature, the decrypted verdict, and the sample files), `tests … passed`
    (including tampered receipts that must fail, and the fixture hygiene check), then `PASS`.
    No key, and no network. On Windows without Developer Mode, the two tests that need a symlink
@@ -119,6 +133,17 @@ Try it locally (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
    `npm run guard -- check "npm install escape-string-regexp"` finds the package's repository and
    shows `ALLOW … "Looks safe"`. `npm run guard -- --config` prints the hook settings for Claude
    Code ([docs/guard.md](docs/guard.md)). Public NEAR RPC and the npm registry; no key.
+9. Do: `npm run verify:receipt -- bench/sandbox/hidden-loader--detonate.json`
+   See: every check `PASS`, including `sandbox evidence: matches the run the model was shown: 1 step,
+   3 decoy wallets or keys touched, 1 host contacted, 1 request caught carrying decoys`, then
+   `VERIFIED`. The evidence file next to the receipt holds the request the stealer sent, with the
+   decoy Solana, NEAR and SSH keys inside. No key, no network.
+10. Do: `npx vercel link && npx vercel env pull`, then `npm run sandbox -- wallet:hidden-loader`
+    See: the steps, then `CAUGHT RED-HANDED: … POST https://metrics.nft-floor-sync.invalid/ingest`
+    with `inside it: NEAR CLI keys ✓  Solana CLI keypair ✓  SSH key ✓`. Needs a Vercel account (the
+    VM runs on Vercel Sandbox). With `NEARAI_API_KEY`,
+    `npm run scan:private -- wallet:hidden-loader --detonate --receipt r.json` does the whole loop:
+    the sandbox run, the model's verdict citing it, and a receipt that binds the evidence.
 
 Test fixtures: two samples contain text written to steer AI reviewers, which is what Airlock
 detects. They are kept packed (`samples/packed/`) and unpacked only into a temporary folder
@@ -253,6 +278,7 @@ docker run -p 8787:8787 -v airlock-data:/data \
 | `AIRLOCK_NEAR_MAX_USD` | `0.05` | Budget per private review; when it is spent, the next reply must be the verdict |
 | `NEAR_ACCOUNT_ID`, `NEAR_PRIVATE_KEY` | unset | A recorder's function-call key: record every verdict on NEAR (or `NEAR_KEY_FILE`, a near-cli credentials file) |
 | `AIRLOCK_ENGINE` | `near` with a NEAR AI key, else `claude` | `claude` keeps the pre-hackathon Claude reviewer even when `NEARAI_API_KEY` is set |
+| `AIRLOCK_SANDBOX` | unset | `1` runs each repository's install steps in the sandbox first (needs `VERCEL_TOKEN`, `VERCEL_TEAM_ID`, `VERCEL_PROJECT_ID`, or `VERCEL_OIDC_TOKEN`); if the sandbox fails, the code is still reviewed |
 | `AIRLOCK_MODEL` | `claude-opus-5-5` | Claude model for the Claude reviewer (on Amazon Bedrock: `CLAUDE_CODE_USE_BEDROCK=1`) |
 | `ARMORIQ_ENV` | `production` | `staging` for keys from the ArmorTools console (see docs/armoriq.md) |
 | `AIRLOCK_MAX_USD_PER_SCAN` | `1.5` | Stop a review that costs more |
