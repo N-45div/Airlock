@@ -10,7 +10,7 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { packedSampleIds, readPack } from '../sample-pack.ts';
+import { WALLET_PACK, packedSampleIds, readPack } from '../sample-pack.ts';
 
 const run = promisify(execFile);
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -54,5 +54,56 @@ describe('fixture hygiene', () => {
       assert.ok(ADDRESSED_TO_AI.some((re) => re.test(text)), `${id}: the hygiene patterns should match its planted text`);
       assert.doesNotMatch(text, /https?:\/\/[^\s/]*example\.com/, `${id}: download hosts must be .invalid`);
     }
+  });
+});
+
+// Wallet-stealer samples carry code that reaches for wallets and keys. They are kept packed in
+// samples/packed/wallet-stealers.pack so no readable file in the repository is a working stealer, and
+// every host they ship to is on the reserved .invalid domain, which never resolves. The sandbox
+// (server/sandbox) unpacks one into the throwaway VM when it needs it.
+describe('wallet-stealer fixture hygiene', () => {
+  const sampleText = async (id: string) => Object.values((await readPack(WALLET_PACK))[id]!).map((b64) => Buffer.from(b64, 'base64').toString('utf8')).join('\n');
+
+  it('the pack holds the samples, and their exfil hosts are all .invalid', async () => {
+    assert.deepEqual(await packedSampleIds(WALLET_PACK), ['hidden-loader', 'near-deploy', 'setup-py-stealer', 'vendored-dep', 'wallet-postinstall']);
+    const pack = await readPack(WALLET_PACK);
+    for (const [id, files] of Object.entries(pack)) {
+      const text = Object.values(files).map((b64) => Buffer.from(b64, 'base64').toString('utf8')).join('\n');
+      for (const host of text.match(/\b[a-z0-9.-]+\.(?:com|net|org|io|xyz|co|dev)\b/gi) ?? []) {
+        assert.ok(/npmjs|pythonhosted|pypi|yarnpkg/.test(host), `${id}: non-registry host "${host}" in a packed stealer; exfil hosts must be .invalid`);
+      }
+    }
+  });
+
+  it('the three stealers reach for a wallet and ship it out; the control does neither on install', async () => {
+    const walletPath = /solana|near-credentials|keystore|Local Extension Settings|\.aws|\.ssh|\.env|gcloud/;
+    for (const id of ['wallet-postinstall', 'hidden-loader', 'vendored-dep', 'setup-py-stealer']) {
+      const text = await sampleText(id);
+      assert.match(text, /\.invalid\b/, `${id}: a stealer should exfil to a .invalid host`);
+    }
+    // near-deploy is the honest control: it reads a key but only in a `npm run deploy` script, never
+    // on install, and sends nothing anywhere.
+    const control = await readPack(WALLET_PACK).then((p) => p['near-deploy']!);
+    const pkg = JSON.parse(Buffer.from(control['package.json']!, 'base64').toString('utf8')) as { scripts?: Record<string, string> };
+    assert.equal(pkg.scripts?.postinstall, undefined, 'the control must not run anything on install');
+    const controlText = Object.values(control).map((b64) => Buffer.from(b64, 'base64').toString('utf8')).join('\n');
+    assert.doesNotMatch(controlText, /\.invalid\b/, 'the control must not exfiltrate');
+    assert.ok(walletPath.test(controlText), 'the control should still read a key (to deploy), so it tests false alarms');
+  });
+
+  it('no readable tracked file is a working wallet stealer (a packed exfil host appears nowhere outside the pack)', async () => {
+    const pack = await readPack(WALLET_PACK);
+    const hosts = new Set<string>();
+    for (const files of Object.values(pack)) {
+      const text = Object.values(files).map((b64) => Buffer.from(b64, 'base64').toString('utf8')).join('\n');
+      for (const h of text.match(/\b[a-z0-9.-]+\.invalid\b/gi) ?? []) hosts.add(h.toLowerCase());
+    }
+    assert.ok(hosts.size >= 4, 'expected several distinct .invalid exfil hosts across the samples');
+    const hits: string[] = [];
+    for (const file of await trackedTextFiles()) {
+      const text = (await readFile(path.join(root, file), 'utf8').catch(() => '')).toLowerCase();
+      for (const h of hosts) if (text.includes(h)) hits.push(`${file}: ${h}`);
+    }
+    assert.deepEqual(hits, [], `wallet-stealer exfil host found in a readable file (keep stealer code packed):\n${hits.join('\n')}`);
   });
 });

@@ -4,8 +4,12 @@
   "type": "module",
   "description": "Before you run a stranger's code, let a fenced agent open it first.",
   "license": "MIT",
-  "workspaces": ["web"],
-  "engines": { "node": ">=24.22.1" },
+  "workspaces": [
+    "web"
+  ],
+  "engines": {
+    "node": ">=24.22.1"
+  },
   "scripts": {
     "start": "node --no-warnings server/main.ts",
     "build": "npm run build -w @airlock/web",
@@ -22,13 +26,15 @@
     "guard": "node --no-warnings server/guard.ts",
     "test:contract": "cd contracts/verdict-registry && cargo test",
     "test": "node --no-warnings --test \"server/test/*.test.ts\"",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "sandbox": "node --no-warnings server/sandbox-cli.ts"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.299",
     "@hono/node-server": "^2.1.5",
     "@nearai/inference-sdk": "0.2.1",
     "@phala/dcap-qvl": "0.7.0",
+    "@vercel/sandbox": "^3.9.1",
     "hono": "^4.13.13",
     "near-api-js": "7.4.0",
     "tweetnacl": "1.0.3",

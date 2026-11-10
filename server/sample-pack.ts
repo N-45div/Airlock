@@ -2,9 +2,11 @@
 // readable files in the repository: anyone (or any AI agent) browsing the tree never meets
 // that text in the clear, and scans, tests and the benchmark unpack a sample into a temporary
 // folder when they need it. The pack is gzipped JSON: { "<sample id>": { "<path>": base64 } }.
-//   node server/sample-pack.ts list
-//   node server/sample-pack.ts unpack <id> <folder>        to read or edit a sample
-//   node server/sample-pack.ts pack <id>=<folder> [...]    to add or replace samples
+// Wallet-stealer samples for the sandbox live in their own pack the same way, so the repository
+// never holds readable code that reaches for wallets (--pack wallet).
+//   node server/sample-pack.ts [--pack wallet] list
+//   node server/sample-pack.ts [--pack wallet] unpack <id> <folder>        to read or edit a sample
+//   node server/sample-pack.ts [--pack wallet] pack <id>=<folder> [...]    to add or replace samples
 
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
@@ -15,6 +17,8 @@ import { gunzipSync, gzipSync } from 'node:zlib';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const PACK = path.join(here, '..', 'samples', 'packed', 'ai-steering.pack');
+/** Harmless wallet-stealer samples for the sandbox: they reach for wallets and keys and send them to hosts that can't exist. */
+export const WALLET_PACK = path.join(here, '..', 'samples', 'packed', 'wallet-stealers.pack');
 
 type Pack = Record<string, Record<string, string>>;
 
@@ -42,7 +46,8 @@ const unpacked = new Map<string, Promise<string>>();
 
 /** A folder holding the packed sample, unpacked once per process into the temp directory. */
 export function packedSampleDir(id: string, file = PACK): Promise<string> {
-  let dir = unpacked.get(id);
+  const key = `${file}\0${id}`;
+  let dir = unpacked.get(key);
   if (!dir) {
     dir = (async () => {
       const digest = createHash('sha256').update(await readFile(file)).digest('hex').slice(0, 12);
@@ -52,7 +57,7 @@ export function packedSampleDir(id: string, file = PACK): Promise<string> {
       await unpackSample(id, target, file);
       return target;
     })();
-    unpacked.set(id, dir);
+    unpacked.set(key, dir);
   }
   return dir;
 }
@@ -80,17 +85,23 @@ export async function packSamples(entries: Record<string, string>, file = PACK):
 }
 
 if (import.meta.main) {
-  const [cmd, ...rest] = process.argv.slice(2);
+  let args = process.argv.slice(2);
+  let file = PACK;
+  if (args[0] === '--pack') {
+    file = args[1] === 'wallet' ? WALLET_PACK : PACK;
+    args = args.slice(2);
+  }
+  const [cmd, ...rest] = args;
   if (cmd === 'list') {
-    for (const id of await packedSampleIds()) console.log(id);
+    for (const id of await packedSampleIds(file)) console.log(id);
   } else if (cmd === 'unpack' && rest.length === 2) {
-    await unpackSample(rest[0]!, path.resolve(rest[1]!));
+    await unpackSample(rest[0]!, path.resolve(rest[1]!), file);
     console.log(`unpacked ${rest[0]} into ${rest[1]}`);
   } else if (cmd === 'pack' && rest.length > 0) {
-    await packSamples(Object.fromEntries(rest.map((r) => r.split('=') as [string, string])));
-    console.log(`packed ${rest.map((r) => r.split('=')[0]).join(', ')} into ${path.relative(process.cwd(), PACK)}`);
+    await packSamples(Object.fromEntries(rest.map((r) => r.split('=') as [string, string])), file);
+    console.log(`packed ${rest.map((r) => r.split('=')[0]).join(', ')} into ${path.relative(process.cwd(), file)}`);
   } else {
-    console.error('usage: node server/sample-pack.ts list | unpack <id> <folder> | pack <id>=<folder> ...');
+    console.error('usage: node server/sample-pack.ts [--pack wallet] list | unpack <id> <folder> | pack <id>=<folder> ...');
     process.exit(2);
   }
 }
