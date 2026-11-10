@@ -139,7 +139,7 @@ Try it locally (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
    `VERIFIED`. The evidence file next to the receipt holds the request the stealer sent, with the
    decoy Solana, NEAR and SSH keys inside. No key, no network.
 10. Do: `npx vercel link && npx vercel env pull`, then `npm run sandbox -- wallet:hidden-loader`
-    See: the steps, then `CAUGHT RED-HANDED: … POST https://metrics.nft-floor-sync.invalid/ingest`
+    See: the steps, then `CAUGHT RED-HANDED: … POST https://…/ingest` (its collector host)
     with `inside it: NEAR CLI keys ✓  Solana CLI keypair ✓  SSH key ✓`. Needs a Vercel account (the
     VM runs on Vercel Sandbox). With `NEARAI_API_KEY`,
     `npm run scan:private -- wallet:hidden-loader --detonate --receipt r.json` does the whole loop:
