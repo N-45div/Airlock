@@ -11,9 +11,14 @@ export function SiteHeader() {
           <span className="brand__name">{PRODUCT}</span>
         </Link>
         <nav className="site-nav" aria-label="Main">
-          <Link to="/#how-it-works">How it works</Link>
+          <Link to="/#how-it-works" className="site-nav__wide">
+            How it works
+          </Link>
           <a href="/near">On NEAR</a>
-          <a href={LINKS.extension}>Chrome extension</a>
+          <Link to="/pricing">Pricing</Link>
+          <a href={LINKS.extension} className="site-nav__wide">
+            Chrome extension
+          </a>
         </nav>
       </div>
     </header>
@@ -27,14 +32,15 @@ export function SiteFooter() {
         <div className="site-footer__brand">
           <Mark size={20} />
           <span className="brand__name">{PRODUCT}</span>
-          <span className="site-footer__line">Reads the code. Never runs it.</span>
+          <span className="site-footer__line">Checks a stranger's code before it can touch your wallets.</span>
         </div>
         <nav className="site-footer__links" aria-label="Footer">
           <a href={LINKS.extension}>Chrome extension</a>
           <a href={LINKS.source}>Source on GitHub</a>
+          <Link to="/pricing">Pricing</Link>
           <Link to="/privacy">Privacy</Link>
         </nav>
-        <p className="site-footer__credit">Reviews by Claude · fenced by ArmorIQ</p>
+        <p className="site-footer__credit">Reviewed by a model in a TEE on NEAR AI Cloud · verdicts on NEAR</p>
       </div>
     </footer>
   );

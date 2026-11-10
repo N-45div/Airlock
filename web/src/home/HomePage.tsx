@@ -1,86 +1,66 @@
-import { useEffect } from 'react';
-import type { FenceRow } from '../report/labels.ts';
-import { FenceLog } from '../report/Fence.tsx';
-import { PRODUCT, TAGLINE } from '../brand.ts';
+import { useEffect, useMemo } from 'react';
+import { HeldBreathCanvas, Sigil } from '../art/Art.tsx';
+import { PRODUCT } from '../brand.ts';
+import { SandboxPanel } from '../report/Sandbox.tsx';
+import type { SandboxReport } from '../../../server/types.ts';
 import { Icon, type IconName } from '../ui/Icon.tsx';
 import { Card, SectionHeading } from '../ui/primitives.tsx';
 import { Samples } from './Samples.tsx';
 import { ScanForm } from './ScanForm.tsx';
+import showcase from './showcase.json';
 
 const STEPS: { icon: IconName; title: string; text: string }[] = [
   {
-    icon: 'read',
-    title: 'Read',
-    text: 'The agent reads the code. It never runs it, installs it or opens it in an editor.',
-  },
-  {
-    icon: 'fence',
-    title: 'Fence',
-    text: `ArmorIQ’s policy decides every tool call: reads are allowed, commands are blocked, and fetching a page waits for you. ${PRODUCT}’s own backstop sits behind it.`,
+    icon: 'terminal',
+    title: 'Run it against decoys',
+    text: 'Its install and setup steps run in a throwaway VM whose home folder holds decoy wallets and keys. Anything that reaches for one is caught sending it.',
   },
   {
     icon: 'shield',
-    title: 'Verdict',
-    text: 'A plain-words answer, every finding with its file and line, and a link you can share.',
+    title: 'Judge it privately',
+    text: 'A model inside a TEE on NEAR AI Cloud reads the code and what it did, end-to-end encrypted. Every reply is signed by the enclave and checked.',
+  },
+  {
+    icon: 'key',
+    title: 'Record it on NEAR',
+    text: 'The verdict goes on NEAR with a receipt anyone can check offline. Your agent, your browser and everyone after you read it for free.',
   },
 ];
 
 const LOOKS_FOR: { icon: IconName; title: string; text: string }[] = [
   {
-    icon: 'terminal',
-    title: 'Code that runs on install or when you open the folder',
-    text: 'npm install hooks, setup.py, editor tasks and dev container commands.',
+    icon: 'key',
+    title: 'Code that reaches for your wallets',
+    text: 'Browser wallets like MetaMask and Phantom, NEAR and Solana CLI keys, Ethereum keystores, seed phrases and .env files.',
   },
   {
-    icon: 'key',
-    title: 'Reading SSH keys, .env files, browser data or crypto wallets',
-    text: 'The things a fake take-home task or free trading bot is usually after.',
+    icon: 'terminal',
+    title: 'Code that runs on install or when you open the folder',
+    text: 'npm install hooks, setup.py, editor tasks and dev container commands: where the damage usually happens, in the first minute.',
   },
   {
     icon: 'send',
-    title: 'Sending data to bots, webhooks or bare IP addresses',
-    text: 'Telegram and Discord bots, paste sites, and servers with no name.',
+    title: 'Sending data somewhere it shouldn’t',
+    text: 'Collectors, bots, webhooks and bare IP addresses. In the sandbox, the request itself is kept.',
   },
   {
     icon: 'hidden',
     title: 'Hidden or packed code',
-    text: 'Encoded strings that are decoded and run, and one-line files no one can read.',
+    text: 'Encoded strings that are decoded and run, payloads tucked into vendored folders, one-line files no one can read.',
   },
   {
     icon: 'message',
     title: 'Text planted to steer AI tools',
-    text: 'Notes in a README or a comment telling an AI to run something or call the code safe.',
+    text: 'Notes in a README, comment or rules file telling an AI agent to run something or call the code safe.',
   },
 ];
 
-/** What a report's fence log looks like; shown on the home page, labelled as an example. */
-const EXAMPLE_FENCE: FenceRow[] = [
-  { event: { id: 'x1', at: '', tool: 'Read', summary: 'package.json', decision: 'allowed', by: 'armoriq' } },
-  { event: { id: 'x2', at: '', tool: 'Read', summary: 'scripts/setup.sh', decision: 'allowed', by: 'armoriq' } },
-  { event: { id: 'x3', at: '', tool: 'Grep', summary: '"readFileSync|https.request" in src', decision: 'allowed', by: 'armoriq' } },
-  {
-    event: {
-      id: 'x4',
-      at: '',
-      tool: 'Bash',
-      summary: 'bash scripts/setup.sh',
-      decision: 'blocked',
-      by: 'armoriq',
-      reason: 'The workspace policy blocks running commands.',
-    },
-  },
-  {
-    event: {
-      id: 'x5',
-      at: '',
-      tool: 'WebFetch',
-      summary: 'https://example.com/install.sh',
-      decision: 'held',
-      by: 'armoriq',
-      reason: 'Fetching a page waits for the person who started the scan.',
-    },
-  },
-];
+const VERDICT_WORD: Record<string, string> = { safe: 'Looks safe', caution: 'Be careful', dangerous: 'Don’t run it' };
+
+interface Showcase {
+  runs: { id: string; what: string; verdict: string; receiptHash: string; held: number }[];
+  catch: { id: string; receiptHash: string; sandbox: SandboxReport } | null;
+}
 
 function initialUrl(): string {
   try {
@@ -90,33 +70,55 @@ function initialUrl(): string {
   }
 }
 
+function useNarrow(): boolean {
+  return useMemo(() => window.matchMedia?.('(max-width: 760px)').matches ?? false, []);
+}
+
 export function HomePage() {
+  const narrow = useNarrow();
+  const data = showcase as Showcase;
   useEffect(() => {
-    document.title = `${PRODUCT} · Check a repository before you run it`;
+    document.title = `${PRODUCT} · Check a stranger’s code before it touches your wallets`;
     if (window.location.hash) document.getElementById(window.location.hash.slice(1))?.scrollIntoView();
   }, []);
 
   return (
-    <div className="page">
-      <section className="hero" aria-labelledby="hero-title">
-        <h1 id="hero-title" className="hero__title">
-          {TAGLINE}
-        </h1>
-        <p className="hero__lede">
-          Paste a GitHub link. An AI agent reads the code inside a fence, never runs it, and tells you in plain words
-          whether it is safe to run.
-        </p>
-        <ScanForm autoFocus initialUrl={initialUrl()} />
-        <p className="hero__for">
-          <span className="hero__for-label">Made for</span> the take-home task a recruiter sent, the free trading bot or
-          starter kit you found, and the package you have never heard of.
+    <div className="page page--home">
+      <section className="stage" aria-labelledby="hero-title">
+        <HeldBreathCanvas className="stage__canvas" seed="airlock:held-breath" chamber={narrow ? { x: 0.5, y: 0.8, r: 0.3 } : { x: 0.76, y: 0.5, r: 0.34 }} />
+        <div className="stage__scrim" aria-hidden="true" />
+        <div className="stage__inner">
+          <p className="stage__eyebrow">Private AI on NEAR AI Cloud · verdicts on NEAR</p>
+          <h1 id="hero-title" className="stage__title">
+            Your laptop is your wallet.
+            <span>Check a stranger’s code before it touches it.</span>
+          </h1>
+          <p className="stage__lede">
+            {PRODUCT} runs the install in a sealed VM full of decoy wallets, has a model inside a TEE judge what it did, and
+            records the verdict on NEAR. A plain answer, with proof.
+          </p>
+          <ScanForm autoFocus initialUrl={initialUrl()} />
+          <ul className="stage__facts">
+            <li>
+              <Icon name="stop" size={15} /> Stealers caught sending your wallets
+            </li>
+            <li>
+              <Icon name="shield" size={15} /> Judged privately in a TEE
+            </li>
+            <li>
+              <Icon name="check" size={15} /> Every verdict checkable, forever
+            </li>
+          </ul>
+        </div>
+        <p className="stage__caption">
+          Live: drift crosses the chamber. What carries a key is held at the seal.
         </p>
       </section>
 
       <Samples />
 
       <section id="how-it-works" aria-labelledby="how-title">
-        <SectionHeading id="how-title" eyebrow="How it works" title="Read, fence, verdict" />
+        <SectionHeading id="how-title" eyebrow="How it works" title="Run it, judge it, record it" />
         <ol className="steps">
           {STEPS.map((step, i) => (
             <Card as="li" key={step.title} className="step">
@@ -131,27 +133,54 @@ export function HomePage() {
             </Card>
           ))}
         </ol>
-        <div className="example">
-          <div className="example__head">
-            <p className="eyebrow">Example</p>
-            <p className="example__title">What the fence looks like in a report</p>
-          </div>
-          <Card pad="none" className="fence">
-            <FenceLog rows={EXAMPLE_FENCE} label="Example tool calls" />
-          </Card>
-          <p className="example__note">
-            Every check includes a fence test: the agent tries once to run what the repository wants run, and the report
-            shows the policy refusing it.
-          </p>
-        </div>
       </section>
+
+      {data.catch ? (
+        <section className="catch" aria-labelledby="catch-title">
+          <div className="catch__side">
+            <SectionHeading id="catch-title" eyebrow="From the benchmark" title="Caught red-handed" />
+            <p className="split__text">
+              A stealer that hides its targets in base64. Its install script ran against decoys, reached for three keys and
+              sent them to its server. The sandbox answered as that server and kept the request.
+            </p>
+            <figure className="catch__sigil">
+              <Sigil seed={data.catch.receiptHash} verdict="dangerous" held={new Set(data.catch.sandbox.sent.flatMap((s) => s.decoys)).size} size={200} />
+              <figcaption>
+                Its sigil, drawn from receipt <code>{data.catch.receiptHash.slice(0, 12)}…</code>. The held lights are the
+                three keys it sent.
+              </figcaption>
+            </figure>
+          </div>
+          <SandboxPanel sandbox={data.catch.sandbox} />
+        </section>
+      ) : null}
+
+      {data.runs.length ? (
+        <section aria-labelledby="faces-title">
+          <SectionHeading id="faces-title" eyebrow="Every verdict has a face" title="Drawn from the receipt it can be checked against" />
+          <p className="split__text faces__lede">
+            The outer ring is the receipt hash, one tick per bit: two sigils match exactly when their receipts do. The color
+            is the verdict, and each held light is a wallet the sandbox caught leaving.
+          </p>
+          <ul className="faces">
+            {data.runs.map((r) => (
+              <li key={r.id} className="faces__item">
+                <Sigil seed={r.receiptHash} verdict={r.verdict as 'safe' | 'caution' | 'dangerous'} held={r.held} size={136} />
+                <p className="faces__name">{r.id}</p>
+                <p className={`faces__verdict faces__verdict--${r.verdict}`}>{VERDICT_WORD[r.verdict] ?? r.verdict}</p>
+                <p className="faces__what">{r.what}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="split" aria-labelledby="looks-title">
         <div>
           <SectionHeading id="looks-title" eyebrow="What it looks for" title="Where the harm usually hides" />
           <p className="split__text">
-            Most harmful repositories do their damage in the first minute: when you install them or open the folder.
-            The agent starts there, then follows what those files load.
+            Most harmful repositories do their damage in the first minute: when you install them or open the folder. {PRODUCT}{' '}
+            starts there, runs it, and follows what those files load.
           </p>
         </div>
         <Card pad="none">
@@ -168,6 +197,26 @@ export function HomePage() {
               </li>
             ))}
           </ul>
+        </Card>
+      </section>
+
+      <section className="agents" aria-labelledby="agents-title">
+        <div>
+          <SectionHeading id="agents-title" eyebrow="For coding agents" title="Your agent checks NEAR before it clones" />
+          <p className="split__text">
+            A hook for Claude Code and Codex runs before every shell command. When one would clone or install a repository,
+            it reads the verdict from NEAR: <strong>Don’t run it</strong> is blocked, anything unchecked waits for you.
+          </p>
+        </div>
+        <Card pad="lg" className="agents__code">
+          <pre>
+            <code>{`$ npm run guard -- --config     # the hook settings
+
+$ npm run guard -- check "git clone github.com/…"
+DENY   Airlock: "Don't run it" for github.com/…
+       (verdict #…, recorded on NEAR)
+       Blocked: don't fetch or run this repository.`}</code>
+          </pre>
         </Card>
       </section>
     </div>

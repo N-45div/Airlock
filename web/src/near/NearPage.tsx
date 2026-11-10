@@ -2,6 +2,7 @@
 // The page reads the registry from public RPC in the browser; nothing comes from our server.
 
 import { useEffect, useState } from 'react';
+import { Sigil } from '../art/Art.tsx';
 import { PRODUCT } from '../brand.ts';
 import { accountUrl, nearView, receiptUrl, RECORDER, REGISTRY, repoLabelOf, repoUrlOf, type OnchainVerdict } from '../near.ts';
 import { VERDICT } from '../report/labels.ts';
@@ -96,6 +97,8 @@ function VerdictRow({ row }: { row: OnchainVerdict }) {
   return (
     <li>
       <Card as="article" pad="md" className="near-row">
+        <Sigil seed={row.receipt_hash} verdict={row.verdict} size={72} className="near-row__sigil" label={`Sigil of receipt ${row.receipt_hash.slice(0, 12)}…`} />
+        <div className="near-row__body">
         <div className="near-row__top">
           <Chip tone={v.tone} icon={v.icon}>
             {v.title}
@@ -148,6 +151,7 @@ function VerdictRow({ row }: { row: OnchainVerdict }) {
             receipt <code>{row.receipt_hash.slice(0, 16)}…</code>
           </span>
         </p>
+        </div>
       </Card>
     </li>
   );

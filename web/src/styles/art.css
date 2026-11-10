@@ -1,0 +1,335 @@
+/* Held Breath and the sigils (web/src/art, docs/art.md). */
+
+#root {
+  overflow-x: clip;
+}
+
+/* The home page's night stage: full width, its own dark palette in either theme, so the scan
+   form, buttons and text inside it restyle themselves through the same tokens. */
+.page--home {
+  padding-top: 0;
+}
+
+.stage {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: min(720px, 90vh);
+  margin-inline: calc(50% - 50vw);
+  overflow: hidden;
+  background: #07080c;
+  color-scheme: dark;
+  --bg: #07080c;
+  --surface: rgba(255, 255, 255, 0.06);
+  --surface-2: rgba(255, 255, 255, 0.09);
+  --border: rgba(255, 255, 255, 0.13);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --text: #f2f3f7;
+  --text-2: #b9bcc8;
+  --text-3: #8e91a0;
+  --accent: #8d99ff;
+  --accent-hover: #a7b0ff;
+  --accent-soft: rgba(141, 153, 255, 0.14);
+  --accent-border: rgba(141, 153, 255, 0.36);
+  --accent-text: #b3baff;
+  --on-accent: #07080c;
+  --danger: #ff8f86;
+  --danger-soft: rgba(255, 143, 134, 0.1);
+  --danger-border: rgba(255, 143, 134, 0.3);
+  color: var(--text);
+}
+
+.stage__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.stage__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(7, 8, 12, 0.94) 0%, rgba(7, 8, 12, 0.82) 36%, rgba(7, 8, 12, 0.22) 62%, rgba(7, 8, 12, 0) 100%),
+    linear-gradient(0deg, rgba(7, 8, 12, 0.7) 0%, rgba(7, 8, 12, 0) 26%);
+  pointer-events: none;
+}
+
+.stage__inner {
+  width: 100%;
+  max-width: calc(var(--content) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: 76px var(--gutter) 92px;
+}
+
+.stage__inner > * {
+  max-width: 600px;
+}
+
+.stage__eyebrow {
+  margin: 0;
+  color: var(--accent-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.stage__title {
+  margin-top: 16px;
+  font-size: clamp(40px, 6.6vw, 68px);
+  font-weight: 650;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.stage__title span {
+  display: block;
+  margin-top: 14px;
+  color: var(--text-2);
+  font-size: 0.56em;
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+}
+
+.stage__lede {
+  margin-top: 20px;
+  color: var(--text-2);
+  font-size: clamp(16px, 2vw, 18.5px);
+  line-height: 1.6;
+}
+
+.stage .scan-form {
+  margin-top: 30px;
+}
+
+.stage__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.stage__facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.stage__facts .icon {
+  color: var(--accent-text);
+}
+
+.stage__caption {
+  position: absolute;
+  right: var(--gutter);
+  bottom: 16px;
+  max-width: 460px;
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .stage {
+    align-items: flex-start;
+    min-height: 0;
+  }
+
+  .stage__inner {
+    padding: 40px var(--gutter) 300px;
+  }
+
+  .stage__scrim {
+    background: linear-gradient(180deg, rgba(7, 8, 12, 0.95) 0%, rgba(7, 8, 12, 0.88) 52%, rgba(7, 8, 12, 0.15) 78%, rgba(7, 8, 12, 0.45) 100%);
+  }
+
+  .stage__caption {
+    left: var(--gutter);
+    text-align: left;
+  }
+}
+
+/* A sigil is a canvas sized in CSS pixels by its component. */
+.sigil {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* The verdict card carries its sigil at the top right. */
+.verdict {
+  position: relative;
+}
+
+.verdict__sigil {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+}
+
+@media (min-width: 641px) {
+  .verdict__top,
+  .verdict__title,
+  .verdict__headline {
+    padding-right: 150px;
+  }
+}
+
+@media (max-width: 640px) {
+  .verdict__sigil {
+    position: static;
+    width: 92px !important;
+    height: 92px !important;
+    margin-bottom: 10px;
+  }
+}
+
+/* Home: a real catch from the benchmark, beside its sigil. */
+.catch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.catch__sigil {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin: 24px 0 0;
+}
+
+.catch__sigil figcaption {
+  color: var(--text-3);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.catch__sigil code,
+.faces__name {
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 860px) {
+  .catch {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .catch__sigil {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Home: every verdict has a face. */
+.faces__lede {
+  max-width: 640px;
+}
+
+.faces {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(156px, 1fr));
+  gap: 16px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.faces__item {
+  padding: 18px 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: center;
+}
+
+.faces__item .sigil {
+  margin: 0 auto;
+}
+
+.faces__name {
+  margin: 10px 0 2px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.faces__verdict {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.faces__verdict--dangerous {
+  color: var(--danger);
+}
+
+.faces__verdict--caution {
+  color: var(--caution);
+}
+
+.faces__verdict--safe {
+  color: var(--safe);
+}
+
+.faces__what {
+  margin: 6px 0 0;
+  color: var(--text-3);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+/* Home: the guard for coding agents. */
+.agents {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 28px;
+  align-items: center;
+}
+
+.agents__code pre {
+  margin: 0;
+  overflow-x: auto;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre;
+}
+
+@media (max-width: 860px) {
+  .agents {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The NEAR page: each verdict beside its sigil. */
+.near-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+@media (max-width: 480px) {
+  .near-row {
+    grid-template-columns: 1fr;
+  }
+
+  .near-row__sigil {
+    width: 56px !important;
+    height: 56px !important;
+  }
+}

@@ -4,6 +4,7 @@ import { startScan } from '../api.ts';
 import { CTA } from '../brand.ts';
 import { messageOf } from '../home/ScanForm.tsx';
 import { navigate } from '../router.tsx';
+import { Sigil } from '../art/Art.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { Button, Card } from '../ui/primitives.tsx';
 import { plural } from './format.ts';
@@ -23,8 +24,19 @@ export function VerdictCard({ scan, rows }: { scan: Scan; rows: FenceRow[] }) {
   if (!scan.verdict) return null;
   const look = VERDICT[scan.verdict];
   const fence = fenceCounts(rows);
+  // The sigil is drawn from the receipt when there is one, so the report's face matches its receipt.
+  const seed = scan.proof?.receiptHash ?? scan.id;
+  const held = new Set((scan.sandbox?.sent ?? []).flatMap((s) => s.decoys)).size;
   return (
     <Card as="section" tone={look.tone} pad="lg" className={`verdict verdict--${look.tone}`} id="verdict" aria-labelledby="verdict-title">
+      <Sigil
+        seed={seed}
+        verdict={scan.verdict}
+        held={held}
+        size={132}
+        className="verdict__sigil"
+        label={scan.proof ? `Sigil of receipt ${seed.slice(0, 12)}…: its outer ring is the receipt hash, one tick per bit` : 'Sigil of this report'}
+      />
       <div className="verdict__top">
         <span className="verdict__badge">
           <Icon name={look.icon} size={24} />

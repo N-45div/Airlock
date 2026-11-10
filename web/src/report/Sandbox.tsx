@@ -2,16 +2,15 @@
 // home folder held decoy wallets and keys (server/sandbox). Red-handed captures lead: a request that
 // carried a decoy away is the clearest thing a report can show.
 
-import type { Scan } from '../../../server/types.ts';
+import type { SandboxReport } from '../../../server/types.ts';
 import { receiptUrl } from '../near.ts';
 import { Icon } from '../ui/Icon.tsx';
 import { Card } from '../ui/primitives.tsx';
 
 const kb = (bytes: number) => (bytes < 1024 ? `${bytes} bytes` : `${(bytes / 1024).toFixed(1)} KB`);
 
-export function SandboxPanel({ scan }: { scan: Scan }) {
-  const sb = scan.sandbox;
-  if (!sb) return null;
+/** `receiptHash` is set when the model in the TEE saw this run and a receipt binds it. */
+export function SandboxPanel({ sandbox: sb, receiptHash }: { sandbox: SandboxReport; receiptHash?: string }) {
   const caught = sb.sent.filter((s) => s.decoys.length > 0);
   const otherSent = sb.sent.filter((s) => s.decoys.length === 0);
   const quiet = sb.wallets.length === 0 && sb.contacts.length === 0 && sb.sent.length === 0;
@@ -113,11 +112,11 @@ export function SandboxPanel({ scan }: { scan: Scan }) {
 
       <p className="sandbox__note">
         {quiet && 'A quiet run is not proof of safety: code can wait, look for a sandbox, or act only on some machines. The review above also read the code. '}
-        {scan.proof ? (
+        {receiptHash ? (
           <>
             The model in the TEE saw this evidence before giving its verdict, and the receipt binds it by SHA-256{' '}
             <code title={sb.evidenceSha256}>{sb.evidenceSha256.slice(0, 16)}…</code>.{' '}
-            <a href={`${receiptUrl(scan.proof.receiptHash)}/evidence`} download={`airlock-evidence-${scan.proof.receiptHash.slice(0, 12)}.json`}>
+            <a href={`${receiptUrl(receiptHash)}/evidence`} download={`airlock-evidence-${receiptHash.slice(0, 12)}.json`}>
               Download the evidence
             </a>
             .

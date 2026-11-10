@@ -82,6 +82,23 @@ export async function renderSandboxSection(dir = SANDBOX_BENCH): Promise<string>
   ].join('\n');
 }
 
+/** The home page's showcase: the benchmark's real sandbox runs, as their sigils and one full catch. */
+export async function renderShowcase(dir = SANDBOX_BENCH): Promise<object | null> {
+  const { receiptHash } = await import('./receipt.ts');
+  const { sandboxReport } = await import('./sandbox/evidence.ts');
+  const runs: { id: string; what: string; verdict: string; receiptHash: string; held: number }[] = [];
+  let catchReport: unknown = null;
+  for (const c of SANDBOX_CASES) {
+    const run = await load<Receipt>(path.join(dir, `${c.id}--detonate.json`));
+    const ev = await load<SandboxEvidence>(path.join(dir, `${c.id}--detonate.evidence.json`));
+    if (!run || !ev) continue;
+    const held = new Set(ev.exfil.flatMap((x) => x.decoys)).size;
+    runs.push({ id: c.id, what: c.what, verdict: run.verdict.verdict, receiptHash: receiptHash(run), held });
+    if (c.id === 'hidden-loader') catchReport = { id: c.id, receiptHash: receiptHash(run), sandbox: sandboxReport(ev) };
+  }
+  return runs.length ? { runs, catch: catchReport } : null;
+}
+
 function run(args: string[]): Promise<number> {
   return new Promise((resolve) => {
     const child = execFile(process.execPath, ['--no-warnings', path.join(root, 'server', 'private-cli.ts'), ...args], { cwd: root, env: process.env, maxBuffer: 32 * 1024 * 1024 }, (error) =>
@@ -110,5 +127,10 @@ if (import.meta.main) {
     }
   }
   await metrics();
-  console.log('wrote METRICS.md');
+  const showcase = await renderShowcase();
+  if (showcase) {
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(path.join(root, 'web', 'src', 'home', 'showcase.json'), `${JSON.stringify(showcase, null, 2)}\n`);
+  }
+  console.log('wrote METRICS.md and web/src/home/showcase.json');
 }

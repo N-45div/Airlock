@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { HomePage } from './home/HomePage.tsx';
 import { NearPage } from './near/NearPage.tsx';
 import { NotFound } from './NotFound.tsx';
+import { PricingPage } from './PricingPage.tsx';
 import { PrivacyPage } from './PrivacyPage.tsx';
 import { ReportPage } from './report/ReportPage.tsx';
 import { parseRoute, usePathname, type Route } from './router.tsx';
@@ -17,6 +18,8 @@ function Page({ route }: { route: Route }) {
       return <PrivacyPage />;
     case 'near':
       return <NearPage />;
+    case 'pricing':
+      return <PricingPage />;
     case 'missing':
       return <NotFound />;
   }

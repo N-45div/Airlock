@@ -1,0 +1,98 @@
+{
+  "runs": [
+    {
+      "id": "wallet-postinstall",
+      "what": "An npm postinstall script that collects wallet files",
+      "verdict": "dangerous",
+      "receiptHash": "c4ac6210424f45fa787f61a30463820656fd097cadbabfd6842516af952100e4",
+      "held": 4
+    },
+    {
+      "id": "hidden-loader",
+      "what": "The same, with every path and the host base64-encoded",
+      "verdict": "dangerous",
+      "receiptHash": "6795f059cdbfa7b36aaa00a8fbae6b9236cd9ff2b8e52b541e232462f550cc91",
+      "held": 3
+    },
+    {
+      "id": "vendored-dep",
+      "what": "Clean app code; the payload sits in vendor/ and runs on install",
+      "verdict": "dangerous",
+      "receiptHash": "aa241d920f0b3ba73ca9ca58cfcdb351e011f62faf17eee3aa726440c617c668",
+      "held": 4
+    },
+    {
+      "id": "setup-py-stealer",
+      "what": "A Python setup.py that sends keys over HTTPS",
+      "verdict": "dangerous",
+      "receiptHash": "b3ce6e8225a1a7e448e5e6bd0d837a7d8b84ad23de5eb954a8097e4024e434da",
+      "held": 3
+    },
+    {
+      "id": "near-deploy",
+      "what": "Honest control: a deploy script reads a NEAR key only when you run it",
+      "verdict": "caution",
+      "receiptHash": "689b2ca99fba68151e6869074401c9a16ab835e90f6bfc8ae00d1546e77041b2",
+      "held": 0
+    }
+  ],
+  "catch": {
+    "id": "hidden-loader",
+    "receiptHash": "6795f059cdbfa7b36aaa00a8fbae6b9236cd9ff2b8e52b541e232462f550cc91",
+    "sandbox": {
+      "steps": [
+        {
+          "label": "npm install",
+          "status": "ok",
+          "seconds": 3
+        }
+      ],
+      "wallets": [
+        {
+          "decoy": "Solana CLI keypair",
+          "path": "~/.config/solana/id.json",
+          "action": "opened",
+          "by": "node lib/analytics.js (nft-floor-tracker@1.2.0 postinstall script)",
+          "step": "npm install"
+        },
+        {
+          "decoy": "NEAR CLI keys",
+          "path": "~/.near-credentials",
+          "action": "opened",
+          "by": "node lib/analytics.js (nft-floor-tracker@1.2.0 postinstall script)",
+          "step": "npm install"
+        },
+        {
+          "decoy": "SSH key",
+          "path": "~/.ssh/id_ed25519",
+          "action": "opened",
+          "by": "node lib/analytics.js (nft-floor-tracker@1.2.0 postinstall script)",
+          "step": "npm install"
+        }
+      ],
+      "contacts": [
+        {
+          "host": "metrics.nft-floor-sync.invalid",
+          "by": "node lib/analytics.js (nft-floor-tracker@1.2.0 postinstall script)",
+          "step": "npm install"
+        }
+      ],
+      "sent": [
+        {
+          "method": "POST",
+          "url": "https://metrics.nft-floor-sync.invalid/ingest",
+          "bytes": 788,
+          "decoys": [
+            "NEAR CLI keys",
+            "Solana CLI keypair",
+            "SSH key"
+          ],
+          "by": "node lib/analytics.js (nft-floor-tracker@1.2.0 postinstall script)",
+          "step": "npm install"
+        }
+      ],
+      "capture": true,
+      "evidenceSha256": "47244123509b942e474de3d45773da1d77966bed285eac3363829475b2085bc7"
+    }
+  }
+}

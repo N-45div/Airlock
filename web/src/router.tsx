@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore, type AnchorHTMLAttributes, type MouseEvent } from 'react';
 
-export type Route = { name: 'home' } | { name: 'report'; id: string } | { name: 'privacy' } | { name: 'near' } | { name: 'missing' };
+export type Route = { name: 'home' } | { name: 'report'; id: string } | { name: 'privacy' } | { name: 'near' } | { name: 'pricing' } | { name: 'missing' };
 
 const NAVIGATE = 'airlock:navigate';
 
@@ -10,6 +10,7 @@ export function parseRoute(pathname: string): Route {
   if (pathname === '/' || pathname === '/index.html') return { name: 'home' };
   if (pathname === '/privacy' || pathname === '/privacy/') return { name: 'privacy' };
   if (pathname === '/near' || pathname === '/near/') return { name: 'near' };
+  if (pathname === '/pricing' || pathname === '/pricing/') return { name: 'pricing' };
   const match = /^\/r\/([A-Za-z0-9_-]{1,64})\/?$/.exec(pathname);
   if (match?.[1]) return { name: 'report', id: match[1] };
   return { name: 'missing' };

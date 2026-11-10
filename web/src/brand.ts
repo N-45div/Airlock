@@ -6,7 +6,7 @@ export const PRODUCT = 'Airlock';
 /** The one call-to-action label, used on every button that starts a check. */
 export const CTA = 'Check before you run';
 
-export const TAGLINE = 'Before you run a stranger’s code, let a fenced agent open it first.';
+export const TAGLINE = 'Your laptop is your wallet. Check a stranger’s code before it touches it.';
 
 export const LINKS = {
   extension: 'https://chromewebstore.google.com/detail/bmhbejjhiimlcmpkpeglogijodbhmpgd',

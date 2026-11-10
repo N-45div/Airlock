@@ -74,8 +74,13 @@ main:focus {
   color: var(--text);
 }
 
-@media (max-width: 420px) {
-  .site-nav a:first-child {
+.site-nav a {
+  white-space: nowrap;
+}
+
+/* Small screens keep the links that have no other way in. */
+@media (max-width: 600px) {
+  .site-nav .site-nav__wide {
     display: none;
   }
 }
@@ -203,4 +208,34 @@ main:focus {
     grid-template-columns: minmax(0, 1fr);
     padding: 18px;
   }
+}
+
+/* Pricing */
+.pricing {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.pricing__name {
+  font-size: 20px;
+  margin: 4px 0 6px;
+}
+
+.pricing__price {
+  margin: 0 0 12px;
+  color: var(--text-2);
+}
+
+.pricing__price strong {
+  font-size: 28px;
+  color: var(--text);
+}
+
+.pricing__list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  color: var(--text-2);
 }
