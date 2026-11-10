@@ -18,7 +18,9 @@ import * as dcap from '@phala/dcap-qvl';
 import { prepareE2eeChatRequest } from '@nearai/inference-sdk';
 import { withSeedReplay } from './nacl-rng.ts';
 import { RECEIPT_SCHEMA, type Receipt, canonicalJson, receiptHash, sha256Hex, treeHash, verdictDigest } from './receipt.ts';
-import { packedSampleDir, packedSampleIds } from './sample-pack.ts';
+import type { SandboxEvidence } from './sandbox/chamber.ts';
+import { sandboxDigest } from './sandbox/evidence.ts';
+import { WALLET_PACK, packedSampleDir, packedSampleIds } from './sample-pack.ts';
 
 export interface Check {
   name: string;
@@ -34,7 +36,7 @@ const ED25519_SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
 /** The verdict decrypted by the last verifyReceipt call, for callers that show the findings. */
 export let lastDecrypted: unknown;
 
-export async function verifyReceipt(receipt: Receipt, opts: { repoDir?: string } = {}): Promise<Check[]> {
+export async function verifyReceipt(receipt: Receipt, opts: { repoDir?: string; evidence?: SandboxEvidence } = {}): Promise<Check[]> {
   lastDecrypted = undefined;
   const checks: Check[] = [];
   const add = (name: string, ok: boolean, detail: string) => checks.push({ name, ok, detail });
@@ -116,6 +118,16 @@ export async function verifyReceipt(receipt: Receipt, opts: { repoDir?: string }
       return `${tree.files} files in ${where} match the reviewed tree`;
     });
   }
+
+  if (opts.evidence) {
+    await attempt('sandbox evidence', () => {
+      if (!receipt.sandbox) throw new Error('this receipt names no sandbox run');
+      const digest = sandboxDigest(opts.evidence!);
+      if (digest.sha256 !== receipt.sandbox.sha256) throw new Error(`the evidence hashes to ${digest.sha256.slice(0, 16)}…, the receipt names ${receipt.sandbox.sha256.slice(0, 16)}…`);
+      const { wallets, contacts, steps } = receipt.sandbox;
+      return `matches the run the model was shown: ${steps} step${steps === 1 ? '' : 's'}, ${wallets} decoy wallet${wallets === 1 ? '' : 's'} or keys touched, ${contacts} host${contacts === 1 ? '' : 's'} contacted`;
+    });
+  }
   return checks;
 }
 
@@ -152,11 +164,17 @@ export function printChecks(file: string, receipt: Receipt, checks: Check[]): bo
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const FIXTURES = path.join(here, '..', 'fixtures', 'receipts');
 
+/** Where a receipt's sandbox evidence is saved by default: r.json -> r.evidence.json. */
+export function evidenceFileFor(receiptFile: string): string {
+  return receiptFile.replace(/(\.json)?$/i, '.evidence.json');
+}
+
 /** For a sample receipt, the sample folder it was made from. */
 export async function sampleDir(receipt: Receipt): Promise<string | undefined> {
   if (!receipt.repo.id.startsWith('sample:')) return undefined;
   const id = receipt.repo.id.slice('sample:'.length);
   if ((await packedSampleIds()).includes(id)) return packedSampleDir(id);
+  if ((await packedSampleIds(WALLET_PACK)).includes(id)) return packedSampleDir(id, WALLET_PACK);
   return path.join(here, '..', 'samples', 'bench', id);
 }
 
@@ -164,23 +182,30 @@ if (import.meta.main) {
   const argv = process.argv.slice(2);
   let files: string[];
   let repoDir: string | undefined;
+  let evidenceFile: string | undefined;
   const offline = argv[0] === '--fixtures';
   if (offline) {
-    files = (await readdir(FIXTURES)).filter((f) => f.endsWith('.json')).sort().map((f) => path.join(FIXTURES, f));
+    files = (await readdir(FIXTURES)).filter((f) => f.endsWith('.json') && !f.endsWith('.evidence.json')).sort().map((f) => path.join(FIXTURES, f));
   } else {
     const i = argv.indexOf('--repo-dir');
     if (i >= 0) repoDir = argv.splice(i, 2)[1];
+    const e = argv.indexOf('--evidence');
+    if (e >= 0) evidenceFile = argv.splice(e, 2)[1];
     files = argv;
   }
   if (files.length === 0) {
-    console.error('usage: npm run verify:receipt -- <receipt.json> [--repo-dir <folder>]');
+    console.error('usage: npm run verify:receipt -- <receipt.json> [--repo-dir <folder>] [--evidence <file.evidence.json>]');
     process.exit(2);
   }
   let all = true;
   for (const file of files) {
     const receipt = JSON.parse(await readFile(file, 'utf8')) as Receipt;
     const dir = repoDir ?? (await sampleDir(receipt));
-    all = printChecks(path.relative(process.cwd(), file) || file, receipt, await verifyReceipt(receipt, dir ? { repoDir: dir } : {})) && all;
+    // A sandbox run's evidence sits next to its receipt as <name>.evidence.json unless named.
+    const evidencePath = evidenceFile ?? (receipt.sandbox ? evidenceFileFor(file) : undefined);
+    const evidence = evidencePath ? ((await readFile(evidencePath, 'utf8').then(JSON.parse, () => undefined)) as SandboxEvidence | undefined) : undefined;
+    if (receipt.sandbox && !evidence) console.log(`  (this receipt binds a sandbox run; pass --evidence <file> to check it)`);
+    all = printChecks(path.relative(process.cwd(), file) || file, receipt, await verifyReceipt(receipt, { ...(dir ? { repoDir: dir } : {}), ...(evidence ? { evidence } : {}) })) && all;
   }
   process.exit(all ? 0 : 1);
 }

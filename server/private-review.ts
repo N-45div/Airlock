@@ -6,6 +6,8 @@
 import type { Inventory } from './inventory.ts';
 import type { Category, Finding, RepoInfo, Severity, ToolEvent, Verdict } from './types.ts';
 import { RepoTools, TOOL_DEFINITIONS } from './repo-tools.ts';
+import type { SandboxEvidence } from './sandbox/chamber.ts';
+import { describeSandbox } from './sandbox/evidence.ts';
 
 // Minimal shapes of the OpenAI-compatible Chat API, as used through @nearai/inference-sdk.
 
@@ -103,6 +105,9 @@ export interface PrivateReviewOptions {
   prices?: Prices;
   /** Accept Gateway signatures when the model's own TEE signature is missing. Off by default. */
   allowGatewaySignature?: boolean;
+  /** What the repository's install and setup steps did in Airlock's sandbox (server/sandbox). When
+   * set, the model is shown it with the inventory; without it the review is unchanged. */
+  sandbox?: SandboxEvidence;
 }
 
 export interface PrivateReviewResult {
@@ -211,7 +216,10 @@ export async function reviewPrivately(opts: PrivateReviewOptions): Promise<Priva
   const maxUsd = opts.maxUsd ?? BUDGET.maxUsd;
   const messages: ChatMessage[] = [
     { role: 'system', content: SYSTEM },
-    { role: 'user', content: `${describeInventory(opts.inventory, opts.repo)}\n\nReview this repository and give your verdict with submit_verdict.` },
+    {
+      role: 'user',
+      content: `${describeInventory(opts.inventory, opts.repo)}${opts.sandbox ? `\n\n${describeSandbox(opts.sandbox)}` : ''}\n\nReview this repository and give your verdict with submit_verdict.`,
+    },
   ];
   const turns: TurnProof[] = [];
   const usage: Usage = { inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };

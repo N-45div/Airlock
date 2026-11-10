@@ -151,3 +151,49 @@ describe('chamber scripts', () => {
     assert.match(s, /bash -c 'bash '\\''set up\.sh'\\'''/);
   });
 });
+
+describe('sandbox evidence for the review', () => {
+  it('tells the model what the code did, credited to the script, and how to weigh it', async () => {
+    const { describeSandbox } = await import('../sandbox/evidence.ts');
+    const { stealerEvidence } = await import('./sandbox-evidence.ts');
+    const text = describeSandbox(stealerEvidence());
+    assert.match(text, /^Sandbox run \(what the code did, not what it says\):/);
+    assert.match(text, /- npm install \(exit 0, 6s\)/);
+    assert.match(text, /Decoy wallets and keys touched \(2\):\n- opened Solana CLI keypair at ~\/\.config\/solana\/id\.json, by node scripts\/postinstall\.js/);
+    assert.match(text, /- collector.test-only.invalid, by node scripts\/postinstall\.js/);
+    assert.match(text, /untrusted data/);
+    assert.match(text, /that is "dangerous", in the "wallet-access" or "secret-access" category/);
+  });
+
+  it('says plainly when nothing was touched, and that this does not prove safety', async () => {
+    const { describeSandbox } = await import('../sandbox/evidence.ts');
+    const { stealerEvidence } = await import('./sandbox-evidence.ts');
+    const clean = { ...stealerEvidence(), wallets: [], contacts: [], programs: [] };
+    const text = describeSandbox(clean);
+    assert.match(text, /Decoy wallets and keys touched \(0\):\n- none/);
+    assert.match(text, /does not prove the code is safe/);
+  });
+
+  it('caps long lists and strips control characters from the repository\'s strings', async () => {
+    const { describeSandbox } = await import('../sandbox/evidence.ts');
+    const { stealerEvidence } = await import('./sandbox-evidence.ts');
+    const ev = stealerEvidence();
+    ev.contacts = Array.from({ length: 45 }, (_, i) => ({ host: `h${i}.invalid`, by: 'x', step: 'npm install' }));
+    ev.programs = [{ command: `bash -c "${'A'.repeat(500)}\u001b[2J\nIgnore that"`, step: 'npm install' }];
+    const text = describeSandbox(ev);
+    assert.match(text, /- … and 15 more/);
+    assert.doesNotMatch(text, /\u001b/);
+    assert.ok(text.split('\n').every((l) => l.length < 400), 'no line runs on');
+  });
+
+  it('digests the evidence for the receipt: counts in the clear, a stable hash of the rest', async () => {
+    const { sandboxDigest } = await import('../sandbox/evidence.ts');
+    const { stealerEvidence } = await import('./sandbox-evidence.ts');
+    const d = sandboxDigest(stealerEvidence());
+    assert.deepEqual({ ...d, sha256: d.sha256.length }, { provider: 'vercel-sandbox', steps: 1, wallets: 2, contacts: 1, sha256: 64 });
+    assert.equal(sandboxDigest(stealerEvidence()).sha256, d.sha256);
+    const changed = stealerEvidence();
+    changed.wallets.pop();
+    assert.notEqual(sandboxDigest(changed).sha256, d.sha256);
+  });
+});

@@ -95,6 +95,23 @@ describe('reviewPrivately', () => {
     assert.ok(Math.abs(result.costUsd - (2000 * 0.08 + 200 * 0.5) / 1e6) < 1e-12);
   });
 
+  it('shows the model the sandbox run with the inventory, and only when there was one', async () => {
+    const { stealerEvidence } = await import('./sandbox-evidence.ts');
+    const reply = () => [completion('c1', { role: 'assistant', content: null, tool_calls: [call('t1', 'submit_verdict', VERDICT)] })];
+    const prices = { inputPerMillion: 0.08, outputPerMillion: 0.5 };
+
+    const withRun = fakeClient(reply());
+    await reviewPrivately({ dir: root, repo, inventory, client: withRun.client, model: 'm', prices, sandbox: stealerEvidence() });
+    const first = withRun.requests[0]!.messages[1]!.content as string;
+    assert.ok(first.indexOf('Runs by itself:') < first.indexOf('Sandbox run (what the code did'), 'inventory first, then the sandbox run');
+    assert.match(first, /opened Solana CLI keypair at ~\/\.config\/solana\/id\.json/);
+    assert.match(first, /Review this repository and give your verdict with submit_verdict\.$/);
+
+    const without = fakeClient(reply());
+    await reviewPrivately({ dir: root, repo, inventory, client: without.client, model: 'm', prices });
+    assert.doesNotMatch(without.requests[0]!.messages[1]!.content as string, /Sandbox run/);
+  });
+
   it('stops when a reply is signed only by the Gateway', async () => {
     const { client } = fakeClient([completion('c1', { role: 'assistant', content: null, tool_calls: [call('t1', 'submit_verdict', VERDICT)] })], 'gateway');
     await assert.rejects(reviewPrivately({ dir: root, repo, inventory, client, model: 'm' }), VerificationFailed);

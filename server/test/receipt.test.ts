@@ -96,6 +96,26 @@ describe('verifyReceipt on the recorded take-home receipt', () => {
     assert.deepEqual(failed(await verifyReceipt(fixture, { repoDir: dir })), ['repository files']);
   });
 
+  it('checks a sandbox run against the evidence the receipt binds, and catches edited evidence', async () => {
+    const { sandboxDigest } = await import('../sandbox/evidence.ts');
+    const { stealerEvidence } = await import('./sandbox-evidence.ts');
+    const evidence = stealerEvidence();
+    const withRun = tamper((r) => {
+      r.sandbox = sandboxDigest(evidence);
+    });
+    const checks = await verifyReceipt(withRun, { evidence });
+    assert.deepEqual(failed(checks), []);
+    assert.match(checks.find((c) => c.name === 'sandbox evidence')!.detail, /1 step, 2 decoy wallets or keys touched, 1 host contacted/);
+
+    // Someone drops the wallet touches to make the run look clean.
+    const edited = { ...evidence, wallets: [] };
+    assert.deepEqual(failed(await verifyReceipt(withRun, { evidence: edited })), ['sandbox evidence']);
+    // Evidence offered for a receipt that names no sandbox run.
+    assert.deepEqual(failed(await verifyReceipt(fixture, { evidence })), ['sandbox evidence']);
+    // A receipt with a sandbox run hashes differently from the same review without one.
+    assert.notEqual(receiptHash(withRun), receiptHash(fixture));
+  });
+
   it('gives the receipt a stable hash', () => {
     assert.equal(receiptHash(fixture), receiptHash(structuredClone(fixture)));
     assert.notEqual(receiptHash(fixture), receiptHash(tamper((x) => (x.costUsd += 1))));

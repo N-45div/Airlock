@@ -58,6 +58,23 @@ export interface ChamberOptions {
 
 const quote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
 
+/** A folder's files as the chamber copies them in: relative paths, no .git, no node_modules, no symlinks. */
+export async function folderFiles(dir: string): Promise<{ path: string; content: Buffer }[]> {
+  const { readdir, readFile } = await import('node:fs/promises');
+  const { join } = await import('node:path');
+  const files: { path: string; content: Buffer }[] = [];
+  const walk = async (d: string, rel: string): Promise<void> => {
+    for (const entry of await readdir(d, { withFileTypes: true })) {
+      if (entry.name === '.git' || entry.name === 'node_modules') continue;
+      const r = rel ? `${rel}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) await walk(join(d, entry.name), r);
+      else if (entry.isFile()) files.push({ path: r, content: await readFile(join(d, entry.name)) });
+    }
+  };
+  await walk(dir, '');
+  return files;
+}
+
 /** The shell script that runs one step under the tracer, from the repository's folder, with a clean environment. */
 export function stepScript(step: Step, index: number, seconds: number): string {
   const trace = `${WORK}/trace-${index}.log`;

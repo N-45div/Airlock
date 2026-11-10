@@ -10,6 +10,15 @@ npm run verify:receipt -- receipt.json --repo-dir samples/take-home
 npm run verify:offline                                        # every receipt in fixtures/receipts
 ```
 
+With `--detonate`, the repository's install and setup steps first run in Airlock's sandbox (a throwaway
+VM with decoy wallets and keys, network cut to package registries), and the model is shown what they did.
+The receipt then binds a hash of that evidence, and the evidence is saved next to it:
+
+```sh
+npm run scan:private -- wallet:hidden-loader --detonate --receipt r.json   # writes r.json and r.evidence.json
+npm run verify:receipt -- r.json                                           # finds r.evidence.json and checks it
+```
+
 `fixtures/receipts/take-home.json` is a real receipt from a live review of Airlock's sample
 take-home task (Nov 4, 2026; 3 replies; $0.0016).
 
@@ -35,6 +44,9 @@ gets recorded on NEAR.
 - **Which deployment is acceptable.** The quote proves *what* runs. The receipt includes the
   measured compose file and measurements (`attestation.deployment`), but nothing compares
   them to an allowlist. NEAR AI's SDK doesn't either, by default.
+- **That the sandbox evidence is what ran.** Like the tree hash, `sandbox.sha256` is the scanner's
+  statement of what it showed the model. The check proves the evidence file is the one the receipt
+  names, not that the sandbox recorded it honestly.
 - **That the verdict is right.** A receipt proves who produced the verdict, not that the
   model judged well. How well it judges is measured in [METRICS.md](../METRICS.md).
 
@@ -59,3 +71,4 @@ repository's receipt only if you'd share its findings; on chain, only the hash g
 | `turns` | Per reply: completion ID, signature kind, signer, signature, signed text, request and response hashes |
 | `final` | The final reply's encrypted bytes and its one-time key seed |
 | `usage`, `costUsd` | Tokens and dollars |
+| `sandbox` | Only for `--detonate`: provider, counts of steps run, decoys touched and hosts contacted, and the SHA-256 of the full evidence file. The evidence's strings come from the repository, so they stay out of the receipt, like the findings |

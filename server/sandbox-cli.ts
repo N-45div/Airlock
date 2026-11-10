@@ -9,9 +9,8 @@
 // keys, and the network is cut to package registries before any step runs. Opening a decoy, or
 // trying to reach a host that isn't a registry, is caught and shown here. Nothing it does leaves the VM.
 
-import { readFile, stat, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import { runChamber, type ChamberSource, type SandboxEvidence } from './sandbox/chamber.ts';
+import { stat, writeFile } from 'node:fs/promises';
+import { folderFiles, runChamber, type ChamberSource, type SandboxEvidence } from './sandbox/chamber.ts';
 import { packedSampleDir, WALLET_PACK } from './sample-pack.ts';
 
 interface Args {
@@ -34,32 +33,15 @@ function parseArgs(argv: string[]): Args {
   return args;
 }
 
-/** Reads a folder into the flat {path, content} list the chamber copies in. Skips .git and node_modules. */
-async function readFolder(dir: string): Promise<{ path: string; content: Buffer }[]> {
-  const { readdir } = await import('node:fs/promises');
-  const files: { path: string; content: Buffer }[] = [];
-  const walk = async (d: string, rel: string): Promise<void> => {
-    for (const entry of await readdir(d, { withFileTypes: true })) {
-      if (entry.name === '.git' || entry.name === 'node_modules') continue;
-      const full = path.join(d, entry.name);
-      const r = rel ? `${rel}/${entry.name}` : entry.name;
-      if (entry.isDirectory()) await walk(full, r);
-      else if (entry.isFile()) files.push({ path: r, content: await readFile(full) });
-    }
-  };
-  await walk(dir, '');
-  return files;
-}
-
 async function locate(target: string): Promise<{ source: ChamberSource; label: string }> {
   if (/^https?:\/\/github\.com\//i.test(target)) return { source: { git: target.replace(/\.git$/, '') }, label: target };
   if (target.startsWith('wallet:')) {
     const id = target.slice('wallet:'.length);
     const dir = await packedSampleDir(id, WALLET_PACK);
-    return { source: { files: await readFolder(dir) }, label: `wallet-stealer sample "${id}"` };
+    return { source: { files: await folderFiles(dir) }, label: `wallet-stealer sample "${id}"` };
   }
   const local = await stat(target).catch(() => null);
-  if (local?.isDirectory()) return { source: { files: await readFolder(target) }, label: target };
+  if (local?.isDirectory()) return { source: { files: await folderFiles(target) }, label: target };
   throw new Error(`Don't know how to open "${target}". Use a GitHub URL, wallet:<id>, or a folder.`);
 }
 

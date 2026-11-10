@@ -71,6 +71,10 @@ doesn't prove which model produced the reply.
 
 - **Receipts don't prove what was sent.** Requests are encrypted, so the tree hash in a
   receipt is the scanner's statement of what it reviewed. See docs/receipts.md.
+- **Sandbox evidence is the scanner's statement too.** A `--detonate` receipt binds a hash of what
+  the sandbox recorded; it proves which evidence the model was shown, not that the run was honest. The
+  sandbox catches code that acts while it runs; code that waits, checks for a VM, or targets other
+  machines can stay quiet there, so a clean run is not proof of safety.
 - **GPU evidence is checked online at scan time only.** The receipt records the result.
 - **The one-time key in a receipt opens the final reply.** For a private repository its
   findings can quote code: share such a receipt only if you'd share its findings.

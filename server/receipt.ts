@@ -7,6 +7,7 @@ import { readFile } from 'node:fs/promises';
 import type { AttestationRecord, ExchangeRecord } from './near-client.ts';
 import type { PrivateReviewResult } from './private-review.ts';
 import { RepoTools } from './repo-tools.ts';
+import type { SandboxDigest } from './sandbox/evidence.ts';
 import type { RepoInfo } from './types.ts';
 
 export const RECEIPT_SCHEMA = 'airlock.receipt.v2';
@@ -49,6 +50,11 @@ export interface Receipt {
   final: { completionId: string; responseBody: string; clientSeed: string };
   usage: PrivateReviewResult['usage'];
   costUsd: number;
+  /** Set when the repository's install and setup steps also ran in Airlock's sandbox and the model
+   * saw what they did. Counts in the clear and a hash of the full evidence, which is shared as its
+   * own file (its strings come from the repository, so they stay out of the receipt, as findings do).
+   * Like the tree hash, it is the scanner's statement of what the model was shown. */
+  sandbox?: SandboxDigest;
 }
 
 export const sha256Hex = (data: Uint8Array | string) => createHash('sha256').update(data).digest('hex');
@@ -111,6 +117,7 @@ export function buildReceipt(input: {
   result: PrivateReviewResult;
   attestation: AttestationRecord;
   exchanges: Map<string, ExchangeRecord>;
+  sandbox?: SandboxDigest;
 }): Receipt {
   const { result, attestation, exchanges } = input;
   const turns: ReceiptTurn[] = result.turns.map((t) => {
@@ -142,5 +149,6 @@ export function buildReceipt(input: {
     final: { completionId: final.completionId, responseBody: final.responseBody, clientSeed: final.clientSeed },
     usage: result.usage,
     costUsd: Number(result.costUsd.toFixed(6)),
+    ...(input.sandbox ? { sandbox: input.sandbox } : {}),
   };
 }

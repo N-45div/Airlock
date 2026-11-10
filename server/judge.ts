@@ -12,13 +12,14 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Receipt } from './receipt.ts';
-import { FIXTURES, sampleDir, verifyReceipt } from './verify-receipt.ts';
+import type { SandboxEvidence } from './sandbox/chamber.ts';
+import { FIXTURES, evidenceFileFor, sampleDir, verifyReceipt } from './verify-receipt.ts';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BENCH = path.join(root, 'bench', 'receipts');
 
 async function receiptFiles(dir: string): Promise<string[]> {
-  return (await readdir(dir).catch(() => [] as string[])).filter((f) => f.endsWith('.json')).sort().map((f) => path.join(dir, f));
+  return (await readdir(dir).catch(() => [] as string[])).filter((f) => f.endsWith('.json') && !f.endsWith('.evidence.json')).sort().map((f) => path.join(dir, f));
 }
 
 const ARCHIVE = path.join(root, 'bench', 'archive');
@@ -32,9 +33,12 @@ const failures: string[] = [];
 for (const file of files) {
   const receipt = JSON.parse(await readFile(file, 'utf8')) as Receipt;
   const dir = await sampleDir(receipt);
-  const checks = await verifyReceipt(receipt, dir ? { repoDir: dir } : {});
+  // A receipt from a sandbox run is checked against its evidence file, which must be there.
+  const evidence = receipt.sandbox ? ((await readFile(evidenceFileFor(file), 'utf8').then(JSON.parse, () => undefined)) as SandboxEvidence | undefined) : undefined;
+  if (receipt.sandbox && !evidence) failures.push(`${path.relative(root, file)}: names a sandbox run but ${path.basename(evidenceFileFor(file))} is missing`);
+  const checks = await verifyReceipt(receipt, { ...(dir ? { repoDir: dir } : {}), ...(evidence ? { evidence } : {}) });
   const failed = checks.filter((c) => !c.ok);
-  if (failed.length === 0) verified += 1;
+  if (failed.length === 0 && !(receipt.sandbox && !evidence)) verified += 1;
   else failures.push(`${path.relative(root, file)}: ${failed.map((c) => `${c.name} (${c.detail})`).join('; ')}`);
 }
 
