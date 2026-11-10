@@ -28,5 +28,22 @@ export function stealerEvidence(): SandboxEvidence {
     ],
     contacts: [{ host: 'collector.test-only.invalid', by, step: 'npm install' }],
     programs: [{ command: 'node scripts/postinstall.js', step: 'npm install' }],
+    capture: { on: true },
+    exfil: [
+      {
+        host: 'collector.test-only.invalid',
+        method: 'POST',
+        path: '/v1/register',
+        tls: true,
+        bytes: 2140,
+        contentType: 'application/json',
+        decoys: ['Phantom (Chrome)', 'Solana CLI keypair'],
+        by,
+        step: 'npm install',
+        sha256: 'a'.repeat(64),
+        sample: Buffer.from('[{"p":"id.json","d":"..."}]').toString('base64'),
+      },
+    ],
+    refused: [],
   };
 }

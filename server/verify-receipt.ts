@@ -124,8 +124,9 @@ export async function verifyReceipt(receipt: Receipt, opts: { repoDir?: string; 
       if (!receipt.sandbox) throw new Error('this receipt names no sandbox run');
       const digest = sandboxDigest(opts.evidence!);
       if (digest.sha256 !== receipt.sandbox.sha256) throw new Error(`the evidence hashes to ${digest.sha256.slice(0, 16)}…, the receipt names ${receipt.sandbox.sha256.slice(0, 16)}…`);
-      const { wallets, contacts, steps } = receipt.sandbox;
-      return `matches the run the model was shown: ${steps} step${steps === 1 ? '' : 's'}, ${wallets} decoy wallet${wallets === 1 ? '' : 's'} or keys touched, ${contacts} host${contacts === 1 ? '' : 's'} contacted`;
+      const { wallets, contacts, steps, sentWithDecoys } = receipt.sandbox;
+      const caught = sentWithDecoys ? `, ${sentWithDecoys} request${sentWithDecoys === 1 ? '' : 's'} caught carrying decoys` : '';
+      return `matches the run the model was shown: ${steps} step${steps === 1 ? '' : 's'}, ${wallets} decoy wallet${wallets === 1 ? '' : 's'} or keys touched, ${contacts} host${contacts === 1 ? '' : 's'} contacted${caught}`;
     });
   }
   return checks;

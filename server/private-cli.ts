@@ -152,7 +152,11 @@ async function main(): Promise<void> {
       for (const s of sandbox.steps) console.log(`  ran ${s.label}: ${s.timedOut ? 'timed out' : `exit ${s.exitCode}`}, ${s.seconds}s`);
       for (const w of sandbox.wallets) console.log(`  CAUGHT ${w.action} ${w.decoy} (${w.path}) by ${w.by}`);
       for (const c of sandbox.contacts) console.log(`  CAUGHT tried to reach ${c.host ?? `${c.ip}:${c.port}`} by ${c.by}`);
-      if (!sandbox.wallets.length && !sandbox.contacts.length) console.log('  nothing it ran touched a decoy or the network');
+      for (const x of sandbox.exfil.filter((e) => e.decoys.length)) {
+        console.log(`  CAUGHT RED-HANDED ${x.method} ${x.tls ? 'https' : 'http'}://${x.host}${x.path} (${x.bytes} bytes) carrying ${x.decoys.join(', ')}`);
+      }
+      if (!sandbox.capture.on) console.log(`  (no capture: ${sandbox.capture.note ?? 'the sinkhole did not start'})`);
+      if (!sandbox.wallets.length && !sandbox.contacts.length && !sandbox.exfil.length) console.log('  nothing it ran touched a decoy or the network');
       console.log('');
     }
 

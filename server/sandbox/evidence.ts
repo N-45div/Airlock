@@ -46,6 +46,20 @@ export function describeSandbox(ev: SandboxEvidence): string {
   if (ev.contacts.length === 0) lines.push('- none');
   lines.push(...list(ev.contacts, (c) => `${clip(c.host ?? `${c.ip}:${c.port}`)}, by ${clip(c.by)}, during ${clip(c.step)}`));
 
+  if (ev.capture.on) {
+    lines.push('', `Requests the code sent, caught by the sandbox answering as the server (${ev.exfil.length}):`);
+    if (ev.exfil.length === 0) lines.push('- none');
+    lines.push(
+      ...list(ev.exfil, (x) => {
+        const inside = x.decoys.length ? `CARRYING ${x.decoys.join(', ')}` : 'no decoy found inside';
+        return `${x.method} ${x.tls ? 'https' : 'http'}://${clip(x.host)}${clip(x.path)} (${x.bytes} bytes, ${inside}), by ${clip(x.by)}, during ${clip(x.step)}`;
+      }),
+    );
+    if (ev.refused.length) lines.push(...list(ev.refused, (r) => `HTTPS to ${clip(r.host ?? 'an address')} refused the sandbox's certificate, so what it meant to send is unseen (during ${clip(r.step)})`));
+  } else {
+    lines.push('', `The sandbox could not answer as the server this time, so it saw which hosts the code looked up, not what it sent${ev.capture.note ? ` (${clip(ev.capture.note)})` : ''}.`);
+  }
+
   lines.push('', `Programs the project's scripts started (${ev.programs.length}):`);
   if (ev.programs.length === 0) lines.push('- none');
   lines.push(...list(ev.programs, (p) => `${clip(p.command)} (during ${clip(p.step)})`));
@@ -54,6 +68,7 @@ export function describeSandbox(ev: SandboxEvidence): string {
     '',
     'How to use this:',
     '- A project script that opened a decoy wallet or key during install, setup or a folder-open task has no honest reason to: that is "dangerous", in the "wallet-access" or "secret-access" category. Find the code that did it, cite file and line, and say it was caught in the sandbox.',
+    '- A request CARRYING a decoy is the code caught sending a wallet or key away: "dangerous", "exfiltration", critical. Name the host, the decoys inside, and the code that built the request.',
     '- A project script that tried to reach a host that is not a package registry: say where and why, if the code shows it. Together with a decoy opened, or with downloading and running code, that is "dangerous" ("exfiltration").',
     '- "looked" means it only checked whether the path exists. Weigh it, but less than "opened".',
     '- If nothing was touched or contacted, that does not prove the code is safe: code can wait, check whether it is in a sandbox, or only act on some machines. Judge the code as you would without the sandbox.',
@@ -67,10 +82,21 @@ export interface SandboxDigest {
   steps: number;
   wallets: number;
   contacts: number;
+  /** Requests the sinkhole caught, and how many of them carried a decoy wallet or key. */
+  sent: number;
+  sentWithDecoys: number;
   /** SHA-256 of the canonical JSON of the full evidence, which is shared as its own file. */
   sha256: string;
 }
 
 export function sandboxDigest(ev: SandboxEvidence): SandboxDigest {
-  return { provider: ev.provider, steps: ev.steps.length, wallets: ev.wallets.length, contacts: ev.contacts.length, sha256: sha256Hex(canonicalJson(ev)) };
+  return {
+    provider: ev.provider,
+    steps: ev.steps.length,
+    wallets: ev.wallets.length,
+    contacts: ev.contacts.length,
+    sent: ev.exfil.length,
+    sentWithDecoys: ev.exfil.filter((x) => x.decoys.length > 0).length,
+    sha256: sha256Hex(canonicalJson(ev)),
+  };
 }

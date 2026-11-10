@@ -2,7 +2,7 @@
 // real thing on Linux, and carries a marker unique to the run, so code that opens one has gone
 // looking for a wallet or a key: no install step has a reason to. Nothing here is a real secret.
 
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import path from 'node:path';
 
 export type DecoyKind = 'browser-wallet' | 'desktop-wallet' | 'cli-wallet' | 'browser-data' | 'ssh-key' | 'cloud-key' | 'env-file' | 'shell-history';
@@ -72,9 +72,23 @@ export function newMarker(): string {
   return `AIRLOCK-DECOY-${randomBytes(12).toString('hex')}`;
 }
 
+/**
+ * Each decoy carries its own token, derived from the run's marker and its path, so bytes caught
+ * leaving the sandbox say which wallet or key was inside them. 32 characters: every decoy format
+ * keeps all of it, including the ones that store it as hex or as a Solana byte array.
+ */
+export function decoyToken(marker: string, decoy: Decoy): string {
+  return `AIRLOCK${createHash('sha256').update(`${marker}\0${decoy.file}`).digest('hex').slice(0, 25)}`;
+}
+
+/** Every decoy's token for this run. */
+export function decoyTokens(marker: string): { label: string; file: string; token: string }[] {
+  return DECOYS.map((d) => ({ label: d.label, file: d.file, token: decoyToken(marker, d) }));
+}
+
 /** The decoy files to write, at absolute paths under `home`. */
 export function decoyFiles(marker: string, home = HOME): { path: string; content: string }[] {
-  return DECOYS.map((d) => ({ path: path.posix.join(home, d.file), content: d.content(marker) }));
+  return DECOYS.map((d) => ({ path: path.posix.join(home, d.file), content: d.content(decoyToken(marker, d)) }));
 }
 
 /** The decoy a path belongs to, if any: the file itself, or a folder only that wallet keeps. */

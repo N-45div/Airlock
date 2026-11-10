@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { npmScripts, stepScript } from '../sandbox/chamber.ts';
-import { DECOYS, HOME, decoyFiles, homeRelative, matchDecoy, newMarker } from '../sandbox/decoys.ts';
+import { lockdownScript, npmScripts, sinkholeConfig, sinkholeScript, stepScript } from '../sandbox/chamber.ts';
+import { DECOYS, HOME, decoyFiles, decoyTokens, homeRelative, matchDecoy, newMarker } from '../sandbox/decoys.ts';
 import { parseJsonc, planSteps } from '../sandbox/plan.ts';
 import { dnsQueryName, readTrace, unescapeC } from '../sandbox/trace.ts';
 
@@ -35,14 +35,15 @@ const TRACE = String.raw`
 `;
 
 describe('decoys', () => {
-  it('cover browser, desktop and CLI wallets, keys and secrets, each carrying the run marker', () => {
+  it('cover browser, desktop and CLI wallets, keys and secrets, each with a token of its own', () => {
     const marker = newMarker();
     const files = decoyFiles(marker);
+    const tokens = decoyTokens(marker).map((t) => t.token);
     assert.equal(files.length, DECOYS.length);
-    for (const f of files) {
-      assert.ok(f.path.startsWith(`${HOME}/`), f.path);
-      assert.ok(f.content.includes(marker) || /^\[\d/.test(f.content) || f.content.includes(Buffer.from(marker).toString('base64').slice(0, 20)) || f.content.includes(Buffer.from(marker).toString('hex').slice(0, 20)), f.path);
-    }
+    assert.equal(new Set(tokens).size, DECOYS.length, 'every decoy gets its own token');
+    assert.ok(tokens.every((t) => /^AIRLOCK[0-9a-f]{25}$/.test(t)));
+    assert.notDeepEqual(decoyTokens(newMarker()).map((t) => t.token), tokens, 'tokens change with every run');
+    for (const f of files) assert.ok(f.path.startsWith(`${HOME}/`), f.path);
     const kinds = new Set(DECOYS.map((d) => d.kind));
     for (const k of ['browser-wallet', 'desktop-wallet', 'cli-wallet', 'ssh-key', 'cloud-key', 'env-file']) assert.ok(kinds.has(k as never), k);
   });
@@ -144,11 +145,21 @@ describe('chamber scripts', () => {
     });
   });
 
-  it('runs a step under the tracer with a clean environment, a time limit, and the decoy home', () => {
+  it('runs a step under the tracer as a user that cannot sudo, with a clean environment and a time limit', () => {
     const s = stepScript({ label: 'bash setup.sh', command: "bash 'set up.sh'", why: '' }, 2, 60);
-    assert.match(s, /env -i PATH=\S+ HOME=\/home\/dev /);
-    assert.match(s, /timeout -k 5 60 strace -f -qq -s 512 -o \/tmp\/airlock\/trace-2\.log\.full -e trace=execve,/);
-    assert.match(s, /bash -c 'bash '\\''set up\.sh'\\'''/);
+    assert.match(s, /timeout -k 5 60 strace -f -qq -s 512 -o \/tmp\/airlock\/trace-2\.log\.full -e trace=execve,\S+ -u dev \/usr\/bin\/env -i PATH=\S+ HOME=\/home\/dev /);
+    assert.match(s, /NODE_EXTRA_CA_CERTS=\/usr\/local\/share\/ca-certificates\/corp-root\.crt/);
+    assert.match(s, /\/bin\/bash -c 'cd \/home\/dev\/code\/project && bash '\\''set up\.sh'\\'''/);
+    assert.match(s, /date \+%s%3N > \/tmp\/airlock\/start-2[\s\S]*date \+%s%3N > \/tmp\/airlock\/end-2[\s\S]*pkill -9 -u dev/);
+  });
+
+  it('locks down before any code runs, and points DNS at the sinkhole only once it is listening', () => {
+    assert.match(lockdownScript(), /chown -R dev:dev \/home\/dev[\s\S]*chown -R root:root \/tmp\/airlock[\s\S]*chmod 700 \/tmp\/airlock/);
+    const s = sinkholeScript();
+    assert.ok(s.indexOf('[ -f /tmp/airlock/ready ] ||') < s.indexOf("echo 'nameserver 127.0.0.1' > /etc/resolv.conf"));
+    const cfg = JSON.parse(sinkholeConfig()) as { allow: string[]; upstream: string; dnsPort: number };
+    assert.ok(cfg.allow.includes('registry.npmjs.org'));
+    assert.deepEqual([cfg.upstream, cfg.dnsPort], ['__UPSTREAM__', 53]);
   });
 });
 
@@ -190,10 +201,46 @@ describe('sandbox evidence for the review', () => {
     const { sandboxDigest } = await import('../sandbox/evidence.ts');
     const { stealerEvidence } = await import('./sandbox-evidence.ts');
     const d = sandboxDigest(stealerEvidence());
-    assert.deepEqual({ ...d, sha256: d.sha256.length }, { provider: 'vercel-sandbox', steps: 1, wallets: 2, contacts: 1, sha256: 64 });
+    assert.deepEqual({ ...d, sha256: d.sha256.length }, { provider: 'vercel-sandbox', steps: 1, wallets: 2, contacts: 1, sent: 1, sentWithDecoys: 1, sha256: 64 });
     assert.equal(sandboxDigest(stealerEvidence()).sha256, d.sha256);
     const changed = stealerEvidence();
     changed.wallets.pop();
     assert.notEqual(sandboxDigest(changed).sha256, d.sha256);
+  });
+});
+
+describe('readCapture', () => {
+  it('credits each caught request to the script that looked the host up, and names the decoys inside', async () => {
+    const { readCapture } = await import('../sandbox/capture.ts');
+    const marker = newMarker();
+    const tokens = decoyTokens(marker);
+    const files = decoyFiles(marker);
+    const sol = files[DECOYS.findIndex((d) => d.label === 'Solana CLI keypair')]!.content;
+    const body = Buffer.from(JSON.stringify({ k: Buffer.from(sol).toString('base64') })).toString('base64');
+    const log = [
+      JSON.stringify({ at: 1000, t: 'dns', name: 'drop.test-only.invalid', type: 1, allowed: false }),
+      JSON.stringify({ at: 1500, t: 'http', tls: true, host: 'drop.test-only.invalid', method: 'POST', path: '/k', bytes: body.length, body: Buffer.from(body).toString('base64') }),
+      JSON.stringify({ at: 9000, t: 'http', tls: false, host: 'cdn.test-only.invalid', method: 'GET', path: '/stage2.sh', bytes: 0, body: '' }),
+      JSON.stringify({ at: 9100, t: 'tls-refused', host: 'pinned.test-only.invalid', error: 'ECONNRESET' }),
+      'not json',
+    ].join('\n');
+    const by = 'node scripts/postinstall.js (x@1.0.0 postinstall script)';
+    const r = readCapture(log, {
+      tokens,
+      steps: [
+        { label: 'npm install', start: 900, end: 2000 },
+        { label: 'bash setup.sh', start: 8000, end: 9500 },
+      ],
+      contacts: [{ host: 'drop.test-only.invalid', by, step: 'npm install' }],
+    });
+    assert.deepEqual(
+      r.exfil.map((x) => [x.method, x.host, x.step, x.by, x.decoys]),
+      [
+        ['POST', 'drop.test-only.invalid', 'npm install', by, ['Solana CLI keypair']],
+        ['GET', 'cdn.test-only.invalid', 'bash setup.sh', 'a project script', []],
+      ],
+    );
+    assert.equal(r.exfil[0]!.sha256.length, 64);
+    assert.deepEqual(r.refused, [{ host: 'pinned.test-only.invalid', error: 'ECONNRESET', step: 'bash setup.sh' }]);
   });
 });

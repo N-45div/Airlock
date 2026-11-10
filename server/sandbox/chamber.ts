@@ -4,13 +4,19 @@
 //
 // Order matters. Everything trusted happens first, before the repository's code exists or can run:
 // the tracer is installed, the repository is cloned or copied in, the decoys are written. Then the
-// network is locked to registries, and only then do the repository's steps run, each under strace
-// with a clean environment. The VM is stopped at the end whatever happens.
+// network is locked to registries and the sinkhole takes over DNS: every other host name resolves
+// to the VM itself, where the sinkhole receives what the code sends and keeps the bytes, HTTPS
+// included (the VM trusts a certificate authority made for this run). Only then do the repository's
+// steps run, each under strace, as a user that can't sudo, so the code can't touch the tracer, the
+// sinkhole or their logs. The VM is stopped at the end whatever happens.
 //
 // Needs a Vercel access token: VERCEL_TOKEN, VERCEL_TEAM_ID and VERCEL_PROJECT_ID.
 
 import { Sandbox } from '@vercel/sandbox';
-import { HOME, decoyFiles, newMarker } from './decoys.ts';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { type Exfil, type Refusal, readCapture } from './capture.ts';
+import { HOME, decoyFiles, decoyTokens, newMarker } from './decoys.ts';
 import { type Step, planSteps } from './plan.ts';
 import { type Contact, REGISTRIES, type StepTrace, type WalletTouch, readTrace } from './trace.ts';
 
@@ -46,6 +52,12 @@ export interface SandboxEvidence {
   wallets: (WalletTouch & { step: string })[];
   contacts: (Contact & { step: string })[];
   programs: { command: string; step: string }[];
+  /** Whether the sinkhole ran, and why not if it didn't. Without it, contacts are lookups only. */
+  capture: { on: boolean; note?: string };
+  /** What the code sent to the hosts it tried to reach, caught by the sinkhole. */
+  exfil: Exfil[];
+  /** HTTPS clients that refused the sinkhole's certificate. */
+  refused: Refusal[];
 }
 
 export interface ChamberOptions {
@@ -75,14 +87,36 @@ export async function folderFiles(dir: string): Promise<{ path: string; content:
   return files;
 }
 
-/** The shell script that runs one step under the tracer, from the repository's folder, with a clean environment. */
+/** The certificate authority the VM trusts for this run, under a name a script wouldn't single out. */
+const CA_FILE = '/usr/local/share/ca-certificates/corp-root.crt';
+
+/**
+ * The script, run as root, that runs one step: strace runs the step's command as `dev`, a user that
+ * can't sudo, from the repository's folder with a clean environment. The step's window is stamped on
+ * the VM's clock, so the sinkhole's requests can be matched to it, and anything the step left running
+ * is killed before the next.
+ */
 export function stepScript(step: Step, index: number, seconds: number): string {
   const trace = `${WORK}/trace-${index}.log`;
+  const env = [
+    'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+    `HOME=${HOME}`,
+    'USER=dev',
+    'LOGNAME=dev',
+    'LANG=C.UTF-8',
+    'TERM=dumb',
+    'CI=1',
+    `NODE_EXTRA_CA_CERTS=${CA_FILE}`,
+    'SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt',
+    'REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt',
+  ].join(' ');
   return [
-    `cd ${REPO_DIR}`,
-    `env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin HOME=${HOME} USER=dev LOGNAME=dev LANG=C.UTF-8 TERM=dumb CI=1 \\`,
-    `  timeout -k 5 ${seconds} strace -f -qq -s 512 -o ${trace}.full -e trace=${CALLS} bash -c ${quote(step.command)} > ${WORK}/out-${index}.log 2>&1`,
+    'cd /tmp',
+    `date +%s%3N > ${WORK}/start-${index}`,
+    `timeout -k 5 ${seconds} strace -f -qq -s 512 -o ${trace}.full -e trace=${CALLS} -u dev /usr/bin/env -i ${env} /bin/bash -c ${quote(`cd ${REPO_DIR} && ${step.command}`)} > ${WORK}/out-${index}.log 2>&1`,
     `echo $? > ${WORK}/exit-${index}`,
+    `date +%s%3N > ${WORK}/end-${index}`,
+    'pkill -9 -u dev || true',
     `grep -E ${KEEP} ${trace}.full | grep -v '"${HOME}/\\.npm/' > ${trace} || true`,
     `rm -f ${trace}.full`,
     `grep -E '^> ' ${WORK}/out-${index}.log | head -400 > ${WORK}/scripts-${index}.log || true`,
@@ -94,9 +128,48 @@ export function setupScript(): string {
   return [
     'set -e',
     'sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq >/dev/null',
-    'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq strace git >/dev/null',
+    'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq strace git openssl ca-certificates >/dev/null',
+    // The repository's code runs as dev. Until the lockdown, the folders belong to the sandbox's
+    // own user, so the files can be written in.
+    'id -u dev >/dev/null 2>&1 || sudo useradd -M -d /home/dev -s /bin/bash dev',
     `sudo install -d -o "$(id -u)" -g "$(id -g)" ${HOME} ${HOME}/code ${WORK}`,
   ].join('\n');
+}
+
+/** After the files are in: hand the home folder to dev, and close the work folder to everyone but root. */
+export function lockdownScript(): string {
+  return ['set -e', `sudo chown -R dev:dev ${HOME}`, `sudo chown -R root:root ${WORK}`, `sudo chmod 700 ${WORK}`].join('\n');
+}
+
+/** Starts the sinkhole as root and points the VM's DNS at it. Exits non-zero if it couldn't. */
+export function sinkholeScript(): string {
+  return [
+    'set -e',
+    `node ${WORK}/sinkhole.mjs make-ca ${WORK}/ca`,
+    `cp ${WORK}/ca/ca.crt ${CA_FILE}`,
+    'update-ca-certificates >/dev/null 2>&1',
+    // Registries are still looked up for real, through the VM's own resolver.
+    `UP=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf)`,
+    `sed -i "s/__UPSTREAM__/$UP/" ${WORK}/sinkhole.json`,
+    `nohup node ${WORK}/sinkhole.mjs serve ${WORK}/sinkhole.json > ${WORK}/sinkhole.out 2>&1 &`,
+    `for i in $(seq 1 50); do [ -f ${WORK}/ready ] && break; sleep 0.2; done`,
+    `[ -f ${WORK}/ready ] || { cat ${WORK}/sinkhole.out >&2; exit 1; }`,
+    `cp -L /etc/resolv.conf ${WORK}/resolv.orig && rm -f /etc/resolv.conf && echo 'nameserver 127.0.0.1' > /etc/resolv.conf`,
+  ].join('\n');
+}
+
+/** The sinkhole's settings; the upstream resolver is filled in inside the VM. */
+export function sinkholeConfig(): string {
+  return JSON.stringify({
+    dnsPort: 53,
+    httpPort: 80,
+    httpsPort: 443,
+    upstream: '__UPSTREAM__',
+    allow: REGISTRIES,
+    log: `${WORK}/capture.jsonl`,
+    caDir: `${WORK}/ca`,
+    ready: `${WORK}/ready`,
+  });
 }
 
 /** npm prints "> name@version event" then "> command" for each script it runs in the foreground. */
@@ -113,9 +186,15 @@ export function npmScripts(lines: string): Record<string, string> {
   return out;
 }
 
-async function sh(sandbox: Sandbox, script: string, timeoutMs: number): Promise<{ exitCode: number; stdout: string; stderr: string }> {
-  const r = await sandbox.runCommand({ cmd: 'bash', args: ['-c', script], timeoutMs });
+async function sh(sandbox: Sandbox, script: string, timeoutMs: number, sudo = false): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+  const r = await sandbox.runCommand({ cmd: 'bash', args: ['-c', script], timeoutMs, sudo });
   return { exitCode: r.exitCode, stdout: await r.stdout(), stderr: await r.stderr() };
+}
+
+/** Reads a file in the root-only work folder; null if it isn't there. */
+async function rootText(sandbox: Sandbox, path: string): Promise<string | null> {
+  const r = await sh(sandbox, `cat ${quote(path)}`, 60_000, true).catch(() => null);
+  return r && r.exitCode === 0 ? r.stdout : null;
 }
 
 /** Writes files at absolute paths, creating their folders first. */
@@ -171,17 +250,34 @@ export async function runChamber(source: ChamberSource, opts: ChamberOptions = {
 
     const steps = await planSteps((rel) => text(sandbox, `${REPO_DIR}/${rel}`), opts.maxSteps ?? 6);
 
+    // The sinkhole and its settings go in while the work folder is still writable.
+    await put(sandbox, [
+      { path: `${WORK}/sinkhole.mjs`, content: await readFile(fileURLToPath(new URL('./vm/sinkhole.mjs', import.meta.url))) },
+      { path: `${WORK}/sinkhole.json`, content: sinkholeConfig() },
+    ]);
+    const locked = await sh(sandbox, lockdownScript(), 60_000);
+    if (locked.exitCode !== 0) throw new Error(`Couldn't lock the sandbox down: ${locked.stderr.slice(-300)}`);
+
     say('Cutting the internet down to package registries');
     await sandbox.updateNetworkPolicy({ allow: REGISTRIES });
 
+    say('Starting the sinkhole: every other host now answers from inside the VM');
+    const sink = await sh(sandbox, sinkholeScript(), 120_000, true);
+    const capture = sink.exitCode === 0 ? { on: true } : { on: false, note: `the sinkhole didn't start, so hosts are lookups only: ${sink.stderr.trim().slice(-200)}` };
+    if (!capture.on) say('The sinkhole did not start; recording lookups only');
+
     const done: ChamberStep[] = [];
+    const windows: { label: string; start: number; end: number }[] = [];
     for (const [i, step] of steps.entries()) {
       say(`Running ${step.label}`);
       const started = Date.now();
-      await sh(sandbox, stepScript(step, i, seconds), (seconds + 60) * 1000).catch(() => null);
-      const exitCode = Number((await text(sandbox, `${WORK}/exit-${i}`))?.trim() ?? NaN);
-      const scripts = npmScripts((await text(sandbox, `${WORK}/scripts-${i}.log`)) ?? '');
-      const trace = readTrace((await text(sandbox, `${WORK}/trace-${i}.log`)) ?? '', { step: step.label });
+      await sh(sandbox, stepScript(step, i, seconds), (seconds + 60) * 1000, true).catch(() => null);
+      const exitCode = Number((await rootText(sandbox, `${WORK}/exit-${i}`))?.trim() ?? NaN);
+      const scripts = npmScripts((await rootText(sandbox, `${WORK}/scripts-${i}.log`)) ?? '');
+      const trace = readTrace((await rootText(sandbox, `${WORK}/trace-${i}.log`)) ?? '', { step: step.label });
+      const start = Number((await rootText(sandbox, `${WORK}/start-${i}`))?.trim());
+      const end = Number((await rootText(sandbox, `${WORK}/end-${i}`))?.trim());
+      if (Number.isFinite(start) && Number.isFinite(end)) windows.push({ label: step.label, start, end });
       done.push({
         ...step,
         exitCode: Number.isFinite(exitCode) ? exitCode : null,
@@ -193,6 +289,10 @@ export async function runChamber(source: ChamberSource, opts: ChamberOptions = {
     }
 
     const named = (s: ChamberStep, by: string) => (s.scripts[by] ? `${by} (${s.scripts[by]})` : by);
+    const contacts = done.flatMap((s) => s.trace.contacts.map((c) => ({ ...c, by: named(s, c.by), step: s.label })));
+    const caught = capture.on
+      ? readCapture((await rootText(sandbox, `${WORK}/capture.jsonl`)) ?? '', { tokens: decoyTokens(marker), steps: windows, contacts })
+      : { exfil: [], refused: [] };
     return {
       provider: 'vercel-sandbox',
       sandboxId: sandbox.name,
@@ -200,8 +300,11 @@ export async function runChamber(source: ChamberSource, opts: ChamberOptions = {
       allowedHosts: REGISTRIES,
       steps: done,
       wallets: done.flatMap((s) => s.trace.wallets.map((w) => ({ ...w, by: named(s, w.by), step: s.label }))),
-      contacts: done.flatMap((s) => s.trace.contacts.map((c) => ({ ...c, by: named(s, c.by), step: s.label }))),
+      contacts,
       programs: done.flatMap((s) => s.trace.programs.map((command) => ({ command, step: s.label }))),
+      capture,
+      exfil: caught.exfil,
+      refused: caught.refused,
     };
   } finally {
     await sandbox.stop().catch(() => {});

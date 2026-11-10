@@ -55,7 +55,18 @@ function report(ev: SandboxEvidence, label: string): void {
     console.log(`  • ${s.label}  (${status}, ${s.seconds}s) — ${s.why}`);
   }
 
-  if (ev.wallets.length === 0 && ev.contacts.length === 0) {
+  const redHanded = ev.exfil.filter((x) => x.decoys.length);
+  if (redHanded.length) {
+    console.log(`\n  CAUGHT RED-HANDED: it tried to send your wallets away (${redHanded.length} request${redHanded.length === 1 ? '' : 's'}):`);
+    for (const x of redHanded) {
+      console.log(`    ✗ ${x.method} ${x.tls ? 'https' : 'http'}://${x.host}${x.path}   ${(x.bytes / 1024).toFixed(1)} KB`);
+      console.log(`        inside it: ${x.decoys.map((d) => `${d} ✓`).join('  ')}`);
+      console.log(`        by ${x.by}  during ${x.step}.  It never left the sandbox.`);
+    }
+  }
+  if (!ev.capture.on) console.log(`\n  (No capture this run: ${ev.capture.note ?? 'the sinkhole did not start'}.)`);
+
+  if (ev.wallets.length === 0 && ev.contacts.length === 0 && ev.exfil.length === 0) {
     console.log(`\n  CLEAN: nothing the code ran opened a wallet or key, and nothing tried to reach the network.`);
   } else {
     if (ev.wallets.length) {
@@ -89,7 +100,7 @@ async function main(): Promise<void> {
     console.log(`\n  Evidence written to ${args.json}`);
   }
   // A dangerous verdict is exit 1, so a shell or CI can act on it.
-  process.exit(ev.wallets.length || ev.contacts.length ? 1 : 0);
+  process.exit(ev.wallets.length || ev.contacts.length || ev.exfil.length ? 1 : 0);
 }
 
 main().catch((error) => {
