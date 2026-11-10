@@ -319,7 +319,8 @@ tracking.
 - `@phala/dcap-qvl` 0.7.0: Intel TDX quote verification, at scan time and offline.
 - `near-sdk` 5.29.1 for the registry contract (Rust), and `near-api-js` 7.4.0 to record and read
   verdicts; `tweetnacl` for the receipt's one-time key.
-- Hono (server), React 19 and Vite (web app), zod.
+- Hono (server), React 19 and Vite (web app), zod. The site's generative art, Held Breath, is plain canvas code
+  with seeded noise ([docs/art.md](docs/art.md)); [docs/art-lab.html](docs/art-lab.html) explores its seeds.
 - From before the hackathon: the Claude Agent SDK, ArmorClaude and sgrep (the fenced Claude
   reviewer).
 - Much of the code, tests and docs were written with Claude Code (Anthropic).
