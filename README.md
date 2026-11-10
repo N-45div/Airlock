@@ -132,6 +132,46 @@ benchmark; `--model z-ai/glm-5.3-flash` has four times the context for very larg
 repositories. Encrypted requests don't use NEAR AI's prompt cache, so every reply pays the
 full input price.
 
+## The business
+
+**The problem.** In web3 the laptop is the wallet: browser wallets, CLI keys and `.env` files sit
+on the same machine that runs `npm install`. Fake recruiter take-homes aimed at crypto developers,
+npm packages hijacked to drain wallets, and AI coding agents that clone and install strangers' code
+on their own all lead to the same place. Spend limits on an agent's wallet don't help here: the
+code takes the developer's own keys.
+
+**What Airlock sells.** A check before anyone, person or agent, runs code they didn't write: the
+code runs first against decoy wallets in a throwaway VM, a model in a TEE judges what it did and
+what it says, and the verdict is recorded on NEAR, where anyone can read it for free.
+
+**What a check costs us** (measured unless marked): private TEE review about $0.003–0.005;
+recording on NEAR well under a cent; a lookup of an existing verdict $0 (a public RPC read). The
+sandbox run is estimated at 1–3 cents of VM time. So a full check costs a few cents, and the most
+common action, looking a verdict up, costs nothing.
+
+**Planned pricing**
+
+| Tier | For | Price | Includes |
+| --- | --- | --- | --- |
+| Free | everyone | $0 | Unlimited verdict lookups (agent guard, Chrome extension, `/near`), 20 public checks a month |
+| Pro | individual developers | $12 a month | Private folders and repositories, red-handed capture reports, an agent guard that checks unknown repositories itself |
+| Team | web3 teams | $25 per developer a month | A GitHub App that checks every new dependency and install-script change on each pull request, org rules, alerts |
+| Platform API | hiring, hackathon, bounty and AI-agent platforms | $0.25–0.50 per check, or per event | API and webhooks, a "Checked by Airlock" badge |
+| Intel | exchanges, wallets, chain-analytics firms | annual | A live feed of malicious packages and repositories caught in the sandbox |
+
+AI agents can also pay per check themselves, in USDC or NEAR through NEAR Intents, with no account.
+
+**Who pays first.** Platforms that make people run strangers' code at scale: hackathon and bounty
+platforms (every submission) and hiring platforms (every take-home). Each one sends thousands of
+checks, and every check adds a public verdict that makes free lookups more useful for everyone else.
+
+**Why it holds.** Every check adds to a public record that costs nothing to read, so lookups
+become the default. Verdicts are verifiable (TEE attestation, receipts, the contract's signature
+check) rather than "trust our server". It's aimed at where web3 actually loses money, the
+developer's own machine, and it sits inside the coding agents that now run most of that code.
+
+These are plans, not traction: no customer pays today.
+
 A recruiter sends you a take-home task. A GitHub repo promises a free crypto trading bot. A
 starter kit has 2,000 stars and an install script you haven't read. Running any of them hands
 a stranger your SSH keys, your `.env` files and your wallets.
