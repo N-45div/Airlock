@@ -169,9 +169,11 @@ code takes the developer's own keys.
 code runs first against decoy wallets in a throwaway VM, a model in a TEE judges what it did and
 what it says, and the verdict is recorded on NEAR, where anyone can read it for free.
 
-**What a check costs us** (measured unless marked): private TEE review about $0.003–0.005;
-recording on NEAR well under a cent; a lookup of an existing verdict $0 (a public RPC read). The
-sandbox run is estimated at 1–3 cents of VM time. So a full check costs a few cents, and the most
+**What a check costs us** (measured unless marked): private TEE review about $0.002–0.005;
+recording on NEAR well under a cent; a lookup of an existing verdict $0 (a public RPC read). A
+sandbox run took 19–32 seconds of one vCPU with 2 GB (10–20 s of active CPU) and downloaded about
+29 MB, mostly installing the tracer, which a prepared snapshot would skip; at Vercel Sandbox's
+rates that is estimated at a few cents at most. So a full check costs a few cents, and the most
 common action, looking a verdict up, costs nothing.
 
 **Planned pricing**
