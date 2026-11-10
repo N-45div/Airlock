@@ -34,6 +34,8 @@ describe('decoysIn', () => {
     assert.deepEqual(decoysIn(Buffer.from(gzipSync(Buffer.from(ssh)).toString('base64')), tokens), ['SSH key']);
     assert.deepEqual(decoysIn(Buffer.from(Buffer.from(ssh).toString('hex')), tokens), ['SSH key']);
     assert.deepEqual(decoysIn(Buffer.from(`data=${encodeURIComponent(sol)}`), tokens), ['Solana CLI keypair']);
+    // A PEM key inside JSON: its newlines become \n, which must not glue onto the base64 after them.
+    assert.deepEqual(decoysIn(Buffer.from(Buffer.from(JSON.stringify([ssh, sol])).toString('base64')), tokens), ['Solana CLI keypair', 'SSH key']);
   });
 
   it('finds nothing in bytes that carry no decoy, or another run\'s decoys', () => {

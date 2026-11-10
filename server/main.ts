@@ -23,6 +23,8 @@ const reviewer =
         ...(process.env.AIRLOCK_NEAR_MAX_USD ? { maxUsd: Number(process.env.AIRLOCK_NEAR_MAX_USD) } : {}),
         tlsPinning: process.env.AIRLOCK_NEAR_TLS_PINNING !== '0',
         record: !!process.env.NEAR_KEY_FILE || !!process.env.NEAR_PRIVATE_KEY,
+        // Detonate in the sandbox first (server/sandbox); needs Vercel credentials.
+        detonate: process.env.AIRLOCK_SANDBOX === '1',
       })
     : review;
 const scanner = new Scanner(dataDir, reviewer);

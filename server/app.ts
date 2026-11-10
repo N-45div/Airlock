@@ -104,6 +104,14 @@ export function createApp(scanner: Scanner, webDir: string): Hono {
     return c.body(receipt);
   });
 
+  app.get('/api/receipts/:hash/evidence', async (c) => {
+    const evidence = await scanner.evidence(c.req.param('hash'));
+    if (!evidence) return c.json({ error: 'No sandbox evidence for that receipt.' }, 404);
+    c.header('content-type', 'application/json; charset=utf-8');
+    c.header('cache-control', 'public, max-age=31536000, immutable');
+    return c.body(evidence);
+  });
+
   // The web app: built files, with the report and scan pages served by the app's router.
   app.use('/assets/*', serveStatic({ root: path.relative(process.cwd(), webDir) }));
   app.use('/favicon.svg', serveStatic({ root: path.relative(process.cwd(), webDir) }));

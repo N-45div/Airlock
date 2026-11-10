@@ -6,6 +6,7 @@
 // section marks them as data and caps how much of them reaches the model.
 
 import { canonicalJson, sha256Hex } from '../receipt.ts';
+import type { SandboxReport } from '../types.ts';
 import type { SandboxEvidence } from './chamber.ts';
 
 const MAX_ITEMS = 30;
@@ -87,6 +88,18 @@ export interface SandboxDigest {
   sentWithDecoys: number;
   /** SHA-256 of the canonical JSON of the full evidence, which is shared as its own file. */
   sha256: string;
+}
+
+/** The part of the evidence the report page shows; the strings are clipped like the prompt's. */
+export function sandboxReport(ev: SandboxEvidence): SandboxReport {
+  return {
+    steps: ev.steps.map((s) => ({ label: clip(s.label), status: s.timedOut ? 'timed out' : s.exitCode === 0 ? 'ok' : s.exitCode === null ? 'no exit code' : `exit ${s.exitCode}`, seconds: s.seconds })),
+    wallets: ev.wallets.map((w) => ({ decoy: w.decoy, path: clip(w.path), action: w.action, by: clip(w.by), step: clip(w.step) })),
+    contacts: ev.contacts.filter((c) => c.host).map((c) => ({ host: clip(c.host!), by: clip(c.by), step: clip(c.step) })),
+    sent: ev.exfil.map((x) => ({ method: x.method, url: clip(`${x.tls ? 'https' : 'http'}://${x.host}${x.path}`), bytes: x.bytes, decoys: x.decoys, by: clip(x.by), step: clip(x.step) })),
+    capture: ev.capture.on,
+    evidenceSha256: sha256Hex(canonicalJson(ev)),
+  };
 }
 
 export function sandboxDigest(ev: SandboxEvidence): SandboxDigest {

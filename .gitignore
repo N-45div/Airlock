@@ -9,3 +9,6 @@ data/
 extension/*.zip
 deploy/airlock.env
 contracts/**/target/
+
+.vercel
+.env*

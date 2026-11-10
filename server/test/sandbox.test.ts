@@ -156,7 +156,8 @@ describe('chamber scripts', () => {
   it('locks down before any code runs, and points DNS at the sinkhole only once it is listening', () => {
     assert.match(lockdownScript(), /chown -R dev:dev \/home\/dev[\s\S]*chown -R root:root \/tmp\/airlock[\s\S]*chmod 700 \/tmp\/airlock/);
     const s = sinkholeScript();
-    assert.ok(s.indexOf('[ -f /tmp/airlock/ready ] ||') < s.indexOf("echo 'nameserver 127.0.0.1' > /etc/resolv.conf"));
+    assert.ok(s.indexOf('[ -f /tmp/airlock/ready ] ||') < s.indexOf('> /etc/resolv.conf'), 'DNS moves to the sinkhole only once it is listening');
+    assert.ok(s.includes('mount --bind /etc/airlock-resolv.conf /etc/resolv.conf'), 'falls back to a bind mount when the file is mounted in');
     const cfg = JSON.parse(sinkholeConfig()) as { allow: string[]; upstream: string; dnsPort: number };
     assert.ok(cfg.allow.includes('registry.npmjs.org'));
     assert.deepEqual([cfg.upstream, cfg.dnsPort], ['__UPSTREAM__', 53]);

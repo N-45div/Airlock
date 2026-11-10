@@ -128,7 +128,7 @@ export function setupScript(): string {
   return [
     'set -e',
     'sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq >/dev/null',
-    'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq strace git openssl ca-certificates >/dev/null',
+    'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq strace git openssl ca-certificates python3-setuptools >/dev/null',
     // The repository's code runs as dev. Until the lockdown, the folders belong to the sandbox's
     // own user, so the files can be written in.
     'id -u dev >/dev/null 2>&1 || sudo useradd -M -d /home/dev -s /bin/bash dev',
@@ -154,7 +154,12 @@ export function sinkholeScript(): string {
     `nohup node ${WORK}/sinkhole.mjs serve ${WORK}/sinkhole.json > ${WORK}/sinkhole.out 2>&1 &`,
     `for i in $(seq 1 50); do [ -f ${WORK}/ready ] && break; sleep 0.2; done`,
     `[ -f ${WORK}/ready ] || { cat ${WORK}/sinkhole.out >&2; exit 1; }`,
-    `cp -L /etc/resolv.conf ${WORK}/resolv.orig && rm -f /etc/resolv.conf && echo 'nameserver 127.0.0.1' > /etc/resolv.conf`,
+    // The platform mounts /etc/resolv.conf into the VM, so it can't be replaced: write into it in
+    // place, or mount ours over it if that's refused.
+    `cp -L /etc/resolv.conf ${WORK}/resolv.orig`,
+    `printf 'nameserver 127.0.0.1\\n' > /etc/airlock-resolv.conf && chmod 644 /etc/airlock-resolv.conf`,
+    `cat /etc/airlock-resolv.conf > /etc/resolv.conf 2>/dev/null || mount --bind /etc/airlock-resolv.conf /etc/resolv.conf`,
+    `grep -q '^nameserver 127.0.0.1' /etc/resolv.conf`,
   ].join('\n');
 }
 
@@ -218,11 +223,14 @@ export async function runChamber(source: ChamberSource, opts: ChamberOptions = {
     (process.env.VERCEL_TOKEN && process.env.VERCEL_TEAM_ID && process.env.VERCEL_PROJECT_ID
       ? { token: process.env.VERCEL_TOKEN, teamId: process.env.VERCEL_TEAM_ID, projectId: process.env.VERCEL_PROJECT_ID }
       : undefined);
-  if (!credentials) throw new Error('The sandbox needs VERCEL_TOKEN, VERCEL_TEAM_ID and VERCEL_PROJECT_ID.');
+  // Without a token, the SDK uses VERCEL_OIDC_TOKEN, which `vercel env pull` writes for a linked project.
+  if (!credentials && !process.env.VERCEL_OIDC_TOKEN) {
+    throw new Error('The sandbox needs VERCEL_TOKEN, VERCEL_TEAM_ID and VERCEL_PROJECT_ID, or VERCEL_OIDC_TOKEN (run vercel link, then vercel env pull).');
+  }
 
   say('Starting a throwaway micro-VM');
   const sandbox = await Sandbox.create({
-    ...credentials,
+    ...(credentials ?? {}),
     resources: { vcpus: 1 },
     timeout: 15 * 60_000,
     networkPolicy: 'allow-all',

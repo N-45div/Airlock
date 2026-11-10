@@ -12,10 +12,10 @@ import { type Receipt, receiptHash } from './receipt.ts';
 import { review } from './review.ts';
 import type { ReviewOptions, ReviewResult } from './review.ts';
 import { SAMPLES, sampleRepo, sampleSource } from './samples.ts';
-import type { Approval, Finding, RepoInfo, Scan, ScanEvent, ScanProof, ScanStatus, ToolEvent } from './types.ts';
+import type { Approval, Finding, RepoInfo, SandboxReport, Scan, ScanEvent, ScanProof, ScanStatus, ToolEvent } from './types.ts';
 
 /** A review engine: Claude (review.ts) or NEAR AI Cloud (near-engine.ts), which adds a proof. */
-export type Reviewer = (opts: ReviewOptions) => Promise<ReviewResult & { proof?: ScanProof }>;
+export type Reviewer = (opts: ReviewOptions) => Promise<ReviewResult & { proof?: ScanProof; sandbox?: SandboxReport }>;
 
 export const LIMITS = {
   /** Scans running at once; the rest wait in line. */
@@ -81,6 +81,12 @@ export class Scanner {
     if (!/^[0-9a-f]{64}$/.test(hash)) return null;
     const own = await readFile(path.join(this.dataDir, 'receipts', `${hash}.json`), 'utf8').catch(() => null);
     return own ?? (await bundledReceipts()).get(hash) ?? null;
+  }
+
+  /** The sandbox evidence a receipt binds, saved next to it by the NEAR engine. */
+  async evidence(hash: string): Promise<string | null> {
+    if (!/^[0-9a-f]{64}$/.test(hash)) return null;
+    return readFile(path.join(this.dataDir, 'receipts', `${hash}.evidence.json`), 'utf8').catch(() => null);
   }
 
   get(id: string): Scan | undefined {
@@ -261,6 +267,7 @@ export class Scanner {
       scan.headline = result.headline;
       scan.summary = result.summary;
       if (result.proof) scan.proof = result.proof;
+      if (result.sandbox) scan.sandbox = result.sandbox;
       scan.status = 'done';
     } catch (error) {
       scan.status = 'failed';

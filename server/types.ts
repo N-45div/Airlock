@@ -95,6 +95,19 @@ export interface ScanProof {
   onchain?: { registry: string; recorder: string; tx: string };
 }
 
+/** What a repository's code did in Airlock's sandbox (server/sandbox), as the report page shows it. */
+export interface SandboxReport {
+  steps: { label: string; status: string; seconds: number }[];
+  wallets: { decoy: string; path: string; action: 'opened' | 'looked'; by: string; step: string }[];
+  contacts: { host: string; by: string; step: string }[];
+  /** Requests the sandbox caught by answering as the server, and the decoys inside each. */
+  sent: { method: string; url: string; bytes: number; decoys: string[]; by: string; step: string }[];
+  /** False when the sandbox could only see lookups, not what was sent. */
+  capture: boolean;
+  /** SHA-256 the receipt binds; the full evidence is at /api/receipts/:hash/evidence. */
+  evidenceSha256: string;
+}
+
 export interface Scan {
   id: string;
   repo: RepoInfo;
@@ -112,6 +125,8 @@ export interface Scan {
   error?: string;
   /** Present when the NEAR AI Cloud engine made the review. */
   proof?: ScanProof;
+  /** Present when the repository's install and setup steps also ran in the sandbox. */
+  sandbox?: SandboxReport;
 }
 
 /** Server-sent events on GET /api/scans/:id/stream. */

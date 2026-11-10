@@ -48,6 +48,8 @@ export function layers(body: Buffer): string[] {
       if (b && b.length) queue.push({ bytes: b, depth: depth + 1 });
     };
     push(unzip(bytes));
+    // Inside JSON, a PEM key's newlines become "\n", and the "n" would run into the base64 after it.
+    if (/\\[nrt"/\\]/.test(text)) push(Buffer.from(text.replace(/\\[nrt]/g, ' ').replace(/\\(["/\\])/g, '$1'), 'latin1'));
     if (/%[0-9a-fA-F]{2}/.test(text)) {
       try {
         push(Buffer.from(decodeURIComponent(text.replace(/\+/g, ' ')), 'utf8'));
