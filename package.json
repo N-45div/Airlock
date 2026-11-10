@@ -27,7 +27,8 @@
     "test:contract": "cd contracts/verdict-registry && cargo test",
     "test": "node --no-warnings --test \"server/test/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json",
-    "sandbox": "node --no-warnings server/sandbox-cli.ts"
+    "sandbox": "node --no-warnings server/sandbox-cli.ts",
+    "bench:sandbox": "node --no-warnings server/sandbox-bench.ts"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.299",

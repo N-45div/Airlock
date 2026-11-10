@@ -1,0 +1,141 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "blue-shallow-hippopotamus-4CCP49",
+  "marker": "AIRLOCK-DECOY-955901730f746857f41f6c7e",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 3,
+      "scripts": {
+        "node vendor/telemetry/setup.js": "airdrop-claimer@0.9.0 postinstall script"
+      },
+      "trace": {
+        "wallets": [
+          {
+            "decoy": "Phantom (Chrome)",
+            "kind": "browser-wallet",
+            "path": "~/.config/google-chrome/Default/Local Extension Settings/bfnaelmomeimhlpmgjnjophhpkkoljpa",
+            "action": "opened",
+            "by": "node vendor/telemetry/setup.js"
+          },
+          {
+            "decoy": "Ethereum keystore",
+            "kind": "cli-wallet",
+            "path": "~/.ethereum/keystore",
+            "action": "opened",
+            "by": "node vendor/telemetry/setup.js"
+          },
+          {
+            "decoy": "Foundry keystore",
+            "kind": "cli-wallet",
+            "path": "~/.foundry/keystores/deployer",
+            "action": "opened",
+            "by": "node vendor/telemetry/setup.js"
+          },
+          {
+            "decoy": "Another project’s .env",
+            "kind": "env-file",
+            "path": "~/projects/defi-bot/.env",
+            "action": "opened",
+            "by": "node vendor/telemetry/setup.js"
+          }
+        ],
+        "contacts": [
+          {
+            "host": "telemetry.airdrop-claimer.invalid",
+            "by": "node vendor/telemetry/setup.js"
+          }
+        ],
+        "programs": [
+          "sh -c node vendor/telemetry/setup.js",
+          "node vendor/telemetry/setup.js"
+        ]
+      }
+    }
+  ],
+  "wallets": [
+    {
+      "decoy": "Phantom (Chrome)",
+      "kind": "browser-wallet",
+      "path": "~/.config/google-chrome/Default/Local Extension Settings/bfnaelmomeimhlpmgjnjophhpkkoljpa",
+      "action": "opened",
+      "by": "node vendor/telemetry/setup.js (airdrop-claimer@0.9.0 postinstall script)",
+      "step": "npm install"
+    },
+    {
+      "decoy": "Ethereum keystore",
+      "kind": "cli-wallet",
+      "path": "~/.ethereum/keystore",
+      "action": "opened",
+      "by": "node vendor/telemetry/setup.js (airdrop-claimer@0.9.0 postinstall script)",
+      "step": "npm install"
+    },
+    {
+      "decoy": "Foundry keystore",
+      "kind": "cli-wallet",
+      "path": "~/.foundry/keystores/deployer",
+      "action": "opened",
+      "by": "node vendor/telemetry/setup.js (airdrop-claimer@0.9.0 postinstall script)",
+      "step": "npm install"
+    },
+    {
+      "decoy": "Another project’s .env",
+      "kind": "env-file",
+      "path": "~/projects/defi-bot/.env",
+      "action": "opened",
+      "by": "node vendor/telemetry/setup.js (airdrop-claimer@0.9.0 postinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "contacts": [
+    {
+      "host": "telemetry.airdrop-claimer.invalid",
+      "by": "node vendor/telemetry/setup.js (airdrop-claimer@0.9.0 postinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c node vendor/telemetry/setup.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node vendor/telemetry/setup.js",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "telemetry.airdrop-claimer.invalid",
+      "method": "POST",
+      "path": "/t",
+      "tls": true,
+      "bytes": 542,
+      "contentType": null,
+      "decoys": [
+        "Phantom (Chrome)",
+        "Ethereum keystore",
+        "Foundry keystore",
+        "Another project’s .env"
+      ],
+      "by": "node vendor/telemetry/setup.js (airdrop-claimer@0.9.0 postinstall script)",
+      "step": "npm install",
+      "sha256": "cb9f7d4fadcd2432540c1b9b5f1e0012ec8668007260b3dfd9ee97813709a550",
+      "sample": "eyJwaGFudG9tIjoie1wiS2V5cmluZ0NvbnRyb2xsZXJcIjp7XCJ2YXVsdFwiOlwie1xcXCJkYXRhXFxcIjpcXFwiQUlSTE9DS2VhNTQ1MDllMzlhNWZjODFmMWNkNmY1OGFcXFwiLFxcXCJpdlxcXCI6XFxcIjlhNWZjODFmMWNkNmY1OGFcXFwiLFxcXCJzYWx0XFxcIjpcXFwiQUlSTE9DS2VhNTQ1MDllM1xcXCJ9XCJ9fSIsImV0aEtleXN0b3JlIjoie1wiYWRkcmVzc1wiOlwiM2Y1Y2U1ZmJmZTNlOWFmMzk3MWRkODMzZDI2YmE5YjVjOTM2ZjBiZVwiLFwiY3J5cHRvXCI6e1wiY2lwaGVydGV4dFwiOlwiQUlSTE9DS2RiNDk3M2M1ZDgzYTUzMDNjNGVhZTNhZDdcIn19IiwiZm91bmRyeSI6IntcImNyeXB0b1wiOntcImNpcGhlcnRleHRcIjpcIkFJUkxPQ0s3ZmUzYzViNDJlZTkyNTNmYjZiOTIyZjM5XCJ9fSIsImVudkZpbGUiOiJQUklWQVRFX0tFWT0weDQxNDk1MjRjNGY0MzRiMzUzMzM5MzQzNTM3MzE2MzMxMzQzNjM1MzgzNzM4NjYzMDMwNjMzMTMzNjMzNTYyMzhcbk1ORU1PTklDPVwiQUlSTE9DSzUzOTQ1NzFjMTQ2NTg3OGYwMGMxM2M1YjhcIlxuIn0="
+    }
+  ],
+  "refused": []
+}

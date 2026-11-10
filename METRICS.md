@@ -78,3 +78,24 @@ Every verdict above is recorded on NEAR testnet by `airlock-recorder.testnet`, m
 extension shows the newest one per repository. Where a model missed (glm-5.3-flash on bcrypt and prepare-husky), the default
 model's verdict was recorded again afterwards, so the extension shows the right one. Earlier runs, with
 their receipts, are in `bench/archive/`.
+
+## Sandbox: reading the code vs running it (2026-11-10)
+
+Five harmless samples, packed in `samples/packed/wallet-stealers.pack`: four wallet stealers and one honest control.
+Each was reviewed twice by the private reviewer (`Qwen/Qwen3.8-27B`): once reading the code only, and once after
+Airlock ran its install steps in the sandbox, a throwaway VM whose home folder held decoy wallets and keys, with every
+host other than the package registries answered from inside the VM. Rebuild with `npm run bench:sandbox -- --render`;
+all 10 receipts, and the evidence each sandbox receipt binds, verify offline with `npm run judge`.
+
+| Sample | What it is | Reading only | With the sandbox | Caught sending (decoys inside) | Model cost, read / sandbox |
+| --- | --- | --- | --- | --- | --- |
+| wallet-postinstall | An npm postinstall script that collects wallet files | Don't run it | Don't run it | POST api.solsniper-sync.invalid: MetaMask (Chrome), Phantom (Chrome), NEAR CLI keys, Solana CLI keypair | $0.0023 / $0.0026 |
+| hidden-loader | The same, with every path and the host base64-encoded | Don't run it | Don't run it | POST metrics.nft-floor-sync.invalid: NEAR CLI keys, Solana CLI keypair, SSH key | $0.0025 / $0.0028 |
+| vendored-dep | Clean app code; the payload sits in vendor/ and runs on install | Don't run it | Don't run it | POST telemetry.airdrop-claimer.invalid: Phantom (Chrome), Ethereum keystore, Foundry keystore, Another project’s .env | $0.0026 / $0.0020 |
+| setup-py-stealer | A Python setup.py that sends keys over HTTPS | Don't run it | Don't run it | POST pkg-metrics.fmtdates.invalid: Solana CLI keypair, AWS keys, Google Cloud key | $0.0016 / $0.0017 |
+| near-deploy | Honest control: a deploy script reads a NEAR key only when you run it | Be careful | Be careful | nothing touched, nothing sent | $0.0031 / $0.0030 |
+
+- Reading alone already called all 4 stealers "Don't run it" (4/4 in both modes): on code it can read, the model saw through base64 and a vendored payload.
+- With the sandbox, 4/4 were also caught red-handed: the request each one sent to its server was kept, and it named exactly the wallets and keys that stealer took. Reading says "this looks like a stealer"; the sandbox shows what it took.
+- The honest control touched no decoy, reached no host, and was not called "Don't run it" in either mode (1/1).
+- Model cost only; the VM time for a sandbox run is not included. Five samples is a smoke test, not a measure of how often the sandbox catches what reading misses: these samples carry their payload in code the model can read.

@@ -105,7 +105,7 @@ describe('wallet-stealer fixture hygiene', () => {
     const hits: string[] = [];
     // Receipts and sandbox evidence report what a sample did, so they name its hosts by design; the
     // rule is about stealer code, which lives only in the pack.
-    const reports = (f: string) => f.startsWith('bench/') || f.startsWith('fixtures/receipts/') || f.endsWith('.evidence.json');
+    const reports = (f: string) => f === 'METRICS.md' || f.startsWith('bench/') || f.startsWith('fixtures/receipts/') || f.endsWith('.evidence.json');
     for (const file of (await trackedTextFiles()).filter((f) => !reports(f))) {
       const text = (await readFile(path.join(root, file), 'utf8').catch(() => '')).toLowerCase();
       for (const h of hosts) if (text.includes(h)) hits.push(`${file}: ${h}`);

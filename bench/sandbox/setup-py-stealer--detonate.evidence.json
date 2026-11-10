@@ -1,0 +1,111 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "plum-nutritious-tortoise-Hc3FLW",
+  "marker": "AIRLOCK-DECOY-d454223b759eec5175e4555f",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "python setup.py",
+      "command": "python3 setup.py --name",
+      "why": "Installing a Python package runs its setup.py.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 3,
+      "scripts": {},
+      "trace": {
+        "wallets": [
+          {
+            "decoy": "Solana CLI keypair",
+            "kind": "cli-wallet",
+            "path": "~/.config/solana/id.json",
+            "action": "opened",
+            "by": "python setup.py"
+          },
+          {
+            "decoy": "AWS keys",
+            "kind": "cloud-key",
+            "path": "~/.aws/credentials",
+            "action": "opened",
+            "by": "python setup.py"
+          },
+          {
+            "decoy": "Google Cloud key",
+            "kind": "cloud-key",
+            "path": "~/.config/gcloud/application_default_credentials.json",
+            "action": "opened",
+            "by": "python setup.py"
+          }
+        ],
+        "contacts": [
+          {
+            "host": "pkg-metrics.fmtdates.invalid",
+            "by": "python setup.py"
+          }
+        ],
+        "programs": []
+      }
+    }
+  ],
+  "wallets": [
+    {
+      "decoy": "Solana CLI keypair",
+      "kind": "cli-wallet",
+      "path": "~/.config/solana/id.json",
+      "action": "opened",
+      "by": "python setup.py",
+      "step": "python setup.py"
+    },
+    {
+      "decoy": "AWS keys",
+      "kind": "cloud-key",
+      "path": "~/.aws/credentials",
+      "action": "opened",
+      "by": "python setup.py",
+      "step": "python setup.py"
+    },
+    {
+      "decoy": "Google Cloud key",
+      "kind": "cloud-key",
+      "path": "~/.config/gcloud/application_default_credentials.json",
+      "action": "opened",
+      "by": "python setup.py",
+      "step": "python setup.py"
+    }
+  ],
+  "contacts": [
+    {
+      "host": "pkg-metrics.fmtdates.invalid",
+      "by": "python setup.py",
+      "step": "python setup.py"
+    }
+  ],
+  "programs": [],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "pkg-metrics.fmtdates.invalid",
+      "method": "POST",
+      "path": "/u",
+      "tls": true,
+      "bytes": 506,
+      "contentType": "application/x-www-form-urlencoded",
+      "decoys": [
+        "Solana CLI keypair",
+        "AWS keys",
+        "Google Cloud key"
+      ],
+      "by": "python setup.py",
+      "step": "python setup.py",
+      "sha256": "bdf9797fa24319d5e2a59737255f5a80326678c4d4ec259b711f1341afc2e917",
+      "sample": "eyIuY29uZmlnL3NvbGFuYS9pZC5qc29uIjogIls2NSw3Myw4Miw3Niw3OSw2Nyw3NSwxMDEsNTYsOTcsMTAyLDk4LDUyLDUwLDU1LDk3LDUzLDQ4LDEwMCw0OSw1Nyw1MCw1MCw1Niw0OSwxMDAsNTQsNTUsNDksOTcsNTIsOTgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDgsNDhdIiwgIi5hd3MvY3JlZGVudGlhbHMiOiAiW2RlZmF1bHRdXG5hd3NfYWNjZXNzX2tleV9pZCA9IEFLSUFBSVJMT0NLNjVCREJDNjQ2XG5hd3Nfc2VjcmV0X2FjY2Vzc19rZXkgPSBBSVJMT0NLNjViZGJjNjQ2ZDQ5MDgwYTcxMzBhODU4YlxuIiwgIi5jb25maWcvZ2Nsb3VkL2FwcGxpY2F0aW9uX2RlZmF1bHRfY3JlZGVudGlhbHMuanNvbiI6ICJ7XCJ0eXBlXCI6XCJhdXRob3JpemVkX3VzZXJcIixcInJlZnJlc2hfdG9rZW5cIjpcIkFJUkxPQ0syOWI0MzVhNWZiMmI1NDY1OTIzNjQ1ZDA5XCJ9In0="
+    }
+  ],
+  "refused": []
+}

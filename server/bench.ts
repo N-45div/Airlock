@@ -17,6 +17,7 @@ import { listPrivateModels } from './near-models.ts';
 import { reviewPrivately } from './private-review.ts';
 import { buildReceipt, receiptHash, treeHash } from './receipt.ts';
 import { packedSampleDir } from './sample-pack.ts';
+import { renderSandboxSection } from './sandbox-bench.ts';
 import type { Inventory } from './inventory.ts';
 import type { Category, RepoInfo, Verdict } from './types.ts';
 
@@ -295,7 +296,7 @@ if (import.meta.main) {
   const argv = process.argv.slice(2);
   if (argv[0] === '--render') {
     const results = JSON.parse(await readFile(RESULTS, 'utf8')) as BenchResults;
-    await writeFile(METRICS, renderMetrics(results));
+    await writeFile(METRICS, `${renderMetrics(results)}${await renderSandboxSection()}`);
     console.log(`wrote ${path.relative(process.cwd(), METRICS)} from ${path.relative(process.cwd(), RESULTS)}`);
   } else {
     const get = (flag: string) => {
@@ -319,7 +320,7 @@ if (import.meta.main) {
       const results: BenchResults = { date: new Date().toISOString(), maxUsd, runs: [...kept, ...runs] };
       await mkdir(path.dirname(RESULTS), { recursive: true });
       await writeFile(RESULTS, `${JSON.stringify(results, null, 2)}\n`);
-      await writeFile(METRICS, renderMetrics(results));
+      await writeFile(METRICS, `${renderMetrics(results)}${await renderSandboxSection()}`);
     };
     const fresh = await runBench({ models, cases, maxUsd, tlsPinning: !argv.includes('--no-tls-pinning'), apiKey, onRun: save });
     await save(fresh.runs);

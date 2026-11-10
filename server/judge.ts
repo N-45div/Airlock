@@ -17,6 +17,8 @@ import { FIXTURES, evidenceFileFor, sampleDir, verifyReceipt } from './verify-re
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BENCH = path.join(root, 'bench', 'receipts');
+// Sandbox runs: each receipt here binds the evidence file saved next to it.
+const SANDBOX = path.join(root, 'bench', 'sandbox');
 
 async function receiptFiles(dir: string): Promise<string[]> {
   return (await readdir(dir).catch(() => [] as string[])).filter((f) => f.endsWith('.json') && !f.endsWith('.evidence.json')).sort().map((f) => path.join(dir, f));
@@ -27,7 +29,7 @@ const archived: string[] = [];
 for (const run of (await readdir(ARCHIVE).catch(() => [] as string[])).sort()) {
   archived.push(...(await receiptFiles(path.join(ARCHIVE, run))).filter((f) => !f.endsWith('results.json')));
 }
-const files = [...(await receiptFiles(FIXTURES)), ...(await receiptFiles(BENCH)), ...archived];
+const files = [...(await receiptFiles(FIXTURES)), ...(await receiptFiles(BENCH)), ...(await receiptFiles(SANDBOX)), ...archived];
 let verified = 0;
 const failures: string[] = [];
 for (const file of files) {
@@ -52,7 +54,7 @@ const skipped = count('skipped') || 0;
 const testsOk = test.status === 0 && tests > 0 && passed + skipped === tests;
 
 console.log('Airlock Private: judge check (no key, no network)\n');
-console.log(`  receipts  ${verified}/${files.length} verified offline (${(await receiptFiles(FIXTURES)).length} fixture, ${(await receiptFiles(BENCH)).length} benchmark, ${archived.length} from earlier runs)`);
+console.log(`  receipts  ${verified}/${files.length} verified offline (${(await receiptFiles(FIXTURES)).length} fixture, ${(await receiptFiles(BENCH)).length} benchmark, ${(await receiptFiles(SANDBOX)).length} sandbox, ${archived.length} from earlier runs)`);
 console.log(`  tests     ${passed}/${tests} passed (receipts, tampering, private engine, fixture hygiene, baseline)`);
 if (skipped) console.log(`            ${skipped} skipped: this system refuses to create symlinks (Windows without Developer Mode)`);
 for (const f of failures) console.log(`  FAIL      ${f}`);

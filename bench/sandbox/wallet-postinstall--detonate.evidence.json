@@ -1,0 +1,141 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "blue-useless-termite-PGjAim",
+  "marker": "AIRLOCK-DECOY-291422c598f43bf4972c244b",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 5,
+      "scripts": {
+        "node scripts/postinstall.js": "sol-sniper@0.3.1 postinstall script"
+      },
+      "trace": {
+        "wallets": [
+          {
+            "decoy": "Solana CLI keypair",
+            "kind": "cli-wallet",
+            "path": "~/.config/solana/id.json",
+            "action": "opened",
+            "by": "node scripts/postinstall.js"
+          },
+          {
+            "decoy": "NEAR CLI keys",
+            "kind": "cli-wallet",
+            "path": "~/.near-credentials",
+            "action": "opened",
+            "by": "node scripts/postinstall.js"
+          },
+          {
+            "decoy": "Phantom (Chrome)",
+            "kind": "browser-wallet",
+            "path": "~/.config/google-chrome/Default/Local Extension Settings/bfnaelmomeimhlpmgjnjophhpkkoljpa",
+            "action": "opened",
+            "by": "node scripts/postinstall.js"
+          },
+          {
+            "decoy": "MetaMask (Chrome)",
+            "kind": "browser-wallet",
+            "path": "~/.config/google-chrome/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn",
+            "action": "opened",
+            "by": "node scripts/postinstall.js"
+          }
+        ],
+        "contacts": [
+          {
+            "host": "api.solsniper-sync.invalid",
+            "by": "node scripts/postinstall.js"
+          }
+        ],
+        "programs": [
+          "sh -c node scripts/postinstall.js",
+          "node scripts/postinstall.js"
+        ]
+      }
+    }
+  ],
+  "wallets": [
+    {
+      "decoy": "Solana CLI keypair",
+      "kind": "cli-wallet",
+      "path": "~/.config/solana/id.json",
+      "action": "opened",
+      "by": "node scripts/postinstall.js (sol-sniper@0.3.1 postinstall script)",
+      "step": "npm install"
+    },
+    {
+      "decoy": "NEAR CLI keys",
+      "kind": "cli-wallet",
+      "path": "~/.near-credentials",
+      "action": "opened",
+      "by": "node scripts/postinstall.js (sol-sniper@0.3.1 postinstall script)",
+      "step": "npm install"
+    },
+    {
+      "decoy": "Phantom (Chrome)",
+      "kind": "browser-wallet",
+      "path": "~/.config/google-chrome/Default/Local Extension Settings/bfnaelmomeimhlpmgjnjophhpkkoljpa",
+      "action": "opened",
+      "by": "node scripts/postinstall.js (sol-sniper@0.3.1 postinstall script)",
+      "step": "npm install"
+    },
+    {
+      "decoy": "MetaMask (Chrome)",
+      "kind": "browser-wallet",
+      "path": "~/.config/google-chrome/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn",
+      "action": "opened",
+      "by": "node scripts/postinstall.js (sol-sniper@0.3.1 postinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "contacts": [
+    {
+      "host": "api.solsniper-sync.invalid",
+      "by": "node scripts/postinstall.js (sol-sniper@0.3.1 postinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c node scripts/postinstall.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node scripts/postinstall.js",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "api.solsniper-sync.invalid",
+      "method": "POST",
+      "path": "/v1/register",
+      "tls": true,
+      "bytes": 1416,
+      "contentType": "application/json",
+      "decoys": [
+        "MetaMask (Chrome)",
+        "Phantom (Chrome)",
+        "NEAR CLI keys",
+        "Solana CLI keypair"
+      ],
+      "by": "node scripts/postinstall.js (sol-sniper@0.3.1 postinstall script)",
+      "step": "npm install",
+      "sha256": "28ea00f734911a657386e6b8946433522f154c251ff4685818c415117018a923",
+      "sample": "W3sicCI6Ii9ob21lL2Rldi8uY29uZmlnL3NvbGFuYS9pZC5qc29uIiwiZCI6Ild6WTFMRGN6TERneUxEYzJMRGM1TERZM0xEYzFMRFE1TERrM0xERXdNU3c1Tnl3eE1EQXNOVFlzTlRZc01UQXlMREV3TWl3MU5DdzBPU3d4TURJc05UY3NPVGtzTlRjc05UWXNNVEF5TERVM0xEVTFMREV3TWl3NU9DdzFNaXcxTWl3ME9TdzFNeXcwT0N3ME9DdzBPQ3cwT0N3ME9DdzBPQ3cwT0N3ME9DdzBPQ3cwT0N3ME9DdzBPQ3cwT0N3ME9DdzBPQ3cwT0N3ME9DdzBPQ3cwT0N3ME9DdzBPQ3cwT0N3ME9DdzBPQ3cwT0N3ME9DdzBPQ3cwT0N3ME9DdzBPQ3cwT0N3ME9GMD0ifSx7InAiOiIvaG9tZS9kZXYvLm5lYXItY3JlZGVudGlhbHMvbWFpbm5ldC9kZXYtdHJlYXN1cnkubmVhci5qc29uIiwiZCI6ImV5SmhZMk52ZFc1MFgybGtJam9pWkdWMkxYUnlaV0Z6ZFhKNUxtNWxZWElpTENKd2RXSnNhV05mYTJWNUlqb2laV1F5TlRVeE9UcEJTVkpNVDBOTE1ERTFPVGxoT1RjNFltRXhObUV6TURWaU5UVXhPVEpoTnlJc0luQnlhWFpoZEdWZmEyVjVJam9pWldReU5UVXhPVHBCU1ZKTVQwTkxNREUxT1RsaE9UYzRZbUV4Tm1Fek1EVmlOVFV4T1RKaE55SjkifSx7InAiOiIvaG9tZS9kZXYvLm5lYXItY3JlZGVudGlhbHMvdGVzdG5ldC9kZXYtdHJlYXN1cnkudGVzdG5ldC5qc29uIiwiZCI6ImV5SmhZMk52ZFc1MFgybGtJam9pWkdWMkxYUnlaV0Z6ZFhKNUxuUmxjM1J1WlhRaUxDSndjbWwyWVhSbFgydGxlU0k2SW1Wa01qVTFNVGs2UVVsU1RFOURTMkV6WXpOalpUaGlPVGRqT0dGak1qaG1Oamc1TURZMk4yVWlmUT09In0seyJwIjoiL2hvbWUvZGV2Ly5jb25maWcvZ29vZ2xlLWNocm9tZS9EZWZhdWx0L0xvY2FsIEV4dGVuc2lvbiBTZXR0aW5ncy9iZm5hZWxtb21laW1obHBtZ2puam9waGhwa2tvbGpwYS8wMDAwMDMubG9nIiwiZCI6ImV5SkxaWGx5YVc1blEyOXVkSEp2Ykd4bGNpSTZleUoyWVhWc2RDSTZJbnRjSW1SaGRHRmNJanBjSWtGSlVreFBRMHN3WmpVNE9EVTBZbVZqTnpCa056Sm1PREZsTjJaaU5EQXdYQ0lzWENKcGRsd2lPbHdpWXpjd1pEY3laamd4WlRkbVlqUXdNRndpTEZ3aWMyRnNkRndpT2x3aVFVbFNURTlEU3pCbU5UZzROVFJpWlZ3aWZTSjlmUT09In0seyJwIjoiL2hvbWUvZGV2Ly5jb25maWcvZ29vZ2xlLWNocm9tZS9EZWZhdWx0L0xvY2FsIEV4dGVuc2lvbiBTZXR0aW5ncy9ua2JpaGZiZW9nYWVhb2VobGVmbmtvZGJlZmdwZ2tubi8wMDAwMDMubG9nIiwiZCI6ImV5SkxaWGx5YVc1blEyOXVkSEp2Ykd4bGNpSTZleUoyWVhWc2RDSTZJbnRjSW1SaGRHRmNJanBjSWtGSlVreFBRMHRqWmpOa1kyUTRPRE5oWVdSak0yUm1OR05oTnpoaE1ETmhYQ0lzWENKcGRsd2lPbHdpWVdGa1l6TmtaalJqWVRjNFlUQXpZVndpTEZ3aWMyRnNkRndpT2x3aVFVbFNURTlEUzJObU0yUmpaRGc0TTF3aWZTSjlmUT09In1d"
+    }
+  ],
+  "refused": []
+}

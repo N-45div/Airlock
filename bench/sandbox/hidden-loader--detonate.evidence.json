@@ -1,0 +1,125 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "rose-imaginative-jaguar-Jj9H3t",
+  "marker": "AIRLOCK-DECOY-e052c20cb74050ee655776f1",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 3,
+      "scripts": {
+        "node lib/analytics.js": "nft-floor-tracker@1.2.0 postinstall script"
+      },
+      "trace": {
+        "wallets": [
+          {
+            "decoy": "Solana CLI keypair",
+            "kind": "cli-wallet",
+            "path": "~/.config/solana/id.json",
+            "action": "opened",
+            "by": "node lib/analytics.js"
+          },
+          {
+            "decoy": "NEAR CLI keys",
+            "kind": "cli-wallet",
+            "path": "~/.near-credentials",
+            "action": "opened",
+            "by": "node lib/analytics.js"
+          },
+          {
+            "decoy": "SSH key",
+            "kind": "ssh-key",
+            "path": "~/.ssh/id_ed25519",
+            "action": "opened",
+            "by": "node lib/analytics.js"
+          }
+        ],
+        "contacts": [
+          {
+            "host": "metrics.nft-floor-sync.invalid",
+            "by": "node lib/analytics.js"
+          }
+        ],
+        "programs": [
+          "sh -c node lib/analytics.js",
+          "node lib/analytics.js"
+        ]
+      }
+    }
+  ],
+  "wallets": [
+    {
+      "decoy": "Solana CLI keypair",
+      "kind": "cli-wallet",
+      "path": "~/.config/solana/id.json",
+      "action": "opened",
+      "by": "node lib/analytics.js (nft-floor-tracker@1.2.0 postinstall script)",
+      "step": "npm install"
+    },
+    {
+      "decoy": "NEAR CLI keys",
+      "kind": "cli-wallet",
+      "path": "~/.near-credentials",
+      "action": "opened",
+      "by": "node lib/analytics.js (nft-floor-tracker@1.2.0 postinstall script)",
+      "step": "npm install"
+    },
+    {
+      "decoy": "SSH key",
+      "kind": "ssh-key",
+      "path": "~/.ssh/id_ed25519",
+      "action": "opened",
+      "by": "node lib/analytics.js (nft-floor-tracker@1.2.0 postinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "contacts": [
+    {
+      "host": "metrics.nft-floor-sync.invalid",
+      "by": "node lib/analytics.js (nft-floor-tracker@1.2.0 postinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c node lib/analytics.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node lib/analytics.js",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "metrics.nft-floor-sync.invalid",
+      "method": "POST",
+      "path": "/ingest",
+      "tls": true,
+      "bytes": 788,
+      "contentType": null,
+      "decoys": [
+        "NEAR CLI keys",
+        "Solana CLI keypair",
+        "SSH key"
+      ],
+      "by": "node lib/analytics.js (nft-floor-tracker@1.2.0 postinstall script)",
+      "step": "npm install",
+      "sha256": "907deeddfe0a09d4823c731c4e9d3a5a3a286e9e0fdcea63fe7fb128c1cce7fa",
+      "sample": "V3lKYk5qVXNOek1zT0RJc056WXNOemtzTmpjc056VXNOVGNzTlRjc05URXNPVGdzTlRFc05UTXNOVFlzTlRRc09UZ3NPVGNzTlRZc09UZ3NOVGNzTlRZc01UQXhMRFUzTERFd01pdzVPQ3cwT0N3MU55d3hNRElzT1Rnc05UTXNNVEF5TERVeUxEUTRMRFE0TERRNExEUTRMRFE0TERRNExEUTRMRFE0TERRNExEUTRMRFE0TERRNExEUTRMRFE0TERRNExEUTRMRFE0TERRNExEUTRMRFE0TERRNExEUTRMRFE0TERRNExEUTRMRFE0TERRNExEUTRMRFE0TERRNExEUTRMRFE0WFNJc0ludGNJbUZqWTI5MWJuUmZhV1JjSWpwY0ltUmxkaTEwY21WaGMzVnllUzV1WldGeVhDSXNYQ0p3ZFdKc2FXTmZhMlY1WENJNlhDSmxaREkxTlRFNU9rRkpVa3hQUTB0bE1UazJNbVU1TkRBNVpUUXlPV1V6TUdWbE5XTm1ZalZqWENJc1hDSndjbWwyWVhSbFgydGxlVndpT2x3aVpXUXlOVFV4T1RwQlNWSk1UME5MWlRFNU5qSmxPVFF3T1dVME1qbGxNekJsWlRWalptSTFZMXdpZlNJc0ludGNJbUZqWTI5MWJuUmZhV1JjSWpwY0ltUmxkaTEwY21WaGMzVnllUzUwWlhOMGJtVjBYQ0lzWENKd2NtbDJZWFJsWDJ0bGVWd2lPbHdpWldReU5UVXhPVHBCU1ZKTVQwTkxOekZoTURCbVpqaGhaVFl3T1RZMU9XTXhaRFUzWVRaak9Wd2lmU0lzSWkwdExTMHRRa1ZIU1U0Z1QxQkZUbE5UU0NCUVVrbFdRVlJGSUV0RldTMHRMUzB0WEc1UlZXeFRWRVU1UkZONlVteE5SRmsxV1ZkWmVGbFhVbWxOVjBaclQwUk5NVnBIVFRGWmVrVjNUVzFKUFZ4dUxTMHRMUzFGVGtRZ1QxQkZUbE5UU0NCUVVrbFdRVlJGSUV0RldTMHRMUzB0WEc0aVhRPT0="
+    }
+  ],
+  "refused": []
+}
