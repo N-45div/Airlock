@@ -37,9 +37,19 @@ const GONE = 3;
 
 const rgba = ([r, g, b]: Rgb, a: number) => `rgba(${r},${g},${b},${a.toFixed(3)})`;
 
-export function startHeldBreath(canvas: HTMLCanvasElement, opts: HeldBreathOptions): () => void {
+/** One Held Breath system on a canvas, advanced a frame at a time by whoever drives it: the page's
+ * animation loop, or a video timeline stepping it deterministically from the same seed. */
+export interface HeldBreathSim {
+  /** Steps the system one frame and draws it. */
+  advance(): void;
+  /** Frames advanced since the last reset. */
+  frame(): number;
+  size(): { w: number; h: number };
+}
+
+export function createHeldBreath(canvas: HTMLCanvasElement, opts: HeldBreathOptions): HeldBreathSim | null {
   const ctx = canvas.getContext('2d', { alpha: false });
-  if (!ctx) return () => {};
+  if (!ctx) return null;
   const rng = new Rng(opts.seed);
   const noise: Noise3 = createNoise3(() => rng.next());
   const pal = opts.palette;
@@ -234,20 +244,29 @@ export function startHeldBreath(canvas: HTMLCanvasElement, opts: HeldBreathOptio
   };
 
   resize();
-
-  if (opts.still) {
-    for (let i = 0; i < 420; i++) {
+  return {
+    advance: () => {
       step();
       draw();
-    }
+    },
+    frame: () => frame,
+    size: () => ({ w: W, h: H }),
+  };
+}
+
+export function startHeldBreath(canvas: HTMLCanvasElement, opts: HeldBreathOptions): () => void {
+  let sim = createHeldBreath(canvas, opts);
+  if (!sim) return () => {};
+
+  if (opts.still) {
+    for (let i = 0; i < 420; i++) sim.advance();
     return () => {};
   }
 
   let raf = 0;
   let running = false;
   const loop = () => {
-    step();
-    draw();
+    sim.advance();
     raf = requestAnimationFrame(loop);
   };
   const play = () => {
@@ -261,10 +280,7 @@ export function startHeldBreath(canvas: HTMLCanvasElement, opts: HeldBreathOptio
   };
 
   // Warm start: the first visible frame already shows drift and a few held lights.
-  for (let i = 0; i < 260; i++) {
-    step();
-    draw();
-  }
+  for (let i = 0; i < 260; i++) sim.advance();
 
   let visible = true;
   const update = () => (visible && !document.hidden ? play() : pause());
@@ -274,14 +290,14 @@ export function startHeldBreath(canvas: HTMLCanvasElement, opts: HeldBreathOptio
   });
   io.observe(canvas);
   document.addEventListener('visibilitychange', update);
-  let lastW = W;
-  let lastH = H;
+  let last = sim.size();
   const ro = new ResizeObserver(() => {
     const rect = canvas.getBoundingClientRect();
-    if (Math.abs(rect.width - lastW) < 2 && Math.abs(rect.height - lastH) < 2) return;
-    resize();
-    lastW = W;
-    lastH = H;
+    if (Math.abs(rect.width - last.w) < 2 && Math.abs(rect.height - last.h) < 2) return;
+    // A new system from the same seed at the new size: the same seed always draws the same thing.
+    sim = createHeldBreath(canvas, opts) ?? sim;
+    for (let i = 0; i < 60; i++) sim.advance();
+    last = sim.size();
   });
   ro.observe(canvas);
   update();
