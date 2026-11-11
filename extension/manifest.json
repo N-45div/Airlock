@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Airlock",
   "short_name": "Airlock",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Check a stranger's code before you run it, and the tools a site offers your AI agent. Verdicts are recorded on NEAR.",
   "minimum_chrome_version": "120",
   "icons": {

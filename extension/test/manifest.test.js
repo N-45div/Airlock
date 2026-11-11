@@ -14,9 +14,9 @@ const scripts = files.filter((f) => f.endsWith('.js'));
 const pages = files.filter((f) => f.endsWith('.html'));
 
 describe('manifest.json', () => {
-  it('is Manifest V3 at 0.2.0, named by the product constant', () => {
+  it('is Manifest V3 at 0.3.0, named by the product constant', () => {
     assert.equal(manifest.manifest_version, 3);
-    assert.equal(manifest.version, '0.2.0');
+    assert.equal(manifest.version, '0.3.0');
     assert.equal(manifest.name, PRODUCT_NAME);
     assert.equal(manifest.short_name, PRODUCT_NAME);
     assert.ok(manifest.action.default_title.startsWith(PRODUCT_NAME));
