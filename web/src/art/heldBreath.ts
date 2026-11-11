@@ -255,8 +255,9 @@ export function createHeldBreath(canvas: HTMLCanvasElement, opts: HeldBreathOpti
 }
 
 export function startHeldBreath(canvas: HTMLCanvasElement, opts: HeldBreathOptions): () => void {
-  let sim = createHeldBreath(canvas, opts);
-  if (!sim) return () => {};
+  const first = createHeldBreath(canvas, opts);
+  if (!first) return () => {};
+  let sim: HeldBreathSim = first;
 
   if (opts.still) {
     for (let i = 0; i < 420; i++) sim.advance();
