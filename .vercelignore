@@ -1,0 +1,3 @@
+# Keys stay on this machine: never upload them with a CLI deploy.
+.env
+.env.*
