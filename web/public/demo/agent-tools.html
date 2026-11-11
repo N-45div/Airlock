@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agent guard test page · Airlock</title>
+    <link rel="icon" href="/favicon.svg" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #07080c;
+        --panel: #10121a;
+        --text: #f2f3f7;
+        --text-2: #b9bcc8;
+        --text-3: #8e91a0;
+        --accent: #8d99ff;
+        --ok: #63d195;
+        --bad: #ff8f86;
+        --border: rgba(255, 255, 255, 0.13);
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      main { max-width: 880px; margin: 0 auto; padding: 40px 20px 60px; }
+      .eyebrow { font: 600 13px/1.2 ui-monospace, Consolas, monospace; letter-spacing: 0.12em; text-transform: uppercase; color: #b3baff; }
+      h1 { margin: 10px 0 8px; font-size: 34px; line-height: 1.15; letter-spacing: -0.02em; }
+      p { margin: 8px 0; color: var(--text-2); }
+      .app { margin-top: 28px; padding: 22px 24px; border: 1px solid var(--border); border-radius: 18px; background: var(--panel); }
+      .app__name { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 650; }
+      .app__dot { width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg, #63d195, #8d99ff); }
+      #summary { margin-top: 14px; color: var(--text); font-weight: 600; }
+      ul { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+      .tool { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255, 255, 255, 0.03); }
+      .tool__head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+      code { font: 15px ui-monospace, Consolas, monospace; }
+      .pill { font-size: 13px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--border); }
+      .pill[data-tone='on'] { color: var(--ok); border-color: rgba(99, 209, 149, 0.45); }
+      .pill[data-tone='off'] { color: var(--bad); border-color: rgba(255, 143, 134, 0.45); }
+      button { font: inherit; font-size: 14px; font-weight: 600; color: var(--text); background: rgba(141, 153, 255, 0.14); border: 1px solid rgba(141, 153, 255, 0.45); border-radius: 10px; padding: 7px 14px; cursor: pointer; }
+      h2 { margin: 30px 0 0; font-size: 18px; }
+      #log { font: 14px/1.5 ui-monospace, Consolas, monospace; color: var(--text-2); }
+      #log li { padding: 8px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.03); }
+      #log li[data-tone='ok'] { color: var(--ok); }
+      #log li[data-tone='bad'] { color: var(--bad); }
+      a { color: #b3baff; }
+    </style>
+    <script src="/demo/agent-tools.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">Airlock · agent guard test page</div>
+      <h1>A pretend crypto app that offers tools to AI agents</h1>
+      <p>
+        With WebMCP, a site can hand tools to the AI agent in your browser. This page offers five. Two
+        are traps: one asks for a seed phrase, and one hides instructions to the agent in its
+        description. Nothing here is real: there is no wallet, and nothing is sent anywhere.
+      </p>
+      <p>
+        Without Airlock, an agent sees all five. With the Airlock extension's agent guard on (Settings,
+        then Guard AI agents in the browser), the traps never reach the agent, and the tools that move
+        money wait for you to press Allow. WebMCP needs chrome://flags/#enable-webmcp-testing for now.
+      </p>
+
+      <section class="app" aria-label="Pretend app">
+        <div class="app__name"><span class="app__dot"></span>Tidepool Swap <span class="pill">test page</span></div>
+        <p id="summary">Loading…</p>
+        <ul id="tools"></ul>
+      </section>
+
+      <h2>What happened</h2>
+      <ul id="log"></ul>
+
+      <p style="margin-top: 30px"><a href="/">Back to Airlock</a></p>
+    </main>
+  </body>
+</html>

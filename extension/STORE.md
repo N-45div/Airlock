@@ -8,13 +8,14 @@ Live: https://chromewebstore.google.com/detail/bmhbejjhiimlcmpkpeglogijodbhmpgd
 - **Category:** Developer Tools
 - **Language:** English
 - **Summary (132 characters max, same as the manifest description):**
-  Check a stranger's GitHub repository before you run it. A fenced AI agent reads it first and tells you if it is safe.
+  Check a stranger's code before you run it, and the tools a site offers your AI agent. Verdicts are recorded on NEAR.
 
 ## Single purpose
 
-Airlock helps you decide whether a GitHub repository is safe to run before you clone or install
-it. It adds one button to GitHub repository pages and npm package pages that sends that
-repository's address to the Airlock service for a check, and shows the result.
+Airlock checks untrusted code before it can act on your behalf or against you: a GitHub repository
+before you run it, and, if you turn it on, the tools a website offers to your browser's AI agent
+before the agent can use them. It adds one button to GitHub repository pages and npm package pages
+that sends that repository's address to the Airlock service for a check, and shows the result.
 
 ## Short description
 
@@ -45,6 +46,12 @@ What Airlock looks for:
 - Packed or encoded code, and programs shipped inside the repository
 - Text planted to steer AI coding assistants
 
+New: guard the AI agent in your browser. Sites can now offer tools to browser AI agents (WebMCP),
+like "swap tokens" or "sign transaction". Turn on the agent guard in Settings and Airlock checks
+every tool a page offers before an agent sees it: tools that slip instructions to the agent or ask
+for a seed phrase are never offered, and tools that move money wait for you to press Allow. The
+checks run on your computer.
+
 Private by design: the extension sends only the address of a repository. No account, no
 cookies, no tracking. Nothing is sent until you press the button (you can turn on showing
 earlier verdicts automatically in Settings).
@@ -53,13 +60,19 @@ Free to use.
 
 ## Permission justifications
 
-- **storage:** Saves two settings: the address of the Airlock server and whether repository
-  pages look up earlier verdicts.
+- **storage:** Saves the settings (the Airlock server address, whether repository pages look up
+  earlier verdicts, whether the agent guard is on) and, for the browser session only, which tools
+  each open tab offered to AI agents, for the badge and popup.
+- **scripting:** Registers the agent guard's two scripts when the user turns it on in Settings, and
+  unregisters them when they turn it off. Nothing is injected otherwise.
 - **Host permission for the Airlock server** (`https://airlock-check.vercel.app/*`): The extension's service worker calls the Airlock API to
   start a check and to look up an earlier verdict for a repository.
 - **Optional host permissions `https://*/*` and `http://localhost/*`:** Never granted at install. Requested for a single
-  origin only when the user types their own Airlock server address in Settings, so the
-  extension can reach that server. Handed back when the user switches away.
+  origin when the user types their own Airlock server address in Settings, so the extension can
+  reach that server, and for all sites only when the user turns on "Guard AI agents in the
+  browser": the guard must run on each page before its scripts to check the tools the page offers
+  to AI agents (WebMCP). The checks run locally; no page content leaves the browser. Handed back
+  when the user turns it off or switches away.
 - **Content scripts on github.com and www.npmjs.com:** Add the Check before you run button to
   repository and package pages and read which repository the page is about (from the address on
   GitHub, from the sidebar Repository link on npm). Nothing else on the page is read or changed.
@@ -78,11 +91,16 @@ What the extension sends, and when:
   sent to a public NEAR testnet RPC node (test.rpc.fastnear.com) as a read-only query to Airlock's verdict
   registry. No key, wallet or account is involved.
 
+- The agent guard (off by default) sends nothing: it reads the tool definitions a page registers
+  for AI agents, inside that page, and keeps a per-tab summary in session storage for the badge
+  and popup, cleared when the tab navigates or closes.
+
 Dashboard answers:
 - Personally identifiable information, health, financial and payment, authentication,
   personal communications, location, user activity: **not collected**.
-- Website content: **not collected** (the extension reads only a link from the page, not its
-  content).
+- Website content: **not collected** (the extension reads only a link from the page; the agent
+  guard, if turned on, reads the tool definitions a page offers to AI agents locally and sends
+  nothing).
 - Web history: **not collected** by default. Only if the user turns on "Show earlier verdicts"
   in Settings are the addresses of GitHub repository pages they open sent, to look up an
   earlier verdict.

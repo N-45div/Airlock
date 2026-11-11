@@ -45,6 +45,30 @@
         <p id="status" class="status" role="status"></p>
       </form>
 
+      <section class="guard" id="agent-guard">
+        <h2>Guard AI agents in the browser</h2>
+        <p>
+          Some sites offer tools to AI agents in your browser (WebMCP), such as "swap tokens" or
+          "sign transaction". With this on, <span data-product-name></span> checks every tool a site
+          offers before an agent can see it:
+        </p>
+        <ul>
+          <li>A tool that slips instructions to the agent, or asks for a seed phrase or private key, is never shown to agents.</li>
+          <li>A tool that moves money or signs something waits for you: each time an agent calls it, you choose Allow or Block.</li>
+          <li>The extension's button shows what each page offered and what <span data-product-name></span> did.</li>
+        </ul>
+        <p class="hint">
+          It runs inside every https:// page you open, so Chrome will ask to let the extension read and
+          change data on all sites. The checks happen on your computer: nothing about the pages is sent
+          anywhere. WebMCP is new; Chrome turns it on for sites in its trial, or for all sites at
+          chrome://flags/#enable-webmcp-testing.
+        </p>
+        <div class="actions">
+          <button type="button" class="primary" id="guard-toggle">Turn on</button>
+          <span id="guard-state" class="status" role="status"></span>
+        </div>
+      </section>
+
       <section class="about">
         <h2>What this extension sends</h2>
         <p>

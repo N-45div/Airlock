@@ -7,8 +7,11 @@
 //   airlock:check        { url }                    -> { id, key }  and opens the report
 //   airlock:open-report  { id, key? }               -> {}           opens the report
 //   airlock:open-url     { url }                    -> {}           opens a NEAR verdict page (Airlock or the explorer)
+//   airlock:agent-tools  { origin, tools }          -> {}           a page's agent-guard report (from agent-guard-bridge.js)
+//   airlock:tab-agent-tools { tabId }               -> { enabled, frames }  for the popup
 
 import { getSettings } from './config.js';
+import { agentGuardWanted, syncAgentGuard } from './lib/agent-guard-setup.js';
 import { ApiError, createScan, isScanId, lookupScan, reportUrl } from './lib/api.js';
 import { chainLinks, chainSummary, EXPLORER, fetchChainVerdict } from './lib/near.js';
 import { parseRepoInput, repoFromPage } from './lib/repo.js';
@@ -38,7 +41,64 @@ async function openTab(url, sender) {
   }
 }
 
+// ---- Agent guard reports, per tab and frame, kept for the session (the worker may sleep) ----
+
+const tabKey = (tabId) => `agentTools:${tabId}`;
+
+async function tabReport(tabId) {
+  try {
+    const stored = await chrome.storage.session.get(tabKey(tabId));
+    return stored[tabKey(tabId)] || { frames: {} };
+  } catch {
+    return { frames: {} };
+  }
+}
+
+async function showBadge(tabId, report) {
+  const tools = Object.values(report.frames).flatMap((f) => f.tools);
+  const blocked = tools.filter((t) => t.level === 'block').length;
+  const asks = tools.filter((t) => t.level === 'ask').length;
+  const held = blocked + asks;
+  try {
+    await chrome.action.setBadgeText({ tabId, text: held ? String(held) : '' });
+    if (held) await chrome.action.setBadgeBackgroundColor({ tabId, color: blocked ? '#b3261e' : '#8f5600' });
+    const parts = [];
+    if (blocked) parts.push(`${blocked} tool${blocked === 1 ? '' : 's'} kept from AI agents`);
+    if (asks) parts.push(`${asks} that ask${asks === 1 ? 's' : ''} you first`);
+    const title = parts.length ? `Airlock: ${parts.join(', ')} on this page` : chrome.runtime.getManifest().action.default_title;
+    await chrome.action.setTitle({ tabId, title });
+  } catch {
+    // The tab closed meanwhile.
+  }
+}
+
+async function clearTab(tabId) {
+  try {
+    await chrome.storage.session.remove(tabKey(tabId));
+  } catch {
+    // Nothing stored.
+  }
+}
+
 const handlers = {
+  async 'airlock:agent-tools'(msg, sender) {
+    const tabId = sender.tab && sender.tab.id;
+    if (typeof tabId !== 'number' || tabId < 0 || !Array.isArray(msg.tools)) return {};
+    const report = await tabReport(tabId);
+    report.frames[String(sender.frameId ?? 0)] = { origin: String(msg.origin || '').slice(0, 200), tools: msg.tools.slice(0, 50) };
+    await chrome.storage.session.set({ [tabKey(tabId)]: report });
+    await showBadge(tabId, report);
+    return {};
+  },
+
+  async 'airlock:tab-agent-tools'(msg) {
+    const enabled = (await agentGuardWanted()) && (await syncAgentGuard().catch(() => false));
+    const tabId = Number(msg.tabId);
+    if (!Number.isInteger(tabId) || tabId < 0) return { enabled, frames: [] };
+    const report = await tabReport(tabId);
+    return { enabled, frames: Object.values(report.frames) };
+  },
+
   async 'airlock:detect'(msg) {
     const links = Array.isArray(msg.repositoryLinks)
       ? msg.repositoryLinks.filter((link) => typeof link === 'string').slice(0, 10)
@@ -116,3 +176,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'sync') lookups.clear();
 });
+
+// A page that starts loading again starts a new report; a closed tab needs none.
+chrome.tabs.onUpdated.addListener((tabId, info) => {
+  if (info.status !== 'loading') return;
+  void clearTab(tabId);
+  chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
+});
+chrome.tabs.onRemoved.addListener((tabId) => void clearTab(tabId));
+
+// Keep the agent guard's scripts in step with its setting and permission.
+const resync = () => void syncAgentGuard().catch(() => {});
+chrome.runtime.onInstalled.addListener(resync);
+chrome.runtime.onStartup.addListener(resync);
+chrome.permissions.onRemoved.addListener(resync);

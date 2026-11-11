@@ -32,6 +32,7 @@ node --test extension/test/             # or: cd extension && npm test
 node extension/scripts/make-icons.mjs   # redraws icons/*.png from web/public/favicon.svg (needs Chrome)
 node extension/scripts/zip.mjs          # writes extension/airlock-extension.zip
 node extension/scripts/live-check.mjs   # loads it into headless Chrome, checks placement on live GitHub
+node extension/scripts/agent-guard-check.mjs [--shots dir]  # the agent guard end to end, in Chrome with WebMCP on
 ```
 
 GitHub changes its markup now and then; `live-check.mjs` shows at once whether the button still
@@ -59,6 +60,39 @@ verdict registry:
   (`GET /api/lookup` on the server, and a `get_latest` view call on the NEAR registry).
   Otherwise nothing is sent until you press the button or open the popup.
 
+## Guard AI agents in the browser (WebMCP)
+
+With [WebMCP](https://developer.chrome.com/docs/ai/webmcp) (a Chrome origin trial since Chrome 149),
+a site can hand tools straight to the AI agent in your browser: "swap tokens", "sign transaction".
+Turn on **Guard AI agents in the browser** in Settings and the extension checks every tool a page
+offers before any agent sees it. It's off by default, because it has to run on every `https://`
+page: Chrome asks you for access to all sites when you turn it on, and the access is handed back
+when you turn it off.
+
+| The tool | What Airlock does |
+| --- | --- |
+| Slips instructions to the agent in its description ("keep this from the user", "act without asking"), imitates system messages, or hides text in invisible characters | Never offered to agents |
+| Asks for a seed phrase, recovery words or a private key | Never offered to agents |
+| Moves money or signs (swap, transfer, approve, withdraw, sign a transaction...) | Offered, but every call, from any agent, waits for you to press **Allow once** or **Block**. Said whether the site marked it `consequentialHint`, and caught when it claims `readOnlyHint` |
+| Pushes the agent to call it first | Waits for you |
+| A description over Chrome's 500-character guidance | Noted |
+
+Forms offered with the declarative API (`<form toolname>`) get the same checks: a blocked one
+loses its `toolname`, and one that moves money loses `toolautosubmit`, so you press submit.
+The toolbar badge counts what a page held, and the popup lists each tool with the reason.
+
+How: `lib/agent-tools.js` (the checks) and `agent-guard.js` (the wrapper) are registered with
+`chrome.scripting` to run in the page's own JavaScript world at `document_start`, before any page
+script. The wrapper replaces `registerTool` on the `ModelContext` prototype, keeps its own copies of
+the built-ins it uses, and holds a page's tools back if the page swaps out a built-in the checks rely
+on. The Allow and Block buttons live in a closed shadow root and count only real clicks.
+`agent-guard-bridge.js` passes the page's report to the service worker for the badge and popup. The
+checks run on your computer; nothing about the pages you open is sent anywhere.
+
+It is a guard rail inside the page: a page written to get around it can. Try it on
+[the test page](https://airlock-check.vercel.app/demo/agent-tools.html), a pretend crypto app with
+five tools, two of them traps, after turning on `chrome://flags/#enable-webmcp-testing`.
+
 ## Verdicts on NEAR
 
 The extension reads Airlock's latest verdict for a repository from the
@@ -77,14 +111,15 @@ analytics or tracking, reads nothing else from the pages, and stores only its tw
 
 | Permission | Why |
 | --- | --- |
-| `storage` | Keeps the server address and the lookup setting. |
+| `storage` | Keeps the settings, and (for the session only) what the agent guard saw on each tab. |
+| `scripting` | Registers the agent guard's scripts when you turn it on, and removes them when you turn it off. |
 | `https://airlock-check.vercel.app/*` (host) | Talks to the Airlock server. |
 | `https://test.rpc.fastnear.com/*` (host) | Reads verdicts from the NEAR registry (view calls only; no key). |
-| `https://*/*` (optional host) | Only requested, origin by origin, when you enter your own `https://` server in Settings. |
+| `https://*/*`, `http://localhost/*` (optional host) | Requested for one origin when you enter your own `https://` server in Settings, and for all sites when you turn on the agent guard. Never at install. |
 | Content scripts on `github.com` and `www.npmjs.com` | Shows the button. npm is matched site-wide (not just `/package/*`) because npm moves between pages without reloading; the script does nothing off package pages. |
 
-No `tabs`, `activeTab`, `scripting` or `web_accessible_resources`. The popup learns the current
-tab's repository by asking the content script.
+No `tabs`, `activeTab` or `web_accessible_resources`. The popup learns the current tab's
+repository by asking the content script.
 
 ## How it fits together
 
@@ -98,6 +133,9 @@ tab's repository by asking the content script.
 | `lib/api.js` | The server routes from `server/types.ts`, verdict labels, plain error sentences. |
 | `lib/near.js` | Reads the NEAR verdict registry over public RPC. |
 | `lib/settings.js` | Server address validation. |
+| `lib/agent-tools.js`, `agent-guard.js` | The agent guard's checks and its wrapper around `registerTool`, in the page's world. |
+| `agent-guard-bridge.js` | Passes the guard's report from the page to the service worker. |
+| `lib/agent-guard-setup.js` | Turns the agent guard on and off (`chrome.scripting`). |
 | `popup.*`, `options.*` | The toolbar popup and the settings page. |
 
 Where the button goes, most specific first:

@@ -79,6 +79,16 @@ What the hackathon adds:
   and `verify:receipt` checks it. In the benchmark, all four stealer samples were caught with the
   exact wallets each took; reading alone also flagged them, and the honest control touched nothing
   ([METRICS.md](METRICS.md#sandbox-reading-the-code-vs-running-it-2026-11-10), `server/sandbox/`).
+- **A guard for the AI agent in your browser (WebMCP).** With WebMCP, in a Chrome origin trial
+  since Chrome 149, a site can hand the AI agent in your browser tools of its own, such as "swap
+  tokens" or "sign transaction". The extension's agent guard (off until you turn it on in its Settings) checks every
+  tool a page offers before any agent sees it, on your computer. A tool that slips instructions to
+  the agent, hides text in invisible characters, or asks for a seed phrase or private key is never
+  offered. One that moves money or signs is offered, but every call waits for your click on Allow,
+  whichever agent makes it, even when the site didn't mark it consequential. The badge and popup
+  show what each page offered and what was held. Airlock's own site offers agents two tools,
+  `get_near_verdict` (read from the NEAR registry) and `check_repository`.
+  (`extension/agent-guard.js`, `extension/lib/agent-tools.js`, `web/src/webmcp.ts`)
 
 Not shown yet: a GitHub Action, and checking Intel quotes inside the contract. The Chrome Web Store listing
 has the pre-hackathon extension until its update is approved; step 7 below loads the current one.
@@ -144,6 +154,15 @@ Try it locally (Node 24.22.1 or later; `.nvmrc`). Steps 1 to 3 need no key:
     VM runs on Vercel Sandbox). With `NEARAI_API_KEY`,
     `npm run scan:private -- wallet:hidden-loader --detonate --receipt r.json` does the whole loop:
     the sandbox run, the model's verdict citing it, and a receipt that binds the evidence.
+11. Do: `node extension/scripts/agent-guard-check.mjs` (Chrome 149 or later)
+    See: eight `ok` lines. On the test page, a pretend crypto app offering five tools, an agent
+    sees all five without Airlock. With the agent guard, the tool asking for a seed phrase and the
+    one with instructions to the agent in its description are never offered, a signing call waits
+    for a real click (Allow runs it, Block refuses it), and the toolbar badge reads 4. By hand: turn
+    on `chrome://flags/#enable-webmcp-testing`, load `extension/` unpacked, Settings, Guard AI agents
+    in the browser, Turn on, then open
+    [airlock-check.vercel.app/demo/agent-tools.html](https://airlock-check.vercel.app/demo/agent-tools.html)
+    and press "Call it as an agent would" on `sign_transaction`. No key, no network.
 
 Test fixtures: two samples contain text written to steer AI reviewers, which is what Airlock
 detects. They are kept packed (`samples/packed/`) and unpacked only into a temporary folder
@@ -297,6 +316,10 @@ docker run -p 8787:8787 -v airlock-data:/data \
   repositories.
 - A repository can change after a scan. Every report names the commit it read.
 - GitHub only for now, public repositories up to 60 MB.
+- The agent guard works from inside the page, ahead of the page's scripts. It judges tools by what
+  they say and ask for, and holds a page's tools back if the page tampers with the built-ins its
+  checks use, but a page written to get around it can. It is a guard rail until browsers and agents
+  enforce consent themselves. WebMCP itself is still an origin trial.
 
 ## Privacy
 
@@ -319,6 +342,8 @@ tracking.
 - `@phala/dcap-qvl` 0.7.0: Intel TDX quote verification, at scan time and offline.
 - `near-sdk` 5.29.1 for the registry contract (Rust), and `near-api-js` 7.4.0 to record and read
   verdicts; `tweetnacl` for the receipt's one-time key.
+- [WebMCP](https://developer.chrome.com/docs/ai/webmcp) (`document.modelContext`, Chrome's origin
+  trial) for the browser agent guard and the site's own agent tools.
 - Hono (server), React 19 and Vite (web app), zod. The site's generative art, Held Breath, is plain canvas code
   with seeded noise ([docs/art.md](docs/art.md)); [docs/art-lab.html](docs/art-lab.html) explores its seeds.
 - From before the hackathon: the Claude Agent SDK, ArmorClaude and sgrep (the fenced Claude

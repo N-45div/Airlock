@@ -41,6 +41,12 @@
         </div>
       </section>
 
+      <section id="agents" class="agents" hidden>
+        <p class="eyebrow">Tools this page offers to AI agents</p>
+        <p id="agents-note" class="muted"></p>
+        <ul id="agents-list" class="agents__list"></ul>
+      </section>
+
       <p id="error" class="error" role="alert" hidden></p>
 
       <button type="button" class="link" id="show-paste" hidden>Check a different repository</button>
@@ -66,6 +72,10 @@
     </main>
 
     <footer>
+      <p id="guard-off" class="muted guard-off" hidden>
+        AI agent guard is off.
+        <button type="button" class="link" id="guard-on">Turn it on</button>
+      </p>
       <details>
         <summary>How it works</summary>
         <ol>

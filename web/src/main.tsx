@@ -5,6 +5,10 @@ import '@fontsource-variable/inter/opsz.css';
 import '@fontsource-variable/jetbrains-mono/wght.css';
 import { App } from './App.tsx';
 import './styles/index.css';
+import { enableWebMcpTrial, registerAirlockTools } from './webmcp.ts';
+
+enableWebMcpTrial();
+registerAirlockTools();
 
 const root = document.getElementById('root');
 if (root) {

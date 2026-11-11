@@ -123,6 +123,80 @@ function showPaste() {
   $('paste-input').focus();
 }
 
+// ---- The agent guard's report for this tab ----
+
+const STATUS = {
+  blocked: { label: 'Kept from agents', tone: 'dangerous' },
+  'asks-you': { label: 'Asks you first', tone: 'caution' },
+  'you-submit': { label: 'You press submit', tone: 'caution' },
+  allowed: { label: 'Allowed', tone: 'safe' },
+};
+const ORDER = ['blocked', 'asks-you', 'you-submit', 'allowed'];
+
+function toolItem(tool, origin) {
+  const li = document.createElement('li');
+  li.className = 'agents__item';
+  const row = document.createElement('p');
+  row.className = 'agents__row';
+  const chip = document.createElement('span');
+  const status = STATUS[tool.status] ?? STATUS.allowed;
+  chip.className = 'chip';
+  chip.dataset.tone = status.tone;
+  chip.textContent = status.label;
+  const name = document.createElement('code');
+  name.textContent = tool.name;
+  row.append(chip, ' ', name);
+  li.append(row);
+  for (const reason of tool.reasons.slice(0, 2)) {
+    const p = document.createElement('p');
+    p.className = 'muted agents__why';
+    p.textContent = reason.text;
+    li.append(p);
+  }
+  const calls = [];
+  if (tool.calls.allowed) calls.push(`${tool.calls.allowed} allowed`);
+  if (tool.calls.blocked) calls.push(`${tool.calls.blocked} blocked`);
+  if (calls.length || origin) {
+    const p = document.createElement('p');
+    p.className = 'muted agents__why';
+    p.textContent = [calls.length ? `Agent calls: ${calls.join(', ')}` : '', origin].filter(Boolean).join(' · ');
+    li.append(p);
+  }
+  return li;
+}
+
+async function agentTools() {
+  let tabId = -1;
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    tabId = tab?.id ?? -1;
+  } catch {
+    // No tab: leave it at -1.
+  }
+  const res = await send({ type: 'airlock:tab-agent-tools', tabId });
+  if (!res.ok) return 0;
+  if (!res.enabled) {
+    $('guard-off').hidden = false;
+    return 0;
+  }
+  const frames = res.frames.length > 1;
+  const tools = res.frames.flatMap((f) => f.tools.map((t) => ({ tool: t, origin: frames ? f.origin : '' })));
+  tools.sort((a, b) => ORDER.indexOf(a.tool.status) - ORDER.indexOf(b.tool.status));
+  $('agents').hidden = false;
+  const kept = tools.filter((t) => t.tool.status === 'blocked').length;
+  const asks = tools.filter((t) => t.tool.status === 'asks-you' || t.tool.status === 'you-submit').length;
+  $('agents-note').textContent = !tools.length
+    ? 'None: this page offers no tools to AI agents, or WebMCP is off in this browser.'
+    : [`${tools.length} tool${tools.length === 1 ? '' : 's'}`, kept ? `${kept} kept from agents` : '', asks ? `${asks} wait${asks === 1 ? 's' : ''} for you` : ''].filter(Boolean).join(' · ');
+  $('agents-list').replaceChildren(...tools.map((t) => toolItem(t.tool, t.origin)));
+  return tools.length;
+}
+
+$('guard-on').addEventListener('click', () => {
+  void chrome.tabs.create({ url: chrome.runtime.getURL('options.html#agent-guard') });
+  window.close();
+});
+
 $('primary').addEventListener('click', () => (view.result ? openReport() : startCheck()));
 $('again').addEventListener('click', () => startCheck());
 $('settings').addEventListener('click', () => chrome.runtime.openOptionsPage());
@@ -148,12 +222,15 @@ async function init() {
   document.title = PRODUCT_NAME;
   const { apiBase } = await getSettings();
   $('more').href = `${apiBase}${HOW_IT_WORKS_PATH}`;
-  const repoUrl = await pageRepo();
+  const [repoUrl, agentToolCount] = await Promise.all([pageRepo(), agentTools()]);
   $('status').hidden = true;
   if (repoUrl) {
     showRepo(repoUrl, 'page');
     $('show-paste').hidden = false;
     await lookup();
+  } else if (agentToolCount) {
+    // A page with agent tools: lead with them, and keep the paste box one click away.
+    $('show-paste').hidden = false;
   } else {
     showPaste();
   }

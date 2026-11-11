@@ -23,10 +23,10 @@ describe('manifest.json', () => {
     assert.ok(manifest.description.length <= 132, `description is ${manifest.description.length} characters`);
   });
 
-  it('asks for storage only, plus the server origin and the NEAR RPC it reads verdicts from', () => {
-    assert.deepEqual(manifest.permissions, ['storage']);
+  it('asks for storage and scripting (the opt-in agent guard), plus the server origin and the NEAR RPC it reads verdicts from', () => {
+    assert.deepEqual(manifest.permissions, ['storage', 'scripting']);
     assert.deepEqual(manifest.host_permissions, [originPattern(DEFAULT_API_BASE), originPattern(NEAR_RPC)]);
-    // Only a custom https:// server the person types in, requested at that moment.
+    // A custom https:// server the person types in, or the agent guard they turn on: requested at that moment.
     assert.deepEqual(manifest.optional_host_permissions, ['https://*/*', 'http://localhost/*']);
     assert.equal(manifest.optional_permissions, undefined);
     assert.equal(manifest.web_accessible_resources, undefined);
