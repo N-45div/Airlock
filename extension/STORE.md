@@ -19,8 +19,8 @@ that sends that repository's address to the Airlock service for a check, and sho
 
 ## Short description
 
-Before you run a stranger's code, let a fenced AI agent open it first. One button on GitHub and
-npm gives you a plain answer: Looks safe, Be careful, or Don't run it.
+Before you run a stranger's code, let Airlock check it first. One button on GitHub and npm gives
+you a plain answer: Looks safe, Be careful, or Don't run it, recorded on NEAR.
 
 ## Long description
 
@@ -32,9 +32,10 @@ Airlock checks the repository first, without it ever touching your computer.
 
 How it works:
 1. On a GitHub repository or an npm package page, press Check before you run.
-2. Airlock copies the repository onto its own server. An AI agent reads it inside a fence: it can
-   look, but anything that could do harm is blocked or held for you to approve.
-3. You get a plain answer, with the reasons and the exact files, in a report you can share.
+2. Airlock fetches the repository on its own server, and a model running in a secure enclave (TEE)
+   on NEAR AI Cloud reviews it, end-to-end encrypted.
+3. You get a plain answer, with the reasons and the exact files, in a report you can share. The
+   verdict is recorded on NEAR, where anyone can check it.
 
 If someone already checked that repository, the button shows the verdict straight away.
 
