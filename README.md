@@ -407,6 +407,8 @@ Chrome extension's button. Everything after it is hackathon work:
 - Checking Intel quotes inside the contract.
 - Verdicts on mainnet.
 - The sandbox on the live site.
+- Running the sandbox on NEAR AI's open-source Red Sandbox microVMs instead of Vercel Sandbox, so the
+  code runs and is judged inside NEAR AI's own stack.
 
 **The Chrome Web Store** lists the pre-hackathon extension until version 0.3.0 is approved. Step 8 loads
 the current one.
@@ -452,7 +454,7 @@ reviewer uses to search by meaning.
 
 ## Built with
 
-- [NEAR AI Cloud](https://cloud.near.ai) through `@nearai/inference-sdk` 0.2.1: models in TEEs,
+- [NEAR AI Cloud](https://cloud.near.ai) through `@nearai/inference-sdk` 0.3.0: models in TEEs,
   end-to-end encryption, attestation and per-reply signatures.
 - `@phala/dcap-qvl` 0.7.0: Intel TDX quote verification, at scan time and offline.
 - `near-sdk` 5.29.1 for the registry contract (Rust), and `near-api-js` 7.4.0 to record and read
