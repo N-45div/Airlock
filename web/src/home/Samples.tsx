@@ -4,7 +4,6 @@ import { api, startScan } from '../api.ts';
 import { CTA, PRODUCT } from '../brand.ts';
 import { navigate } from '../router.tsx';
 import { Icon, Spinner } from '../ui/Icon.tsx';
-import { SectionHeading } from '../ui/primitives.tsx';
 import { messageOf } from './ScanForm.tsx';
 
 function repoLabel(sample: Sample): string {
@@ -41,15 +40,14 @@ export function Samples() {
   };
 
   return (
-    <section aria-labelledby="samples-title">
-      <SectionHeading id="samples-title" eyebrow="Try it" title="Or start with a sample" aside="One click starts a real check." />
+    <div className="samples">
       {unavailable ? (
         <p className="muted-note">Samples are not available right now. Paste any public GitHub link above instead.</p>
       ) : (
         <ul className="sample-grid" aria-busy={samples ? undefined : true}>
           {samples
-            ? samples.map((sample) => (
-                <li key={sample.id}>
+            ? samples.map((sample, i) => (
+                <li key={sample.id} className={i === 0 && sample.url.startsWith('sample:') ? 'sample-grid__featured' : undefined}>
                   <button
                     type="button"
                     className="sample"
@@ -84,6 +82,6 @@ export function Samples() {
           <span>{error}</span>
         </p>
       ) : null}
-    </section>
+    </div>
   );
 }

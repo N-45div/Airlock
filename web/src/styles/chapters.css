@@ -1,0 +1,734 @@
+/* The home page as numbered chapters: each a full-width band with one job, separated by space and a
+   hairline, not by boxes. Color comes from Held Breath's palette and means the same thing everywhere:
+   held coral is what the sandbox caught, drift indigo is the private review, cleared green is NEAR. */
+
+:root {
+  --held: #c2492f;
+  --drift: #3f4fd0;
+  --cleared: #1d7348;
+  --held-glow: rgba(255, 150, 120, 0.16);
+  --drift-glow: rgba(138, 150, 255, 0.16);
+  --cleared-glow: rgba(99, 209, 149, 0.14);
+  --band-alt: #efeee9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --held: #ff9678;
+    --drift: #8a96ff;
+    --cleared: #63d195;
+    --band-alt: #121317;
+  }
+}
+
+.page--home > * + * {
+  margin-top: 0;
+}
+
+/* Proof strip: four numbers, each a link to where it is shown. */
+.proof-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-inline: calc(50% - 50vw);
+  padding-inline: max(var(--gutter), calc(50vw - var(--content) / 2));
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.proof-strip li {
+  display: flex;
+  border-left: 1px solid var(--border);
+}
+
+.proof-strip li:last-child {
+  border-right: 1px solid var(--border);
+}
+
+.proof-strip__item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  padding: 26px 22px 24px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.proof-strip__item:hover {
+  background: var(--surface-2);
+}
+
+.proof-strip__value {
+  font-size: clamp(28px, 3.4vw, 38px);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+.proof-strip li:nth-child(1) .proof-strip__value,
+.proof-strip li:nth-child(2) .proof-strip__value {
+  color: var(--held);
+}
+
+.proof-strip li:nth-child(3) .proof-strip__value {
+  color: var(--drift);
+}
+
+.proof-strip li:nth-child(4) .proof-strip__value {
+  color: var(--cleared);
+}
+
+.proof-strip__label {
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+@media (max-width: 860px) {
+  .proof-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .proof-strip li:nth-child(2) {
+    border-right: 1px solid var(--border);
+  }
+
+  .proof-strip li:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* A chapter: a band the full width of the window, its content in the column. */
+.chapter {
+  position: relative;
+  isolation: isolate;
+  padding-block: 96px;
+}
+
+.chapter::before {
+  content: '';
+  position: absolute;
+  inset: 0 calc(50% - 50vw);
+  z-index: -1;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.chapter--alt::before {
+  background: var(--band-alt);
+}
+
+.chapter__head {
+  max-width: 720px;
+  margin-bottom: 40px;
+}
+
+.chapter__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chapter__n {
+  font-family: var(--font-mono);
+  color: var(--text-3);
+  letter-spacing: 0;
+}
+
+.chapter__n::after {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  margin-left: 12px;
+  vertical-align: middle;
+  background: linear-gradient(90deg, var(--held), var(--drift), var(--cleared));
+}
+
+.chapter__title {
+  margin-top: 14px;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 650;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.chapter__lede {
+  margin-top: 16px;
+  color: var(--text-2);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.chapter__note {
+  max-width: 760px;
+  margin-top: 28px;
+  color: var(--text-3);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+@media (max-width: 520px) {
+  .chapter {
+    padding-block: 64px;
+  }
+
+  .chapter__head {
+    margin-bottom: 28px;
+  }
+}
+
+/* The night chapter, for judges: the hero's palette again, so the page ends where it began. */
+.chapter--night {
+  color-scheme: dark;
+  --bg: #07080c;
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-2: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.12);
+  --text: #f2f3f7;
+  --text-2: #b9bcc8;
+  --text-3: #8e91a0;
+  --accent-text: #b3baff;
+  color: var(--text);
+}
+
+.chapter--night::before {
+  background:
+    radial-gradient(60% 80% at 85% 10%, var(--drift-glow), transparent 70%),
+    radial-gradient(50% 70% at 10% 100%, var(--held-glow), transparent 70%),
+    #07080c;
+  border-top: 0;
+}
+
+/* Samples: the stealer first and wide. */
+.sample-grid__featured {
+  grid-column: 1 / -1;
+}
+
+.sample-grid__featured .sample {
+  border-color: color-mix(in srgb, var(--held) 45%, var(--border));
+  background:
+    radial-gradient(80% 140% at 100% 0%, var(--held-glow), transparent 60%),
+    var(--surface);
+}
+
+.sample-grid__featured .sample__title {
+  font-size: 20px;
+}
+
+.sample-grid__featured .sample__blurb {
+  max-width: 640px;
+  font-size: 15.5px;
+}
+
+.sample-grid__featured .sample__cta {
+  color: var(--held);
+}
+
+/* How it works: three stages on one line, joined by the palette's gradient. */
+.pipeline {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.pipeline::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  right: 22px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--held), var(--drift) 50%, var(--cleared));
+  opacity: 0.55;
+}
+
+.pipeline__stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pipeline__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pipeline__node {
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--tone);
+  border-radius: 50%;
+  background: var(--band-alt);
+  color: var(--tone);
+  box-shadow: 0 0 0 6px var(--band-alt), 0 0 28px var(--tone-glow);
+}
+
+.pipeline__stage--held {
+  --tone: var(--held);
+  --tone-glow: var(--held-glow);
+}
+
+.pipeline__stage--drift {
+  --tone: var(--drift);
+  --tone-glow: var(--drift-glow);
+}
+
+.pipeline__stage--cleared {
+  --tone: var(--cleared);
+  --tone-glow: var(--cleared-glow);
+}
+
+.pipeline__step {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--band-alt);
+  color: var(--tone);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.pipeline__title {
+  margin-top: 12px;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+}
+
+.pipeline__text {
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.pipeline__out {
+  display: grid;
+  gap: 4px;
+  margin-top: auto;
+  padding: 14px 16px;
+  border-left: 2px solid var(--tone);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.pipeline__out span {
+  color: var(--tone);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 860px) {
+  .pipeline {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .pipeline::before {
+    top: 22px;
+    bottom: 22px;
+    left: 22px;
+    right: auto;
+    width: 2px;
+    height: auto;
+    background: linear-gradient(180deg, var(--held), var(--drift) 50%, var(--cleared));
+  }
+
+  .pipeline__stage {
+    padding-left: 64px;
+  }
+
+  .pipeline__top {
+    margin-left: -64px;
+  }
+}
+
+/* Caught red-handed: the sigil beside the evidence. */
+.catch {
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
+  gap: 48px;
+}
+
+.catch__sigil {
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0;
+}
+
+.catch__sigil figcaption {
+  max-width: 300px;
+}
+
+@media (max-width: 860px) {
+  .catch {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .catch__sigil {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .catch__sigil {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Against real malware: two stacked bars and the packages caught. */
+.wild {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+}
+
+.wild__bars {
+  display: grid;
+  gap: 22px;
+}
+
+.wild__bar-title {
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.wild__bar-title span {
+  margin-left: 6px;
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.wild__track {
+  display: flex;
+  gap: 3px;
+  height: 40px;
+}
+
+.wild__seg {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.wild__seg--caught,
+.wild__key--caught::before {
+  background: var(--held);
+}
+
+.wild__seg--phoned,
+.wild__key--phoned::before {
+  background: var(--held);
+}
+
+.wild__seg--fetched,
+.wild__key--fetched::before {
+  background: var(--drift);
+}
+
+.wild__seg--quiet,
+.wild__key--quiet::before {
+  background: color-mix(in srgb, var(--text-3) 55%, transparent);
+}
+
+.wild__seg--failed {
+  background: var(--border-strong);
+  color: var(--text-2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .wild__seg {
+    color: #07080c;
+  }
+}
+
+.wild__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.wild__key {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.wild__key::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.wild__list {
+  display: grid;
+  border-top: 1px solid var(--border);
+}
+
+.wild__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.wild__pkg {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.wild__outcome {
+  color: var(--held);
+  font-weight: 500;
+}
+
+.wild__outcome {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .wild {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+/* Where it guards you: three surfaces, then what it looks for. */
+.guards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.guard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.guard__where {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--drift);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.guard__title {
+  font-size: 18px;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+.guard__text {
+  color: var(--text-2);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+.guard__code {
+  margin-top: auto;
+  padding: 12px 14px;
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  background: #07080c;
+  color: #e7e9f2;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.guard__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.looks-for {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.looks-for li {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.looks-for__icon {
+  color: var(--held);
+}
+
+.looks-for__title {
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.looks-for__text {
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+@media (max-width: 960px) {
+  .guards {
+    grid-template-columns: 1fr;
+  }
+
+  .looks-for {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .looks-for {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Faces: tighter on the alternate band. */
+.faces {
+  margin-top: 0;
+}
+
+/* For judges: three ways to check, on the night band. */
+.verify {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.verify__card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.verify__time {
+  color: var(--accent-text);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.verify__card h3 {
+  font-size: 18px;
+  letter-spacing: -0.015em;
+}
+
+.verify__card p:not(.verify__time) {
+  color: var(--text-2);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+.verify__card pre {
+  padding: 12px 14px;
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.45);
+  color: #e7e9f2;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.verify__card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+@media (max-width: 860px) {
+  .verify {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The footer sits right under the night band. */
+.page--home + * {
+  margin-top: 0;
+}
+
+main:has(.page--home) + .site-footer {
+  margin-top: 0;
+}
+
+/* The featured sample spans the row; the other three sit side by side. */
+.samples .sample-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 860px) {
+  .samples .sample-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.wild__takeaways {
+  display: grid;
+  gap: 14px;
+  margin-top: 8px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+.wild__takeaways strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
