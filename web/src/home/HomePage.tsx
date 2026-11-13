@@ -133,6 +133,8 @@ export function HomePage() {
   const data = showcase as Showcase;
   const real = wild as WildSummary;
   const verdicts = useVerdictCount(68);
+  // The stealer sample appears once the server runs the sandbox; until then the title says less.
+  const [hasStealer, setHasStealer] = useState(false);
   const caughtSamples = data.runs.filter((r) => r.verdict === 'dangerous').length;
   useEffect(() => {
     document.title = `${PRODUCT} · Check a stranger’s code before it touches your wallets`;
@@ -181,10 +183,10 @@ export function HomePage() {
         id="try"
         n="01"
         eyebrow="Try it"
-        title="Watch it catch a stealer, in one click"
+        title={hasStealer ? 'Watch it catch a stealer, in one click' : 'Start a real check, in one click'}
         lede="One click starts a real check of a sample: the private review in a TEE, the receipt and the NEAR transaction. The samples that ship with Airlock are harmless; a stealer among them can only send to a host that doesn’t exist."
       >
-        <Samples />
+        <Samples onSamples={(list) => setHasStealer(list.some((x) => x.id === 'hidden-loader'))} />
       </Chapter>
 
       <Chapter

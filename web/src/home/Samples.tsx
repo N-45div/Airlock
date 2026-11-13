@@ -11,7 +11,8 @@ function repoLabel(sample: Sample): string {
   return github ? `${github[1]}/${github[2]}` : `${PRODUCT} sample`;
 }
 
-export function Samples() {
+/** The home page's samples. onSamples hears the list once it loads, so the page can describe what is offered. */
+export function Samples({ onSamples }: { onSamples?: (samples: Sample[]) => void } = {}) {
   const [samples, setSamples] = useState<Sample[] | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -21,7 +22,11 @@ export function Samples() {
     let live = true;
     api
       .samples()
-      .then((list) => live && setSamples(list))
+      .then((list) => {
+        if (!live) return;
+        setSamples(list);
+        onSamples?.(list);
+      })
       .catch(() => live && setUnavailable(true));
     return () => {
       live = false;
