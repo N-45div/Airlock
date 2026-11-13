@@ -25,6 +25,13 @@ const reviewer =
         record: !!process.env.NEAR_KEY_FILE || !!process.env.NEAR_PRIVATE_KEY,
         // Detonate in the sandbox first (server/sandbox); needs Vercel credentials.
         detonate: process.env.AIRLOCK_SANDBOX === '1',
+        // A public server's limits: short steps, a cap on the whole run, and runs per UTC day.
+        sandboxLimits: {
+          stepSeconds: Number(process.env.AIRLOCK_SANDBOX_STEP_SECONDS ?? 60),
+          maxSteps: Number(process.env.AIRLOCK_SANDBOX_MAX_STEPS ?? 3),
+          maxSeconds: Number(process.env.AIRLOCK_SANDBOX_MAX_SECONDS ?? 240),
+          perDay: Number(process.env.AIRLOCK_SANDBOX_PER_DAY ?? 60),
+        },
       })
     : review;
 const scanner = new Scanner(dataDir, reviewer);

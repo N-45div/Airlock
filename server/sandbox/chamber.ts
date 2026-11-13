@@ -64,6 +64,8 @@ export interface ChamberOptions {
   credentials?: { token: string; teamId: string; projectId: string };
   stepSeconds?: number;
   maxSteps?: number;
+  /** Stops the run: the VM is stopped at once and runChamber rejects. */
+  signal?: AbortSignal;
   /** Progress, for the CLI and the report's live view. */
   onProgress?: (message: string) => void;
 }
@@ -230,6 +232,8 @@ export async function runChamber(source: ChamberSource, opts: ChamberOptions = {
     throw new Error('The sandbox needs VERCEL_TOKEN, VERCEL_TEAM_ID and VERCEL_PROJECT_ID, or VERCEL_OIDC_TOKEN (run vercel link, then vercel env pull).');
   }
 
+  const halt = () => opts.signal?.throwIfAborted();
+  halt();
   say('Starting a throwaway micro-VM');
   const sandbox = await Sandbox.create({
     ...(credentials ?? {}),
@@ -239,7 +243,10 @@ export async function runChamber(source: ChamberSource, opts: ChamberOptions = {
     persistent: false,
     tags: { purpose: 'airlock-sandbox' },
   });
+  const stopNow = () => void sandbox.stop().catch(() => {});
+  opts.signal?.addEventListener('abort', stopNow, { once: true });
   try {
+    halt();
     say('Installing the tracer');
     const setup = await sh(sandbox, setupScript(), 180_000);
     if (setup.exitCode !== 0) throw new Error(`Sandbox setup failed: ${setup.stderr.slice(-300)}`);
@@ -279,6 +286,7 @@ export async function runChamber(source: ChamberSource, opts: ChamberOptions = {
     const done: ChamberStep[] = [];
     const windows: { label: string; start: number; end: number }[] = [];
     for (const [i, step] of steps.entries()) {
+      halt();
       say(`Running ${step.label}`);
       const started = Date.now();
       await sh(sandbox, stepScript(step, i, seconds, decoyEnv(marker)), (seconds + 60) * 1000, true).catch(() => null);
@@ -298,6 +306,7 @@ export async function runChamber(source: ChamberSource, opts: ChamberOptions = {
       });
     }
 
+    halt();
     const named = (s: ChamberStep, by: string) => (s.scripts[by] ? `${by} (${s.scripts[by]})` : by);
     const contacts = done.flatMap((s) => s.trace.contacts.map((c) => ({ ...c, by: named(s, c.by), step: s.label })));
     const caught = capture.on
@@ -317,6 +326,7 @@ export async function runChamber(source: ChamberSource, opts: ChamberOptions = {
       refused: caught.refused,
     };
   } finally {
+    opts.signal?.removeEventListener('abort', stopNow);
     await sandbox.stop().catch(() => {});
   }
 }

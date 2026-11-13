@@ -30,7 +30,13 @@ export interface NearEngineOptions {
   /** First run the repository's install and setup steps in the sandbox (server/sandbox) and show the
    * model what they did. Needs Vercel credentials; if the sandbox fails, the code is still reviewed. */
   detonate?: boolean;
+  /** Limits for a public server: seconds per step, steps, seconds for the whole run (then the review
+   * reads the code only), and runs per UTC day. */
+  sandboxLimits?: { stepSeconds?: number; maxSteps?: number; maxSeconds?: number; perDay?: number };
 }
+
+/** Sandbox runs started today (UTC), for the daily limit. */
+const sandboxRuns = { day: '', count: 0 };
 
 export function nearReviewer(engine: NearEngineOptions): Reviewer {
   const model = engine.model ?? DEFAULT_MODEL;
@@ -40,20 +46,35 @@ export function nearReviewer(engine: NearEngineOptions): Reviewer {
     const client = await RecordingClient.connect({ apiKey: engine.apiKey, model, tlsPinning: engine.tlsPinning ?? true });
     const tree = await treeHash(opts.dir);
     let sandbox: SandboxEvidence | undefined;
-    if (engine.detonate) {
+    const limits = engine.sandboxLimits ?? {};
+    const today = new Date().toISOString().slice(0, 10);
+    if (sandboxRuns.day !== today) Object.assign(sandboxRuns, { day: today, count: 0 });
+    if (engine.detonate && limits.perDay !== undefined && sandboxRuns.count >= limits.perDay) {
+      opts.hooks.onThought('The sandbox has done all its runs for today, so this review reads the code only');
+    } else if (engine.detonate) {
+      sandboxRuns.count++;
+      const stop = new AbortController();
+      const timer = limits.maxSeconds ? setTimeout(() => stop.abort(new Error(`the sandbox ran out of its ${limits.maxSeconds} seconds`)), limits.maxSeconds * 1000) : undefined;
       try {
         // Loaded only here, so the server needs the sandbox SDK and credentials only when this is on.
         const { folderFiles, runChamber } = await import('./sandbox/chamber.ts');
         opts.hooks.onThought('Running its install and setup steps in a throwaway VM full of decoy wallets');
         const source = opts.repo.host === 'github' ? { git: opts.repo.url, ...(opts.repo.commit ? { revision: opts.repo.commit } : {}) } : { files: await folderFiles(opts.dir) };
-        sandbox = await runChamber(source, { onProgress: (m) => opts.hooks.onThought(`Sandbox: ${m}`) });
+        sandbox = await runChamber(source, {
+          signal: stop.signal,
+          ...(limits.stepSeconds ? { stepSeconds: limits.stepSeconds } : {}),
+          ...(limits.maxSteps ? { maxSteps: limits.maxSteps } : {}),
+          onProgress: (m) => opts.hooks.onThought(`Sandbox: ${m}`),
+        });
         const caught = sandbox.exfil.filter((x) => x.decoys.length).length;
         opts.hooks.onThought(
           `Sandbox done: ${sandbox.wallets.length} decoy wallets or keys touched, ${sandbox.contacts.length} hosts contacted${caught ? `, ${caught} request${caught === 1 ? '' : 's'} caught carrying decoys` : ''}`,
         );
       } catch (error) {
         console.error(`sandbox run failed: ${(error as Error).message}`);
-        opts.hooks.onThought('The sandbox run failed, so this review reads the code only');
+        opts.hooks.onThought(stop.signal.aborted ? 'The sandbox ran out of time, so this review reads the code only' : 'The sandbox run failed, so this review reads the code only');
+      } finally {
+        clearTimeout(timer);
       }
     }
     const result = await reviewPrivately({
