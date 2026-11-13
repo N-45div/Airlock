@@ -16,7 +16,7 @@ import { Sandbox } from '@vercel/sandbox';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { type Exfil, type Refusal, readCapture } from './capture.ts';
-import { HOME, decoyFiles, decoyTokens, newMarker } from './decoys.ts';
+import { HOME, decoyEnv, decoyFiles, decoyTokens, newMarker } from './decoys.ts';
 import { type Step, planSteps } from './plan.ts';
 import { type Contact, REGISTRIES, type StepTrace, type WalletTouch, readTrace } from './trace.ts';
 
@@ -96,8 +96,9 @@ const CA_FILE = '/usr/local/share/ca-certificates/corp-root.crt';
  * the VM's clock, so the sinkhole's requests can be matched to it, and anything the step left running
  * is killed before the next.
  */
-export function stepScript(step: Step, index: number, seconds: number): string {
+export function stepScript(step: Step, index: number, seconds: number, decoyVars: string[] = []): string {
   const trace = `${WORK}/trace-${index}.log`;
+  for (const v of decoyVars) if (!/^[A-Z_]+=[A-Za-z0-9_]+$/.test(v)) throw new Error(`Unsafe decoy variable: ${v.split('=')[0]}`);
   const env = [
     'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
     `HOME=${HOME}`,
@@ -109,6 +110,7 @@ export function stepScript(step: Step, index: number, seconds: number): string {
     `NODE_EXTRA_CA_CERTS=${CA_FILE}`,
     'SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt',
     'REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt',
+    ...decoyVars,
   ].join(' ');
   return [
     'cd /tmp',
@@ -279,7 +281,7 @@ export async function runChamber(source: ChamberSource, opts: ChamberOptions = {
     for (const [i, step] of steps.entries()) {
       say(`Running ${step.label}`);
       const started = Date.now();
-      await sh(sandbox, stepScript(step, i, seconds), (seconds + 60) * 1000, true).catch(() => null);
+      await sh(sandbox, stepScript(step, i, seconds, decoyEnv(marker)), (seconds + 60) * 1000, true).catch(() => null);
       const exitCode = Number((await rootText(sandbox, `${WORK}/exit-${i}`))?.trim() ?? NaN);
       const scripts = npmScripts((await rootText(sandbox, `${WORK}/scripts-${i}.log`)) ?? '');
       const trace = readTrace((await rootText(sandbox, `${WORK}/trace-${i}.log`)) ?? '', { step: step.label });

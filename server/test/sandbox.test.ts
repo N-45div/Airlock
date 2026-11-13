@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { lockdownScript, npmScripts, sinkholeConfig, sinkholeScript, stepScript } from '../sandbox/chamber.ts';
-import { DECOYS, HOME, decoyFiles, decoyTokens, homeRelative, matchDecoy, newMarker } from '../sandbox/decoys.ts';
+import { DECOYS, ENV_DECOYS, HOME, decoyEnv, decoyFiles, decoyTokens, homeRelative, matchDecoy, newMarker } from '../sandbox/decoys.ts';
 import { parseJsonc, planSteps } from '../sandbox/plan.ts';
 import { dnsQueryName, readTrace, unescapeC } from '../sandbox/trace.ts';
 
@@ -40,7 +40,7 @@ describe('decoys', () => {
     const files = decoyFiles(marker);
     const tokens = decoyTokens(marker).map((t) => t.token);
     assert.equal(files.length, DECOYS.length);
-    assert.equal(new Set(tokens).size, DECOYS.length, 'every decoy gets its own token');
+    assert.equal(new Set(tokens).size, DECOYS.length + ENV_DECOYS.length, 'every decoy, file or variable, gets its own token');
     assert.ok(tokens.every((t) => /^AIRLOCK[0-9a-f]{25}$/.test(t)));
     assert.notDeepEqual(decoyTokens(newMarker()).map((t) => t.token), tokens, 'tokens change with every run');
     for (const f of files) assert.ok(f.path.startsWith(`${HOME}/`), f.path);
@@ -151,6 +151,17 @@ describe('chamber scripts', () => {
     assert.match(s, /NODE_EXTRA_CA_CERTS=\/usr\/local\/share\/ca-certificates\/corp-root\.crt/);
     assert.match(s, /\/bin\/bash -c 'cd \/home\/dev\/code\/project && bash '\\''set up\.sh'\\'''/);
     assert.match(s, /date \+%s%3N > \/tmp\/airlock\/start-2[\s\S]*date \+%s%3N > \/tmp\/airlock\/end-2[\s\S]*pkill -9 -u dev/);
+  });
+
+  it('gives each step decoy secrets in its environment, each with its own token', () => {
+    const marker = newMarker();
+    const vars = decoyEnv(marker);
+    assert.deepEqual(vars.map((v) => v.split('=')[0]), ENV_DECOYS.map((e) => e.name));
+    const s = stepScript({ label: 'npm install', command: 'npm install', why: '' }, 0, 60, vars);
+    for (const v of vars) assert.ok(s.includes(` ${v} `), v.split('=')[0]);
+    const byLabel = new Map(decoyTokens(marker).map((t) => [t.label, t.token]));
+    assert.ok(vars[0]!.includes(byLabel.get('npm token (environment)')!), 'the variable carries the token the capture looks for');
+    assert.throws(() => stepScript({ label: 'x', command: 'x', why: '' }, 0, 60, ['EVIL=$(id)']), /Unsafe decoy variable/);
   });
 
   it('locks down before any code runs, and points DNS at the sinkhole only once it is listening', () => {

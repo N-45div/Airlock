@@ -81,9 +81,31 @@ export function decoyToken(marker: string, decoy: Decoy): string {
   return `AIRLOCK${createHash('sha256').update(`${marker}\0${decoy.file}`).digest('hex').slice(0, 25)}`;
 }
 
-/** Every decoy's token for this run. */
+/**
+ * Secrets a stealer reads from the environment instead of from files: the variables install scripts
+ * on a developer's machine or a CI runner commonly see. None of them is one npm itself reads, so
+ * installs work as usual. Each carries its own token like a file decoy.
+ */
+export const ENV_DECOYS: { label: string; name: string; value: (token: string) => string }[] = [
+  { label: 'npm token (environment)', name: 'NPM_TOKEN', value: (t) => `npm_${t}` },
+  { label: 'GitHub token (environment)', name: 'GITHUB_TOKEN', value: (t) => `ghp_${t}` },
+  { label: 'AWS secret key (environment)', name: 'AWS_SECRET_ACCESS_KEY', value: (t) => t },
+  { label: 'Wallet private key (environment)', name: 'PRIVATE_KEY', value: (t) => `0x${Buffer.from(t).toString('hex').slice(0, 64)}` },
+];
+
+const envToken = (marker: string, name: string) => `AIRLOCK${createHash('sha256').update(`${marker}\0env:${name}`).digest('hex').slice(0, 25)}`;
+
+/** The decoy variables for this run, as NAME=value pairs. Values are letters, digits and _ only. */
+export function decoyEnv(marker: string): string[] {
+  return ENV_DECOYS.map((e) => `${e.name}=${e.value(envToken(marker, e.name))}`);
+}
+
+/** Every decoy's token for this run: the files, then the environment variables. */
 export function decoyTokens(marker: string): { label: string; file: string; token: string }[] {
-  return DECOYS.map((d) => ({ label: d.label, file: d.file, token: decoyToken(marker, d) }));
+  return [
+    ...DECOYS.map((d) => ({ label: d.label, file: d.file, token: decoyToken(marker, d) })),
+    ...ENV_DECOYS.map((e) => ({ label: e.label, file: `$${e.name}`, token: envToken(marker, e.name) })),
+  ];
 }
 
 /** The decoy files to write, at absolute paths under `home`. */
