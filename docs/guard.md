@@ -13,6 +13,7 @@ on it. Source: [`server/guard.ts`](../server/guard.ts).
 | *Looks safe*, for an older commit | You are asked: the new commit hasn't been checked. |
 | None, for a GitHub repository | You are asked, with links to check it on the site or privately on your machine. `AIRLOCK_GUARD_UNKNOWN=allow` lets these through. |
 | None, for an npm package | It runs as usual. Most packages never get a verdict. |
+| *Looks safe*, for an npm package's repository | It runs as usual, and the note says the verdict covers the repository the package names, not the package published on npm: a package names its own repository, and any package can name any repository. |
 
 Reading a verdict is a free view call to public NEAR RPC: no key, no wallet, and nothing is sent to
 Airlock. The guard trusts verdicts from `airlock-recorder.testnet`, the recorder whose key can only
