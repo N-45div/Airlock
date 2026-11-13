@@ -2,10 +2,14 @@
 
 **In web3 your laptop is your wallet. Airlock checks a stranger's code before you, or your AI agent, runs it.**
 
+Other scanners tell you a repository looks like a wallet stealer. Airlock runs it against decoy wallets,
+shows you the request that carried them out, and records a verdict on NEAR that the contract stores
+only after verifying the TEE model's signature.
+
 Airlock runs a repository's install steps in a throwaway VM full of decoy wallets, has a model inside a
-TEE on NEAR AI Cloud judge the code and what it did, and records the verdict on NEAR. The contract
-stores a verdict only after it checks the model's signature, so anyone can read it for free and know
-where it came from.
+TEE on NEAR AI Cloud judge the code and what it did, and records the verdict on NEAR. Anyone can read
+a verdict for free and know where it came from. Against 20 real npm malware packages, the sandbox
+caught 9 phoning home at install, and none of 10 honest packages ([Results](#results)).
 
 - **Try it:** [airlock-check.vercel.app](https://airlock-check.vercel.app). Paste a GitHub link and get a verdict in about a minute.
 - **Every verdict on NEAR:** [airlock-check.vercel.app/near](https://airlock-check.vercel.app/near), from the contract [`airlock-verdicts.testnet`](https://testnet.nearblocks.io/address/airlock-verdicts.testnet)
@@ -42,7 +46,8 @@ flowchart LR
 `setup.py`, VS Code tasks that run when the folder opens, dev container commands, setup scripts) run in
 a throwaway [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) VM. Its home folder holds decoys
 where real secrets live: MetaMask, Phantom, Rabby and other browser wallets, NEAR and Solana CLI keys,
-Ethereum and Foundry keystores, SSH and cloud keys, another project's `.env`. Package registries resolve
+Ethereum and Foundry keystores, SSH and cloud keys, another project's `.env`. Its environment holds
+decoy npm, GitHub, AWS and wallet secrets, where install-time malware usually looks. Package registries resolve
 for real. Every other host is answered from inside the VM, HTTPS included, so whatever the code sends is
 kept. Each decoy carries its own token, so a caught request shows which wallets were inside it, even
 through base64, gzip, hex or JSON. The code runs as a user that can't touch the tracer or its logs.
@@ -142,7 +147,8 @@ data.
    **See:** `ASK  Airlock: "Be careful" for github.com/kelektiv/node.bcrypt.js (verdict #…` with the
    report's link, and exit code 1. As a Claude Code hook, this clone waits for you.
    `npm run guard -- check "npm install escape-string-regexp"` finds the package's repository and shows
-   `ALLOW … "Looks safe"`. `npm run guard -- --config` prints the hook settings to paste
+   `ALLOW … "Looks safe"`, with a note that the verdict covers the repository the package names, not
+   the package published on npm. `npm run guard -- --config` prints the hook settings to paste
    ([docs/guard.md](docs/guard.md)).
 6. **Do:** `npm run build && npm start`, then open http://127.0.0.1:8787/near
    **See:** every verdict on NEAR, each with its receipt to download. Without a key, `npm start` serves
@@ -186,6 +192,13 @@ data.
     VM runs on Vercel Sandbox. With `NEARAI_API_KEY` set,
     `npm run scan:private -- wallet:hidden-loader --detonate --receipt r.json` runs the whole loop: the
     sandbox run, the model's verdict citing it, and a receipt that binds the evidence.
+12. **Do:** `node server/wild-bench.ts render`, or `node server/wild-bench.ts classify` to recompute
+    every outcome from the saved evidence. No key, no VM.
+    **See:** the real-malware table in [Results](#results), rebuilt from `bench/wild/`. To run the
+    samples again, use a Vercel account of its own, not one that serves anything you care about:
+    `node --env-file=.env.wild server/wild-bench.ts run` (the header of `server/wild-bench.ts` lists
+    every step). Each VM downloads and opens its own encrypted sample, so none ever reaches the machine
+    running the script.
 
 **About the samples.** Every sample is harmless. Two contain text written to steer AI reviewers, which is
 what Airlock detects, and the wallet stealers send only to `.invalid` hosts, which never resolve. Both
@@ -216,8 +229,30 @@ No model tried to run anything. All 52 receipts verify offline, and all 52 verdi
 
 Five samples is a smoke test, not a measure of how often running catches what reading misses.
 
-Per-case tables: [METRICS.md](METRICS.md). Rerun the reviews with `npm run bench` and
-`npm run bench:sandbox`.
+**Running real malware.** 20 real malicious npm packages, the newest install-time ones in
+[Datadog's open dataset](https://github.com/DataDog/malicious-software-packages-dataset), and 10 popular
+honest packages that also run something on install, each in its own VM on a Vercel account apart from
+the live site's:
+
+| What the sandbox saw at install | Malicious | Honest |
+| --- | --- | --- |
+| Phoned home with the machine's details | 9/20 | 0/10 |
+| Only downloaded files (prebuilt binaries) | 5/20 | 4/10 |
+| Nothing visible | 6/20 | 6/10 |
+
+- The 9 sent the sandbox user's name, folder and hostname out. The requests went as POSTs to
+  pipedream.net and webhook.site, as a beacon to oast.fun with the data hex-encoded in the host name,
+  and as DNS lookups carrying it to an out-of-band collector. The sandbox kept every request.
+- None of the honest packages phoned home. The 4 that reached out only downloaded their prebuilt
+  binaries, so they are not false alarms.
+- None took a decoy wallet: these samples go after host details.
+- In 8 of the 11 malicious runs that showed nothing distinguishable, `npm install` itself failed (a
+  dependency since removed from npm, or a git dependency the sandbox doesn't allow), so their script may
+  never have run.
+- This measures the sandbox alone. The private review reads the code to cover what running can't show.
+
+Per-case tables, and the exact rule for what counts as phoning home: [METRICS.md](METRICS.md). Rerun the
+reviews with `npm run bench` and `npm run bench:sandbox`.
 
 **Cost.** Each private review has a budget, $0.05 by default (`--max-usd` to change it). When it is
 spent, the model must give its verdict on the next reply. Encrypted requests don't use NEAR AI's
@@ -248,7 +283,8 @@ to trust for the TEE: [THREAT_MODEL.md](THREAT_MODEL.md).
   review doesn't follow dependencies into their own repositories.
 - The sandbox runs only install and setup steps, up to 90 seconds each. Code can stay quiet there if it
   waits, checks whether it is in a VM, or acts only when you run the app itself. A clean sandbox run is
-  evidence, not proof.
+  evidence, not proof. An install that fails, for example on a dependency since removed from npm, may
+  never reach the code that would show itself.
 - The sandbox runs from the command line with a Vercel account. The live site's server has it off.
 - A repository can change after a check. Every report names the commit it read, and the coding agent
   hook asks again when the commit has moved.
@@ -297,6 +333,7 @@ The hosted server runs it with `deploy/compose.yaml` behind Caddy.
 | `web/` | The web app (React), including the `/near` page and the agent tools demo page |
 | `extension/` | The Chrome extension, including the agent guard |
 | `samples/`, `bench/`, `fixtures/receipts/` | Harmless samples (some packed), benchmark results and receipts |
+| `bench/wild/` | The real-malware run: which samples, what each did, and every run's evidence (no sample code) |
 | `docs/` | Receipts, the registry, the guard, the site's generative art |
 | `deploy/` | The hosted server's compose file and Caddy config |
 
@@ -426,6 +463,9 @@ reviewer uses to search by meaning.
   trial) for the browser agent guard and the site's own agent tools.
 - Hono (server), React 19 and Vite (web app), zod. The site's generative art is plain canvas code with
   seeded noise ([docs/art.md](docs/art.md)); [docs/art-lab.html](docs/art-lab.html) explores its seeds.
+- [Datadog's malicious software packages dataset](https://github.com/DataDog/malicious-software-packages-dataset)
+  (Apache-2.0) for the real-malware run: the samples stay in Datadog's repository, and only the
+  sandbox VMs ever open them.
 - From before the hackathon: the Claude Agent SDK, ArmorClaude and sgrep.
 - Much of the code, tests and docs were written with Claude Code (Anthropic).
 
