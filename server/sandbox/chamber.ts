@@ -30,7 +30,16 @@ const CALLS = 'execve,clone,clone3,fork,vfork,open,openat,openat2,newfstatat,sta
 /** The lines worth downloading: the process tree, network calls, and anything under the decoy home except npm's cache. */
 const KEEP = `'(execve|clone3?|v?fork|connect|sendto|sendmmsg|sendmsg)\\(|<\\.\\.\\. (clone3?|v?fork) resumed>|"${HOME}/(\\.|projects/)'`;
 
-export type ChamberSource = { git: string; revision?: string } | { files: { path: string; content: Buffer }[] };
+/**
+ * Where the code comes from: a git repository, files copied in, or an encrypted archive the VM
+ * downloads and opens itself (a malware research sample: it is never opened outside the VM). The
+ * archive's git blob id is checked before it is opened, and the folder holding its package.json
+ * becomes the project.
+ */
+export type ChamberSource =
+  | { git: string; revision?: string }
+  | { files: { path: string; content: Buffer }[] }
+  | { archive: { url: string; blob: string; password: string } };
 
 export interface ChamberStep extends Step {
   exitCode: number | null;
@@ -87,6 +96,49 @@ export async function folderFiles(dir: string): Promise<{ path: string; content:
   };
   await walk(dir, '');
   return files;
+}
+
+/** Where an archive source is downloaded and opened, outside the project and gone before the lockdown. */
+const INBOX = '/tmp/airlock-inbox';
+
+/**
+ * Opens an encrypted sample archive (ZipCrypto, as research datasets ship them) and moves the
+ * shallowest folder holding a package.json or setup.py into the project folder. Python's zipfile
+ * writes no symlinks, and a path that would leave the folder stops it. Nothing in the archive runs.
+ */
+const OPEN_ARCHIVE = `import os, shutil, sys, zipfile
+archive, password, dest = sys.argv[1], sys.argv[2].encode(), sys.argv[3]
+out = os.path.join(os.path.dirname(archive), "x")
+with zipfile.ZipFile(archive) as z:
+    for name in z.namelist():
+        if name.startswith("/") or ".." in name.replace("\\\\", "/").split("/"):
+            sys.exit("unsafe path in the archive: " + name)
+    z.extractall(out, pwd=password)
+best = None
+for root, dirs, files in os.walk(out):
+    if "package.json" in files or "setup.py" in files:
+        if best is None or root.count(os.sep) < best.count(os.sep):
+            best = root
+if best is None:
+    sys.exit("no package.json or setup.py in the archive")
+os.makedirs(dest, exist_ok=True)
+for name in os.listdir(best):
+    shutil.move(os.path.join(best, name), os.path.join(dest, name))
+print(os.path.relpath(best, out))
+`;
+
+/** Downloads the archive, checks its git blob id, opens it into the project folder, deletes the download. */
+export function archiveScript(a: { url: string; blob: string; password: string }): string {
+  if (!/^https:\/\/raw\.githubusercontent\.com\/[\w./%-]+\.zip$/.test(a.url)) throw new Error('Archive URLs must be .zip files on raw.githubusercontent.com.');
+  if (!/^[0-9a-f]{40}$/.test(a.blob)) throw new Error('The archive needs its 40-character git blob id.');
+  if (!/^\w+$/.test(a.password)) throw new Error('Archive passwords are letters and digits only.');
+  return [
+    'set -e',
+    `curl -fsSL --max-time 120 -o ${INBOX}/sample.zip ${quote(a.url)}`,
+    `test "$(git hash-object ${INBOX}/sample.zip)" = ${a.blob} || { echo "the archive's git blob id doesn't match" >&2; exit 3; }`,
+    `python3 ${INBOX}/open.py ${INBOX}/sample.zip ${a.password} ${REPO_DIR}`,
+    `rm -rf ${INBOX}`,
+  ].join('\n');
 }
 
 /** The certificate authority the VM trusts for this run, under a name a script wouldn't single out. */
@@ -256,9 +308,15 @@ export async function runChamber(source: ChamberSource, opts: ChamberOptions = {
       const rev = source.revision ? ` && git -C ${REPO_DIR} fetch -q --depth 1 origin ${quote(source.revision)} && git -C ${REPO_DIR} checkout -q FETCH_HEAD` : '';
       const clone = await sh(sandbox, `git clone -q --depth 1 --no-recurse-submodules -c core.symlinks=false ${quote(source.git)} ${REPO_DIR}${rev}`, 180_000);
       if (clone.exitCode !== 0) throw new Error(`Couldn't clone the repository in the sandbox: ${clone.stderr.slice(-300)}`);
-    } else {
+    } else if ('files' in source) {
       say('Copying the files into the sandbox');
       await put(sandbox, source.files.map((f) => ({ path: `${REPO_DIR}/${f.path}`, content: f.content })));
+    } else {
+      // Downloaded and opened inside the VM, before the lockdown and before any of its code can run.
+      say('Downloading the sample archive inside the sandbox');
+      await put(sandbox, [{ path: `${INBOX}/open.py`, content: OPEN_ARCHIVE }]);
+      const opened = await sh(sandbox, archiveScript(source.archive), 240_000);
+      if (opened.exitCode !== 0) throw new Error(`Couldn't open the sample archive in the sandbox: ${(opened.stderr || opened.stdout).slice(-300)}`);
     }
 
     const marker = newMarker();

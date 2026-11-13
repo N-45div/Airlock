@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { lockdownScript, npmScripts, sinkholeConfig, sinkholeScript, stepScript } from '../sandbox/chamber.ts';
+import { archiveScript, lockdownScript, npmScripts, sinkholeConfig, sinkholeScript, stepScript } from '../sandbox/chamber.ts';
 import { DECOYS, ENV_DECOYS, HOME, decoyEnv, decoyFiles, decoyTokens, homeRelative, matchDecoy, newMarker } from '../sandbox/decoys.ts';
 import { parseJsonc, planSteps } from '../sandbox/plan.ts';
 import { dnsQueryName, readTrace, unescapeC } from '../sandbox/trace.ts';
@@ -162,6 +162,16 @@ describe('chamber scripts', () => {
     const byLabel = new Map(decoyTokens(marker).map((t) => [t.label, t.token]));
     assert.ok(vars[0]!.includes(byLabel.get('npm token (environment)')!), 'the variable carries the token the capture looks for');
     assert.throws(() => stepScript({ label: 'x', command: 'x', why: '' }, 0, 60, ['EVIL=$(id)']), /Unsafe decoy variable/);
+  });
+
+  it('opens a research archive only from GitHub, only after checking its blob id, without running anything', () => {
+    const blob = 'a'.repeat(40);
+    const s = archiveScript({ url: 'https://raw.githubusercontent.com/o/r/main/samples/x.zip', blob, password: 'infected' });
+    assert.ok(s.indexOf('git hash-object') < s.indexOf('open.py'), 'the blob id is checked before the archive is opened');
+    assert.match(s, /rm -rf \/tmp\/airlock-inbox$/);
+    assert.throws(() => archiveScript({ url: 'https://evil.example/x.zip', blob, password: 'infected' }), /raw\.githubusercontent\.com/);
+    assert.throws(() => archiveScript({ url: 'https://raw.githubusercontent.com/o/r/x.zip', blob: 'nothex', password: 'infected' }), /blob id/);
+    assert.throws(() => archiveScript({ url: 'https://raw.githubusercontent.com/o/r/x.zip', blob, password: "x'; rm -rf /" }), /letters and digits/);
   });
 
   it('locks down before any code runs, and points DNS at the sinkhole only once it is listening', () => {
