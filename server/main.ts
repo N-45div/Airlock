@@ -12,6 +12,12 @@ const webDir = path.resolve(process.env.AIRLOCK_WEB ?? path.join(here, '..', 'we
 const port = Number(process.env.PORT ?? 8787);
 const host = process.env.HOST ?? '127.0.0.1';
 
+/** A positive number from the environment; an unset, empty or invalid value means the default. */
+function positive(name: string, fallback: number): number {
+  const value = Number(process.env[name]?.trim() || NaN);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
 // The NEAR AI Cloud engine when a key is set (AIRLOCK_ENGINE=claude keeps the Claude review).
 const engine = process.env.AIRLOCK_ENGINE ?? (process.env.NEARAI_API_KEY ? 'near' : 'claude');
 const reviewer =
@@ -27,10 +33,10 @@ const reviewer =
         detonate: process.env.AIRLOCK_SANDBOX === '1',
         // A public server's limits: short steps, a cap on the whole run, and runs per UTC day.
         sandboxLimits: {
-          stepSeconds: Number(process.env.AIRLOCK_SANDBOX_STEP_SECONDS ?? 60),
-          maxSteps: Number(process.env.AIRLOCK_SANDBOX_MAX_STEPS ?? 3),
-          maxSeconds: Number(process.env.AIRLOCK_SANDBOX_MAX_SECONDS ?? 240),
-          perDay: Number(process.env.AIRLOCK_SANDBOX_PER_DAY ?? 60),
+          stepSeconds: positive('AIRLOCK_SANDBOX_STEP_SECONDS', 60),
+          maxSteps: positive('AIRLOCK_SANDBOX_MAX_STEPS', 3),
+          maxSeconds: positive('AIRLOCK_SANDBOX_MAX_SECONDS', 240),
+          perDay: positive('AIRLOCK_SANDBOX_PER_DAY', 60),
         },
       })
     : review;
