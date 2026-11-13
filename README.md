@@ -407,8 +407,11 @@ Chrome extension's button. Everything after it is hackathon work:
 - Checking Intel quotes inside the contract.
 - Verdicts on mainnet.
 - The sandbox on the live site.
-- Running the sandbox on NEAR AI's open-source Red Sandbox microVMs instead of Vercel Sandbox, so the
-  code runs and is judged inside NEAR AI's own stack.
+- A local sandbox mode on [NEAR AI Red Sandbox](https://github.com/nearai/nearai-red-sandbox), NEAR AI's
+  open-source microVM for Apple-silicon Macs: a private repository's install steps would run against
+  decoys on your own machine, with no Vercel account and no code leaving it. Red Sandbox gives a
+  researcher's agent a room to investigate in; Airlock would bring the decoys, the sinkhole that keeps
+  what was sent, the verdict, the receipt and the record on NEAR.
 
 **The Chrome Web Store** lists the pre-hackathon extension until version 0.3.0 is approved. Step 8 loads
 the current one.
