@@ -182,7 +182,7 @@ export function HomePage() {
         n="01"
         eyebrow="Try it"
         title="Watch it catch a stealer, in one click"
-        lede="Each sample starts a real check: the sandbox run, the private review in a TEE, the receipt and the NEAR transaction. The first one steals wallets; it can only send them to a host that doesn’t exist."
+        lede="One click starts a real check of a sample: the private review in a TEE, the receipt and the NEAR transaction. The samples that ship with Airlock are harmless; a stealer among them can only send to a host that doesn’t exist."
       >
         <Samples />
       </Chapter>
@@ -373,7 +373,7 @@ export function HomePage() {
           <li className="verify__card">
             <p className="verify__time">2 minutes · in the browser</p>
             <h3>Run a check and read its proof</h3>
-            <p>Start the stealer sample above. Open the report’s Verified review panel: the attestation, the signed replies, the receipt, and the NEAR transaction.</p>
+            <p>Start any sample above. Open the report’s Verified review panel: the attestation, the signed replies, the receipt, and the NEAR transaction.</p>
             <a href="/near">
               Every verdict on NEAR <Icon name="arrow" size={14} />
             </a>
