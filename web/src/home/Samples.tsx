@@ -68,7 +68,7 @@ export function Samples() {
                   </button>
                 </li>
               ))
-            : [0, 1, 2].map((n) => (
+            : [0, 1, 2, 3].map((n) => (
                 <li key={n} className="sample sample--placeholder" aria-hidden="true">
                   <span className="placeholder-line placeholder-line--short" />
                   <span className="placeholder-line" />
