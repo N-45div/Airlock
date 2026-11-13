@@ -39,7 +39,13 @@ machine clones it, so GitHub sees that clone.
 - **The measured deployment.** The quote proves what runs: the receipt includes the compose
   file and measurements. Neither Airlock nor NEAR AI's SDK compares them to an allowlist by
   default, so you trust NEAR AI's published deployment.
-- **NEAR AI's SDK** (`@nearai/inference-sdk` 0.2.1) for encryption and online verification.
+- **That deployment's software.** Attestation shows which software runs, not that it has no
+  bugs. On 2026-11-08 NEAR AI reported that an attacker exploited an SGLang vulnerability on one
+  inference server and reached other parts of its infrastructure. It fixed the flaw on all
+  inference servers and rotated credentials. Because every Airlock receipt keeps the quote and its
+  measurements, a review made on a deployment later found vulnerable can be picked out afterwards.
+  Airlock's own keys still worked after the fix; a live review on 2026-11-13 attested `UpToDate`.
+- **NEAR AI's SDK** (`@nearai/inference-sdk` 0.3.0) for encryption and online verification.
   Airlock follows its documented manual flow (`server/near-client.ts`).
 - **The registry's owner and recorders**, for verdicts read from NEAR. The owner decides which
   model keys and recorders the contract accepts; a reader decides which recorder to believe.
