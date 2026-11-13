@@ -123,6 +123,10 @@ hosts up, as installers that fetch prebuilt binaries do, is not.
 | Did nothing visible on install | 6/20 | 6/10 |
 | Sandbox run failed | 0/20 | 0/10 |
 
+In 8 of the 11 malicious runs that showed nothing distinguishable, `npm install` itself failed in the sandbox,
+mostly on a dependency since removed from npm or a git dependency the sandbox does not allow, so their install script may
+never have run. That is a limit of replaying removed packages, not evidence that they are harmless.
+
 | Package | Discovered | Install script | Outcome | What the sandbox saw |
 | --- | --- | --- | --- | --- |
 | `@myorder-frontend-commons/analytics@101.0.0` | 2026-10-12 | preinstall: `node poc.js`; install: `node poc.js`; postinstall: `node poc.js` | Caught phoning home with the machine’s details | GET oast.fun, GET nip.io |

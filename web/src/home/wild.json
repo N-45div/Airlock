@@ -1,0 +1,292 @@
+{
+  "date": "2026-11-13",
+  "installFailed": 8,
+  "malicious": {
+    "total": 20,
+    "caught": 0,
+    "phoned": 9,
+    "fetched": 5,
+    "quiet": 6,
+    "failed": 0
+  },
+  "honest": {
+    "total": 10,
+    "caught": 0,
+    "phoned": 0,
+    "fetched": 4,
+    "quiet": 6,
+    "failed": 0
+  },
+  "rows": [
+    {
+      "name": "@myorder-frontend-commons/analytics",
+      "version": "101.0.0",
+      "kind": "malicious",
+      "outcome": "phoned",
+      "decoys": [],
+      "saw": "GET oast.fun, GET nip.io",
+      "script": "node poc.js"
+    },
+    {
+      "name": "@hybridaione/hybridclaw",
+      "version": "0.39.10",
+      "kind": "malicious",
+      "outcome": "fetched",
+      "decoys": [],
+      "saw": "GET github.com, GET nodejs.org",
+      "script": "node ./scripts/postinstall-container.mjs"
+    },
+    {
+      "name": "@itsmee_aizat.id/baileys2",
+      "version": "2.0.0",
+      "kind": "malicious",
+      "outcome": "fetched",
+      "decoys": [],
+      "saw": "GET github.com",
+      "script": "node ./engine-requirements.js"
+    },
+    {
+      "name": "@blackbelt-technology/pi-agent-dashboard",
+      "version": "0.9.0",
+      "kind": "malicious",
+      "outcome": "fetched",
+      "decoys": [],
+      "saw": "GET sheetjs.com",
+      "script": "node scripts/maybe-patch-package.cjs && node scripts/fix-pty-permissions.cjs"
+    },
+    {
+      "name": "@codexed/codex",
+      "version": "0.160.1-codexed.1",
+      "kind": "malicious",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "node scripts/postinstall.mjs"
+    },
+    {
+      "name": "gina",
+      "version": "0.7.3",
+      "kind": "malicious",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "node script/pre_install.js"
+    },
+    {
+      "name": "@42ailab/42plugin",
+      "version": "0.4.22",
+      "kind": "malicious",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "node postinstall.js"
+    },
+    {
+      "name": "dzyclutch",
+      "version": "1.1.11",
+      "kind": "malicious",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "node ./engine-requirements.js"
+    },
+    {
+      "name": "esoftplay",
+      "version": "0.0.269-beta8d1f009",
+      "kind": "malicious",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "bun ./bin/build.js install"
+    },
+    {
+      "name": "@pixelzx/genesis",
+      "version": "2026.9.27",
+      "kind": "malicious",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "node scripts/preinstall-package-manager-warning.mjs"
+    },
+    {
+      "name": "eslint-plugin-skywagon-web",
+      "version": "100.0.0",
+      "kind": "malicious",
+      "outcome": "phoned",
+      "decoys": [],
+      "saw": "POST pipedream.net (676 B body)",
+      "script": "node index.js"
+    },
+    {
+      "name": "yonzoffic-baileys",
+      "version": "8.6.90",
+      "kind": "malicious",
+      "outcome": "fetched",
+      "decoys": [],
+      "saw": "GET github.com",
+      "script": "node ./engine-requirements.js"
+    },
+    {
+      "name": "@alphaspace/core",
+      "version": "99.0.1",
+      "kind": "malicious",
+      "outcome": "phoned",
+      "decoys": [],
+      "saw": "POST pipedream.net (901 B body)",
+      "script": "node preinstall.js"
+    },
+    {
+      "name": "shoplist-app",
+      "version": "993.99.99",
+      "kind": "malicious",
+      "outcome": "phoned",
+      "decoys": [],
+      "saw": "GET pipedream.net",
+      "script": "node preinstall.js"
+    },
+    {
+      "name": "aliftech-ui",
+      "version": "99.9.9",
+      "kind": "malicious",
+      "outcome": "phoned",
+      "decoys": [],
+      "saw": "GET webhook.site",
+      "script": "node postinstall.js"
+    },
+    {
+      "name": "exiouss",
+      "version": "5.0.1",
+      "kind": "malicious",
+      "outcome": "fetched",
+      "decoys": [],
+      "saw": "GET github.com",
+      "script": "node -e \"try{require('electron')}catch(e){console.log('Electron will download on first run.')}\""
+    },
+    {
+      "name": "efhthrthrthregerht",
+      "version": "99.9.9",
+      "kind": "malicious",
+      "outcome": "phoned",
+      "decoys": [],
+      "saw": "POST webhook.site (90 B body)",
+      "script": "node index.js"
+    },
+    {
+      "name": "faceplate-docs",
+      "version": "99.9.10",
+      "kind": "malicious",
+      "outcome": "phoned",
+      "decoys": [],
+      "saw": "POST webhook.site (90 B body)",
+      "script": "node index.js"
+    },
+    {
+      "name": "@baanx/abis",
+      "version": "9.9.11",
+      "kind": "malicious",
+      "outcome": "phoned",
+      "decoys": [],
+      "saw": "DNS lookup under algamil7x.xyz",
+      "script": "node index.js"
+    },
+    {
+      "name": "@baanx/solana-lib",
+      "version": "9.9.10",
+      "kind": "malicious",
+      "outcome": "phoned",
+      "decoys": [],
+      "saw": "DNS lookup under algamil7x.xyz",
+      "script": "node index.js"
+    },
+    {
+      "name": "esbuild",
+      "version": "0.28.2",
+      "kind": "honest",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "node install.js"
+    },
+    {
+      "name": "@swc/core",
+      "version": "1.16.22",
+      "kind": "honest",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "node postinstall.js"
+    },
+    {
+      "name": "bcrypt",
+      "version": "6.0.0",
+      "kind": "honest",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "node-gyp-build"
+    },
+    {
+      "name": "sqlite3",
+      "version": "6.0.1",
+      "kind": "honest",
+      "outcome": "fetched",
+      "decoys": [],
+      "saw": "GET github.com, GET nodejs.org",
+      "script": "prebuild-install -r napi || node-gyp rebuild"
+    },
+    {
+      "name": "puppeteer",
+      "version": "25.17.0",
+      "kind": "honest",
+      "outcome": "fetched",
+      "decoys": [],
+      "saw": "GET googleapis.com",
+      "script": "node install.mjs"
+    },
+    {
+      "name": "core-js",
+      "version": "3.51.0",
+      "kind": "honest",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "node -e \"try{require('./postinstall')}catch(e){}\""
+    },
+    {
+      "name": "cypress",
+      "version": "16.3.0",
+      "kind": "honest",
+      "outcome": "fetched",
+      "decoys": [],
+      "saw": "GET cypress.io",
+      "script": "node dist/index.js --exec install"
+    },
+    {
+      "name": "canvas",
+      "version": "3.2.3",
+      "kind": "honest",
+      "outcome": "fetched",
+      "decoys": [],
+      "saw": "GET github.com, GET nodejs.org",
+      "script": "prebuild-install -r napi || node-gyp rebuild"
+    },
+    {
+      "name": "@parcel/watcher",
+      "version": "2.6.0",
+      "kind": "honest",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "node scripts/build-from-source.js"
+    },
+    {
+      "name": "lefthook",
+      "version": "2.2.2",
+      "kind": "honest",
+      "outcome": "quiet",
+      "decoys": [],
+      "saw": "nothing",
+      "script": "node postinstall.js"
+    }
+  ]
+}

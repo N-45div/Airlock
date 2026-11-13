@@ -245,6 +245,28 @@ const OUTCOME_TEXT: Record<Outcome, string> = {
   failed: 'Sandbox run failed',
 };
 
+/** Malicious runs that showed nothing distinguishable and whose npm install exited with an error. */
+function installFailed(rows: Row[]): Row[] {
+  return rows.filter((r) => r.kind === 'malicious' && (r.outcome === 'fetched' || r.outcome === 'quiet') && r.steps.some((st) => st.label === 'npm install' && st.exit !== 0));
+}
+
+/** What the sandbox saw, in a line: each request as method, the site it went to (its last two labels) and its body size. */
+function sawText(r: Row): string {
+  const site = (host: string) => (/^[\d.]+$/.test(host) ? host : host.split('.').slice(-2).join('.'));
+  const requests = [...new Set(r.sent.map((s) => `${s.method} ${site(s.host)}${s.bytes ? ` (${s.bytes} B body)` : ''}`))];
+  return (
+    [
+      requests.length ? requests.slice(0, 3).join(', ') + (requests.length > 3 ? ', …' : '') : '',
+      r.sent.some((s) => s.decoys.length) ? `with ${[...new Set(r.sent.flatMap((s) => s.decoys))].join(', ')}` : '',
+      r.decoysTouched.length ? `opened ${r.decoysTouched.join(', ')}` : '',
+      !r.sent.length && r.hosts.length ? `DNS lookup under ${[...new Set(r.hosts.map(site))].join(', ')}` : '',
+      r.error ? `error: ${r.error.replace(/[|`]/g, ' ').slice(0, 80)}` : '',
+    ]
+      .filter(Boolean)
+      .join('; ') || 'nothing'
+  );
+}
+
 export function render(rows: Row[]): string {
   const mal = rows.filter((r) => r.kind === 'malicious');
   const honest = rows.filter((r) => r.kind === 'honest');
@@ -269,20 +291,15 @@ export function render(rows: Row[]): string {
     '| --- | --- | --- |',
     ...(['caught', 'phoned', 'fetched', 'quiet', 'failed'] as Outcome[]).map((o) => `| ${OUTCOME_TEXT[o]} | ${count(mal, o)}/${mal.length} | ${count(honest, o)}/${honest.length} |`),
     '',
+    `In ${installFailed(rows).length} of the ${mal.filter((r) => r.outcome === 'fetched' || r.outcome === 'quiet').length} malicious runs that showed nothing distinguishable, \`npm install\` itself failed in the sandbox,`,
+    'mostly on a dependency since removed from npm or a git dependency the sandbox does not allow, so their install script may',
+    'never have run. That is a limit of replaying removed packages, not evidence that they are harmless.',
+    '',
     '| Package | Discovered | Install script | Outcome | What the sandbox saw |',
     '| --- | --- | --- | --- | --- |',
     ...rows.map((r) => {
       const script = Object.entries(r.scripts ?? {}).map(([k, v]) => `${k}: \`${v.replace(/[|`]/g, ' ').slice(0, 60)}\``).join('; ') || '-';
-      // Each request as method, the site it went to (its last two labels) and its size; lookups by site too.
-      const site = (host: string) => (/^[\d.]+$/.test(host) ? host : host.split('.').slice(-2).join('.'));
-      const requests = [...new Set(r.sent.map((s) => `${s.method} ${site(s.host)}${s.bytes ? ` (${s.bytes} B body)` : ''}`))];
-      const saw = [
-        requests.length ? requests.slice(0, 3).join(', ') + (requests.length > 3 ? ', …' : '') : '',
-        r.sent.some((s) => s.decoys.length) ? `with ${[...new Set(r.sent.flatMap((s) => s.decoys))].join(', ')}` : '',
-        r.decoysTouched.length ? `opened ${r.decoysTouched.join(', ')}` : '',
-        !r.sent.length && r.hosts.length ? `DNS lookup under ${[...new Set(r.hosts.map(site))].join(', ')}` : '',
-        r.error ? `error: ${r.error.replace(/[|`]/g, ' ').slice(0, 80)}` : '',
-      ].filter(Boolean).join('; ') || 'nothing';
+      const saw = sawText(r);
       return `| ${r.kind === 'honest' ? `${r.name}@${r.version} (honest)` : `\`${r.name}@${r.version}\``} | ${r.discovered ?? '-'} | ${script} | ${OUTCOME_TEXT[r.outcome]} | ${saw} |`;
     }),
     '',
@@ -335,6 +352,7 @@ if (import.meta.main) {
     };
     const summary = {
       date: '2026-11-13',
+      installFailed: installFailed(rows).length,
       malicious: tally('malicious'),
       honest: tally('honest'),
       rows: rows.map((r) => ({
@@ -343,7 +361,7 @@ if (import.meta.main) {
         kind: r.kind,
         outcome: r.outcome,
         decoys: [...new Set(r.sent.flatMap((s) => s.decoys))],
-        hosts: new Set(r.sent.map((s) => s.host)).size,
+        saw: sawText(r),
         script: Object.values(r.scripts ?? {})[0] ?? '',
       })),
     };
