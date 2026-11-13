@@ -1,0 +1,35 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "beige-yelping-leopon-tC6iHg",
+  "marker": "AIRLOCK-DECOY-7374eda7e35a5fe5f4ffcb35",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 1,
+      "timedOut": false,
+      "seconds": 46,
+      "scripts": {},
+      "trace": {
+        "wallets": [],
+        "contacts": [],
+        "programs": []
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [],
+  "programs": [],
+  "capture": {
+    "on": true
+  },
+  "exfil": [],
+  "refused": []
+}

@@ -1,0 +1,49 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "harlequin-mixed-seahorse-NXeGx5",
+  "marker": "AIRLOCK-DECOY-b9ca0fadd0c59e24af8b2081",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 6,
+      "scripts": {
+        "node -e \"try{require('./postinstall')}catch(e){}\"": "core-js@3.51.0 postinstall script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [],
+        "programs": [
+          "sh -c node -e \"try{require('./postinstall')}catch(e){}\"",
+          "node -e try{require('./postinstall')}catch(e){}"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [],
+  "programs": [
+    {
+      "command": "sh -c node -e \"try{require('./postinstall')}catch(e){}\"",
+      "step": "npm install"
+    },
+    {
+      "command": "node -e try{require('./postinstall')}catch(e){}",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [],
+  "refused": []
+}

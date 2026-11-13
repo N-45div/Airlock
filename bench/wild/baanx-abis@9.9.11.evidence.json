@@ -1,0 +1,60 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "white-future-gerbil-ewScVx",
+  "marker": "AIRLOCK-DECOY-e30f0d0daf73dd86c461a07d",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 4,
+      "scripts": {
+        "node index.js": "@baanx/abis@9.9.11 install script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [
+          {
+            "host": "bxabis.dev.fc07f9deb39.project.1794602034.oob.algamil7x.xyz",
+            "by": "node index.js"
+          }
+        ],
+        "programs": [
+          "sh -c node index.js",
+          "node index.js"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [
+    {
+      "host": "bxabis.dev.fc07f9deb39.project.1794602034.oob.algamil7x.xyz",
+      "by": "node index.js (@baanx/abis@9.9.11 install script)",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c node index.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node index.js",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [],
+  "refused": []
+}

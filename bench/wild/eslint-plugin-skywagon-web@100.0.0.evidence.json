@@ -1,0 +1,74 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "azure-mere-spider-TDtLfc",
+  "marker": "AIRLOCK-DECOY-3921955aba294e2b661b7f36",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 3,
+      "scripts": {
+        "node index.js": "eslint-plugin-skywagon-web@100.0.0 preinstall script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [
+          {
+            "host": "eo1blcdjptwydyq.m.pipedream.net",
+            "by": "node index.js"
+          }
+        ],
+        "programs": [
+          "sh -c node index.js",
+          "node index.js"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [
+    {
+      "host": "eo1blcdjptwydyq.m.pipedream.net",
+      "by": "node index.js (eslint-plugin-skywagon-web@100.0.0 preinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c node index.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node index.js",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "eo1blcdjptwydyq.m.pipedream.net",
+      "method": "POST",
+      "path": "/",
+      "tls": true,
+      "bytes": 676,
+      "contentType": "application/x-www-form-urlencoded",
+      "decoys": [],
+      "by": "node index.js (eslint-plugin-skywagon-web@100.0.0 preinstall script)",
+      "step": "npm install",
+      "sha256": "f061be23670bbf1ec138cef49228ecb6cc72950be44ebfdf5303f7b36f2cb998",
+      "sample": "bXNnPSU3QiUyMnAlMjIlM0ElMjJlc2xpbnQtcGx1Z2luLXNreXdhZ29uLXdlYiUyMiUyQyUyMmMlMjIlM0ElMjIlMkZob21lJTJGZGV2JTJGY29kZSUyRnByb2plY3QlMjIlMkMlMjJoZCUyMiUzQSUyMiUyRmhvbWUlMkZkZXYlMjIlMkMlMjJobiUyMiUzQSUyMmI1YjkzNTM1LWE3YiUyMiUyQyUyMnVuJTIyJTNBJTIyZGV2JTIyJTJDJTIyZG5zJTIyJTNBJTVCJTIyMTI3LjAuMC4xJTIyJTVEJTJDJTIydiUyMiUzQSUyMjEwMC4wLjAlMjIlMkMlMjJwanNvbiUyMiUzQSU3QiUyMm5hbWUlMjIlM0ElMjJlc2xpbnQtcGx1Z2luLXNreXdhZ29uLXdlYiUyMiUyQyUyMnZlcnNpb24lMjIlM0ElMjIxMDAuMC4wJTIyJTJDJTIyZGVzY3JpcHRpb24lMjIlM0ElMjIlMjIlMkMlMjJtYWluJTIyJTNBJTIyaW5kZXguanMlMjIlMkMlMjJzY3JpcHRzJTIyJTNBJTdCJTIydGVzdCUyMiUzQSUyMmVjaG8lMjAlNUMlMjJFcnJvciUzQSUyMG5vJTIwdGVzdCUyMHNwZWNpZmllZCU1QyUyMiUyMCUyNiUyNiUyMGV4aXQlMjAxJTIyJTJDJTIycHJlaW5zdGFsbCUyMiUzQSUyMm5vZGUlMjBpbmRleC5qcyUyMiU3RCUyQyUyMmtleXdvcmRzJTIyJTNBJTVCJTVEJTJDJTIyYXV0aG9yJTIyJTNBJTIyJTIyJTJDJTIybGljZW5zZSUyMiUzQSUyMklTQyUyMiUyQyUyMnR5cGUlMjIlM0ElMjJjb21tb25qcyUyMiU3RCU3RA=="
+    }
+  ],
+  "refused": []
+}

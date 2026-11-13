@@ -1,0 +1,101 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "azure-competent-whippet-smeHwC",
+  "marker": "AIRLOCK-DECOY-acf91295bc691b5fc2ea967f",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 3,
+      "scripts": {
+        "node preinstall.js": "@alphaspace/core@99.0.1 preinstall script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [
+          {
+            "host": "istio-system.prod1-gq1.omega.yahoo.com",
+            "by": "node preinstall.js"
+          },
+          {
+            "host": "jws300162.mail.gq1.yahoo.com",
+            "by": "node preinstall.js"
+          },
+          {
+            "host": "artifactory.ouryahoo.com",
+            "by": "node preinstall.js"
+          },
+          {
+            "host": "f5778d1d81cc30c39dcdd0da5ca1d49a.m.pipedream.net",
+            "by": "node preinstall.js"
+          }
+        ],
+        "programs": [
+          "sh -c node preinstall.js",
+          "node preinstall.js"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [
+    {
+      "host": "istio-system.prod1-gq1.omega.yahoo.com",
+      "by": "node preinstall.js (@alphaspace/core@99.0.1 preinstall script)",
+      "step": "npm install"
+    },
+    {
+      "host": "jws300162.mail.gq1.yahoo.com",
+      "by": "node preinstall.js (@alphaspace/core@99.0.1 preinstall script)",
+      "step": "npm install"
+    },
+    {
+      "host": "artifactory.ouryahoo.com",
+      "by": "node preinstall.js (@alphaspace/core@99.0.1 preinstall script)",
+      "step": "npm install"
+    },
+    {
+      "host": "f5778d1d81cc30c39dcdd0da5ca1d49a.m.pipedream.net",
+      "by": "node preinstall.js (@alphaspace/core@99.0.1 preinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c node preinstall.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node preinstall.js",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "f5778d1d81cc30c39dcdd0da5ca1d49a.m.pipedream.net",
+      "method": "POST",
+      "path": "/",
+      "tls": true,
+      "bytes": 901,
+      "contentType": "application/json",
+      "decoys": [],
+      "by": "node preinstall.js (@alphaspace/core@99.0.1 preinstall script)",
+      "step": "npm install",
+      "sha256": "d7af85b22eb44c693354bc588626ddcd4260db7457ab554c10e1b772af09612c",
+      "sample": "eyJwb2MiOiJ5YWhvby1iYnAtYWxwaGFzcGFjZS1kZXBjb25mdXNpb24iLCJyZXNlYXJjaGVyIjoibWxpdGNoZmllbGQiLCJzY2hlbWEiOiJ2OTkuMC4xIiwicnVuX2lkIjoiM2U1MjQ2ZDUiLCJ0c191dGMiOiIyMDI2LTExLTEzVDIwOjMyOjMwLjc1OVoiLCJob3N0bmFtZSI6ImIzZDhjMmRhLWE2OCIsInVzZXJuYW1lIjoiZGV2IiwicGxhdGZvcm0iOiJsaW51eCIsImFyY2giOiJ4NjQiLCJub2RlIjoidjI0LjIyLjMiLCJpbml0X2N3ZCI6Ii9ob21lL2Rldi9jb2RlL3Byb2plY3QiLCJjd2QiOiIvaG9tZS9kZXYvY29kZS9wcm9qZWN0IiwiY29uc3VtZXJfcGFja2FnZSI6eyJuYW1lIjoiQGFscGhhc3BhY2UvY29yZSIsInZlcnNpb24iOiI5OS4wLjEifSwicmVnaXN0cnlfY29uZmlnIjpudWxsLCJucG1fY29uZmlnX3JlZ2lzdHJ5IjpudWxsLCJucG1fdXNlcl9hZ2VudCI6Im5wbS8xMS4xOS4xIG5vZGUvdjI0LjIyLjMgbGludXggeDY0IHdvcmtzcGFjZXMvZmFsc2UiLCJjaSI6eyJ2YXJzX3ByZXNlbnQiOlsiQ0kiXSwic2RfYXBpX2hvc3QiOm51bGwsInNkX3VpX2hvc3QiOm51bGwsImplbmtpbnNfaG9zdCI6bnVsbCwiZ2l0aHViX3NlcnZlciI6bnVsbCwiZ2l0aHViX3JlcG9zaXRvcnkiOm51bGx9LCJwcm94eSI6eyJucG1fcHJveHkiOm51bGwsIm5wbV9odHRwcyI6bnVsbCwiaHR0cF9wcm94eSI6bnVsbCwiaHR0cHNfcHJveHkiOm51bGwsIm5vX3Byb3h5IjpudWxsfSwiaW50ZXJuYWxfZG5zIjp7ImlzdGlvLXN5c3RlbS5wcm9kMS1ncTEub21lZ2EueWFob28uY29tIjp0cnVlLCJqd3MzMDAxNjIubWFpbC5ncTEueWFob28uY29tIjp0cnVlLCJhcnRpZmFjdG9yeS5vdXJ5YWhvby5jb20iOnRydWV9LCJwa2ciOiJAYWxwaGFzcGFjZS9jb3JlIiwicGtnX3ZlcnNpb24iOiI5OS4wLjEifQ=="
+    }
+  ],
+  "refused": []
+}

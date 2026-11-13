@@ -1,0 +1,74 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "indigo-intermediate-reptile-32npX1",
+  "marker": "AIRLOCK-DECOY-41dd10fa24f57e66bf01ed0c",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 3,
+      "scripts": {
+        "node index.js": "faceplate-docs@99.9.10 postinstall script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [
+          {
+            "host": "webhook.site",
+            "by": "node index.js"
+          }
+        ],
+        "programs": [
+          "sh -c node index.js",
+          "node index.js"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [
+    {
+      "host": "webhook.site",
+      "by": "node index.js (faceplate-docs@99.9.10 postinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c node index.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node index.js",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "webhook.site",
+      "method": "POST",
+      "path": "/f9bff304-3053-4d54-be05-86537267514a",
+      "tls": true,
+      "bytes": 90,
+      "contentType": "application/json",
+      "decoys": [],
+      "by": "node index.js (faceplate-docs@99.9.10 postinstall script)",
+      "step": "npm install",
+      "sha256": "d19bf1543896d77a6566705c16778a776132f0be38c6c92e68db0c37d9929188",
+      "sample": "eyJ1c2VyIjoiZGV2IiwiY3dkIjoiL2hvbWUvZGV2L2NvZGUvcHJvamVjdCIsImhvc3RuYW1lIjoiNGY0NzNmODQtMTNlIiwiaXAiOiIxNjkuMjU0LjAuMiJ9"
+    }
+  ],
+  "refused": []
+}

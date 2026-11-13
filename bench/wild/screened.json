@@ -1,0 +1,596 @@
+[
+  {
+    "id": "myorder-frontend-commons-analytics@101.0.0",
+    "name": "@myorder-frontend-commons/analytics",
+    "version": "101.0.0",
+    "discovered": "2026-10-12",
+    "blob": "6a6064ee497d567cce3d2a72bfe1d45e51dc0cef",
+    "bytes": 9838,
+    "scripts": {
+      "preinstall": "node poc.js",
+      "install": "node poc.js",
+      "postinstall": "node poc.js"
+    }
+  },
+  {
+    "id": "toptal-picasso@100.0.12",
+    "name": "@toptal/picasso",
+    "version": "100.0.12",
+    "discovered": "2026-10-12",
+    "blob": "6ec090ba58ae2618d2068fd8c78e4676a2247e9a",
+    "bytes": 1427758,
+    "scripts": {}
+  },
+  {
+    "id": "hybridaione-hybridclaw@0.39.10",
+    "name": "@hybridaione/hybridclaw",
+    "version": "0.39.10",
+    "discovered": "2026-10-11",
+    "blob": "639e5a1c06dcfef8452f60b0b085fcfcf4670f68",
+    "bytes": 12802925,
+    "scripts": {
+      "postinstall": "node ./scripts/postinstall-container.mjs"
+    }
+  },
+  {
+    "id": "aseppxyzz12-baileys@0.0.0-stage",
+    "name": "@aseppxyzz12/baileys",
+    "version": "0.0.0-stage",
+    "discovered": "2026-10-09",
+    "blob": "f2080d5c35eed5749c5faa9ada5d027860b7e758",
+    "bytes": 2968,
+    "scripts": {}
+  },
+  {
+    "id": "truffle-kit@3.3.2",
+    "name": "truffle-kit",
+    "version": "3.3.2",
+    "discovered": "2026-10-09",
+    "blob": "942c1838d0cb2629ca925612b25e6a5e94aca815",
+    "bytes": 109253,
+    "scripts": {}
+  },
+  {
+    "id": "itsmee_aizat.id-baileys2@2.0.0",
+    "name": "@itsmee_aizat.id/baileys2",
+    "version": "2.0.0",
+    "discovered": "2026-10-08",
+    "blob": "5f5d34dbb43a5863d137db9e60340070acd97561",
+    "bytes": 1538509,
+    "scripts": {
+      "preinstall": "node ./engine-requirements.js"
+    }
+  },
+  {
+    "id": "nyzzpediaa-baileys-new@0.0.0-stage",
+    "name": "@nyzzpediaa/baileys-new",
+    "version": "0.0.0-stage",
+    "discovered": "2026-10-08",
+    "blob": "0c4169cf8f0cbbc2b45f514ca3e97fed04914b31",
+    "bytes": 3105,
+    "scripts": {}
+  },
+  {
+    "id": "xayz-baileys@0.0.0-stage",
+    "name": "@xayz/baileys",
+    "version": "0.0.0-stage",
+    "discovered": "2026-10-08",
+    "blob": "d07e360a343610465006771f8c5fa777a2d19820",
+    "bytes": 3111,
+    "scripts": {}
+  },
+  {
+    "id": "brat-generator@0.0.0-stage",
+    "name": "brat-generator",
+    "version": "0.0.0-stage",
+    "discovered": "2026-10-08",
+    "blob": "106952ac6fc593a29ceca7b9e89b967a64e1e378",
+    "bytes": 2817,
+    "scripts": {}
+  },
+  {
+    "id": "internallib_v788@0.0.0-stage",
+    "name": "internallib_v788",
+    "version": "0.0.0-stage",
+    "discovered": "2026-10-08",
+    "blob": "1d4b81fbfb9cda29aedfb1d6180cdcfd510b406d",
+    "bytes": 2443,
+    "scripts": {}
+  },
+  {
+    "id": "node-gyp-runtime@0.0.0-stage",
+    "name": "node-gyp-runtime",
+    "version": "0.0.0-stage",
+    "discovered": "2026-10-08",
+    "blob": "3636f0e8ad26bd871714454bc7e714df8bfa6d33",
+    "bytes": 2851,
+    "scripts": {}
+  },
+  {
+    "id": "tailwindcss-ui-extensions@0.0.0-stage",
+    "name": "tailwindcss-ui-extensions",
+    "version": "0.0.0-stage",
+    "discovered": "2026-10-08",
+    "blob": "b5d66be848763a02e5cb64423db480aa36a847dc",
+    "bytes": 2972,
+    "scripts": {}
+  },
+  {
+    "id": "qwen-code-qwen-code@0.25.0",
+    "name": "@qwen-code/qwen-code",
+    "version": "0.25.0",
+    "discovered": "2026-10-07",
+    "blob": "a162d5269411d39aedfcf04433ade0bf123ab876",
+    "bytes": 33902026,
+    "scripts": {}
+  },
+  {
+    "id": "random-certs@0.0.0-stage",
+    "name": "random-certs",
+    "version": "0.0.0-stage",
+    "discovered": "2026-10-07",
+    "blob": "46515be4b5a88ce43f459330617d2ebb06f3037b",
+    "bytes": 2792,
+    "scripts": {}
+  },
+  {
+    "id": "vectorizers@0.0.0-stage",
+    "name": "vectorizers",
+    "version": "0.0.0-stage",
+    "discovered": "2026-10-07",
+    "blob": "0efbd5ff8aa5abfe5eee9e4f4809f85a4b2a4d5f",
+    "bytes": 2798,
+    "scripts": {}
+  },
+  {
+    "id": "blackbelt-technology-pi-agent-dashboard@0.9.0",
+    "name": "@blackbelt-technology/pi-agent-dashboard",
+    "version": "0.9.0",
+    "discovered": "2026-10-06",
+    "blob": "a646892a219538e6113995377fd359d8dd8e8025",
+    "bytes": 2705683,
+    "scripts": {
+      "postinstall": "node scripts/maybe-patch-package.cjs && node scripts/fix-pty-permissions.cjs"
+    }
+  },
+  {
+    "id": "codexed-codex@0.160.1-codexed.1",
+    "name": "@codexed/codex",
+    "version": "0.160.1-codexed.1",
+    "discovered": "2026-10-05",
+    "blob": "6854a2c3132bbd468339be577f56e81316a3dbf4",
+    "bytes": 31497,
+    "scripts": {
+      "postinstall": "node scripts/postinstall.mjs"
+    }
+  },
+  {
+    "id": "inpeek-odata@0.0.0-stage",
+    "name": "@inpeek/odata",
+    "version": "0.0.0-stage",
+    "discovered": "2026-10-05",
+    "blob": "712bd653e561036ceb14bf5a68ef89e0c7070e50",
+    "bytes": 2854,
+    "scripts": {}
+  },
+  {
+    "id": "base_parts_ai@1.0.63",
+    "name": "base_parts_ai",
+    "version": "1.0.63",
+    "discovered": "2026-10-05",
+    "blob": "ccade3926a059d58f4577addb2b96a64bc0cc236",
+    "bytes": 68701,
+    "scripts": {}
+  },
+  {
+    "id": "gina@0.7.3",
+    "name": "gina",
+    "version": "0.7.3",
+    "discovered": "2026-10-05",
+    "blob": "12af7176654ed32413fbb937b0c4356398a6c365",
+    "bytes": 5450838,
+    "scripts": {
+      "preinstall": "node script/pre_install.js",
+      "postinstall": "node script/post_install.js"
+    }
+  },
+  {
+    "id": "42ailab-42plugin@0.4.22",
+    "name": "@42ailab/42plugin",
+    "version": "0.4.22",
+    "discovered": "2026-10-03",
+    "blob": "7b6bf0e63f9b3139a6785796d3369eb4d352a41e",
+    "bytes": 32667,
+    "scripts": {
+      "postinstall": "node postinstall.js"
+    }
+  },
+  {
+    "id": "42ailab-42plugin-linux-arm64@0.4.22",
+    "name": "@42ailab/42plugin-linux-arm64",
+    "version": "0.4.22",
+    "discovered": "2026-10-03",
+    "blob": "4db12f2ae78ec523c11abbc4dde4cb225e5e9fca",
+    "bytes": 38987704,
+    "scripts": {}
+  },
+  {
+    "id": "42ailab-42plugin-linux-x64@0.4.22",
+    "name": "@42ailab/42plugin-linux-x64",
+    "version": "0.4.22",
+    "discovered": "2026-10-03",
+    "blob": "337660d9ed78486365f12ca5f9add59c45bc2acf",
+    "bytes": 39330799,
+    "scripts": {}
+  },
+  {
+    "id": "dzyclutch@1.1.11",
+    "name": "dzyclutch",
+    "version": "1.1.11",
+    "discovered": "2026-10-03",
+    "blob": "5c3df0802d111e2bbc71c6d0d06e68425e509dcd",
+    "bytes": 801140,
+    "scripts": {
+      "preinstall": "node ./engine-requirements.js"
+    }
+  },
+  {
+    "id": "dzyclutch-baileys@1.0.1",
+    "name": "dzyclutch-baileys",
+    "version": "1.0.1",
+    "discovered": "2026-10-03",
+    "blob": "ddabd69a9123f304f89241b3eb971316dbed84be",
+    "bytes": 2234,
+    "scripts": {}
+  },
+  {
+    "id": "serpacksven@1.0.2",
+    "name": "serpacksven",
+    "version": "1.0.2",
+    "discovered": "2026-10-03",
+    "blob": "00c0faae663d9946494157926493c10564f0a8c4",
+    "bytes": 38058,
+    "scripts": {}
+  },
+  {
+    "id": "agentgg@0.1.25",
+    "name": "agentgg",
+    "version": "0.1.25",
+    "discovered": "2026-10-02",
+    "blob": "025c18fba8bad27593678ac60fdb9e8e34c739e7",
+    "bytes": 64015655,
+    "scripts": {}
+  },
+  {
+    "id": "langwatch-server@3.19.4",
+    "name": "@langwatch/server",
+    "version": "3.19.4",
+    "discovered": "2026-10-01",
+    "blob": "85b006dbb29da2c49f88acb7c438f392faaa1eb3",
+    "bytes": 2254693,
+    "scripts": {}
+  },
+  {
+    "id": "pflag29424@0.0.0-stage",
+    "name": "pflag29424",
+    "version": "0.0.0-stage",
+    "discovered": "2026-10-01",
+    "blob": "e4056da455ceafa3f2e522812222674d89685548",
+    "bytes": 2770,
+    "scripts": {}
+  },
+  {
+    "id": "cchubber@0.6.0",
+    "name": "cchubber",
+    "version": "0.6.0",
+    "discovered": "2026-09-30",
+    "blob": "e47e004919f623b3e3a38047f868aef3c1b195f2",
+    "bytes": 140367,
+    "scripts": {}
+  },
+  {
+    "id": "imgbundle@1.0.0",
+    "name": "imgbundle",
+    "version": "1.0.0",
+    "discovered": "2026-09-30",
+    "blob": "461e6dc05bf8ef04c45228e9e6cea612c6e3f2dc",
+    "bytes": 3725,
+    "scripts": {}
+  },
+  {
+    "id": "esoftplay@0.0.269-beta8d1f009",
+    "name": "esoftplay",
+    "version": "0.0.269-beta8d1f009",
+    "discovered": "2026-09-29",
+    "blob": "1b58ea07605f080e515a817cd1173e9c4ae79a9b",
+    "bytes": 1787969,
+    "scripts": {
+      "postinstall": "bun ./bin/build.js install"
+    }
+  },
+  {
+    "id": "cdn-img-fetch@1.0.2",
+    "name": "cdn-img-fetch",
+    "version": "1.0.2",
+    "discovered": "2026-09-28",
+    "blob": "6248dc7e64a74e733c2e9cee4bb9d6810ca1cccf",
+    "bytes": 4571,
+    "scripts": {}
+  },
+  {
+    "id": "native-runner@1.0.2",
+    "name": "native-runner",
+    "version": "1.0.2",
+    "discovered": "2026-09-28",
+    "blob": "cc9813892b7b19762ec84cae9c669403e296c82d",
+    "bytes": 5217,
+    "scripts": {}
+  },
+  {
+    "id": "pixelzx-genesis@2026.9.27",
+    "name": "@pixelzx/genesis",
+    "version": "2026.9.27",
+    "discovered": "2026-09-27",
+    "blob": "89efd2b05360a51dd9ccdab803062c1826ab41f8",
+    "bytes": 17858917,
+    "scripts": {
+      "preinstall": "node scripts/preinstall-package-manager-warning.mjs",
+      "postinstall": "node scripts/postinstall-bundled-plugins.mjs"
+    }
+  },
+  {
+    "id": "eslint-plugin-skywagon-web@100.0.0",
+    "name": "eslint-plugin-skywagon-web",
+    "version": "100.0.0",
+    "discovered": "2026-09-26",
+    "blob": "6e0f05637799b2c38481596e090758cb8ef7e15d",
+    "bytes": 3692,
+    "scripts": {
+      "preinstall": "node index.js"
+    }
+  },
+  {
+    "id": "yonzoffic-baileys@8.6.90",
+    "name": "yonzoffic-baileys",
+    "version": "8.6.90",
+    "discovered": "2026-09-26",
+    "blob": "b307585a77107b37b050a14f98bcc58fbc575aa5",
+    "bytes": 791082,
+    "scripts": {
+      "preinstall": "node ./engine-requirements.js"
+    }
+  },
+  {
+    "id": "alphaspace-core@99.0.1",
+    "name": "@alphaspace/core",
+    "version": "99.0.1",
+    "discovered": "2026-09-25",
+    "blob": "17b34852a8c65e57d920c83720675d9fc124b8d8",
+    "bytes": 7444,
+    "scripts": {
+      "preinstall": "node preinstall.js"
+    }
+  },
+  {
+    "id": "shoplist-app@993.99.99",
+    "name": "shoplist-app",
+    "version": "993.99.99",
+    "discovered": "2026-09-25",
+    "blob": "6f225034fb5cbe51e2ba8e7bd2e663e476587834",
+    "bytes": 4470,
+    "scripts": {
+      "preinstall": "node preinstall.js",
+      "install": "node preinstall.js",
+      "postinstall": "node preinstall.js"
+    }
+  },
+  {
+    "id": "vite-plugin-crypto@1.0.6",
+    "name": "vite-plugin-crypto",
+    "version": "1.0.6",
+    "discovered": "2026-09-25",
+    "blob": "e03ef231c230331adde1e3478cf5eed1cd6fc9d4",
+    "bytes": 33186,
+    "scripts": {}
+  },
+  {
+    "id": "aliftech-ui@99.9.9",
+    "name": "aliftech-ui",
+    "version": "99.9.9",
+    "discovered": "2026-09-24",
+    "blob": "c8dbebbd39633e06388e400c8c4e1c671933af39",
+    "bytes": 2669,
+    "scripts": {
+      "postinstall": "node postinstall.js"
+    }
+  },
+  {
+    "id": "exiouss@5.0.1",
+    "name": "exiouss",
+    "version": "5.0.1",
+    "discovered": "2026-09-24",
+    "blob": "7bc8632a79919ba820964bfcbee4d133224211b2",
+    "bytes": 27294702,
+    "scripts": {
+      "postinstall": "node -e \"try{require('electron')}catch(e){console.log('Electron will download on first run.')}\""
+    }
+  },
+  {
+    "id": "mcp-secure-server@0.0.25-security",
+    "name": "mcp-secure-server",
+    "version": "0.0.25-security",
+    "discovered": "2026-09-24",
+    "blob": "5bdaa3a3e778ea8e0960d86d0b008ef70443f082",
+    "bytes": 446960,
+    "scripts": {}
+  },
+  {
+    "id": "internal-module@1.0.1",
+    "name": "internal-module",
+    "version": "1.0.1",
+    "discovered": "2026-09-23",
+    "blob": "be0fd73f4aa00629baf29d1f82e22d1f309d7e16",
+    "bytes": 14050,
+    "scripts": {}
+  },
+  {
+    "id": "toptal-picasso-rich-text-editor@100.0.10",
+    "name": "@toptal/picasso-rich-text-editor",
+    "version": "100.0.10",
+    "discovered": "2026-09-22",
+    "blob": "cab00ed6bd300793e73a9708cf0b12066d229056",
+    "bytes": 699621,
+    "scripts": {}
+  },
+  {
+    "id": "efhthrthrthregerht@99.9.9",
+    "name": "efhthrthrthregerht",
+    "version": "99.9.9",
+    "discovered": "2026-09-22",
+    "blob": "25b825b709e6e99516fddb0f261ced91e6448311",
+    "bytes": 2919,
+    "scripts": {
+      "postinstall": "node index.js"
+    }
+  },
+  {
+    "id": "faceplate-docs@99.9.10",
+    "name": "faceplate-docs",
+    "version": "99.9.10",
+    "discovered": "2026-09-22",
+    "blob": "ca8bf671415171705e4c6a5d4346b4d4e23deb42",
+    "bytes": 3517,
+    "scripts": {
+      "postinstall": "node index.js"
+    }
+  },
+  {
+    "id": "baanx-abis@9.9.11",
+    "name": "@baanx/abis",
+    "version": "9.9.11",
+    "discovered": "2026-09-21",
+    "blob": "712bb71e33b0a2a5118752c12f95e6dba6c75302",
+    "bytes": 18659,
+    "scripts": {
+      "install": "node index.js"
+    }
+  },
+  {
+    "id": "baanx-solana-lib@9.9.10",
+    "name": "@baanx/solana-lib",
+    "version": "9.9.10",
+    "discovered": "2026-09-21",
+    "blob": "4611910284e782b1c8d186d4810e9cb1759ee4ef",
+    "bytes": 15506,
+    "scripts": {
+      "install": "node index.js"
+    }
+  },
+  {
+    "id": "edgeone@1.6.41",
+    "name": "edgeone",
+    "version": "1.6.41",
+    "discovered": "2026-09-21",
+    "blob": "020f9205c40f94bcc5a096d7f1a8c948a00f87bb",
+    "bytes": 5612218,
+    "scripts": {}
+  },
+  {
+    "id": "ndmcjcxiebysfdb@1.0.1",
+    "name": "ndmcjcxiebysfdb",
+    "version": "1.0.1",
+    "discovered": "2026-09-21",
+    "blob": "8ed1e98b50171b26f508b51a2d826d6b6c23a22f",
+    "bytes": 35631,
+    "scripts": {}
+  },
+  {
+    "id": "cowork-os@0.5.53",
+    "name": "cowork-os",
+    "version": "0.5.53",
+    "discovered": "2026-09-20",
+    "blob": "35da991f350f590fc7457c39342e64de583220f9",
+    "bytes": 69540662,
+    "scripts": {
+      "postinstall": "node scripts/codesign_electron_dev.mjs"
+    }
+  },
+  {
+    "id": "fdhcxvnwhjiofv@1.0.0",
+    "name": "fdhcxvnwhjiofv",
+    "version": "1.0.0",
+    "discovered": "2026-09-20",
+    "blob": "2eb9e9b0400fb3b00f2b4b455a100ae5fbfcf64a",
+    "bytes": 35176,
+    "scripts": {}
+  },
+  {
+    "id": "illusion-datalab@1.1.1",
+    "name": "illusion-datalab",
+    "version": "1.1.1",
+    "discovered": "2026-09-20",
+    "blob": "ba8033b01dcb73ab9756b3189cd811f1081c6c7b",
+    "bytes": 9987,
+    "scripts": {}
+  },
+  {
+    "id": "lufxchwmxwyps@1.0.2",
+    "name": "lufxchwmxwyps",
+    "version": "1.0.2",
+    "discovered": "2026-09-20",
+    "blob": "8d330b9e548cbc79518f1e04fb158ae48d003b20",
+    "bytes": 35500,
+    "scripts": {}
+  },
+  {
+    "id": "ndmcmsujey@1.0.0",
+    "name": "ndmcmsujey",
+    "version": "1.0.0",
+    "discovered": "2026-09-20",
+    "blob": "e264ab455503f844d446b94181306fe98a6601ce",
+    "bytes": 34021,
+    "scripts": {}
+  },
+  {
+    "id": "sysverify@2.0.10",
+    "name": "sysverify",
+    "version": "2.0.10",
+    "discovered": "2026-09-20",
+    "blob": "317dbbbb1c13df03f34c8726e15e37b738dcdceb",
+    "bytes": 100465,
+    "scripts": {
+      "postinstall": "node -e \"try{require('electron')}catch(e){console.log('Electron will download on first run.')}\""
+    }
+  },
+  {
+    "id": "action-slack-message-root@1.0.1",
+    "name": "action-slack-message-root",
+    "version": "1.0.1",
+    "discovered": "2026-09-19",
+    "blob": "dc0e753d326c33e62083fdc9150cce0d0aae5ea9",
+    "bytes": 3305,
+    "scripts": {
+      "preinstall": "node index.js"
+    }
+  },
+  {
+    "id": "chai-as-viem@1.1.3",
+    "name": "chai-as-viem",
+    "version": "1.1.3",
+    "discovered": "2026-09-19",
+    "blob": "53fa3550f4867f564ad6202b3359e0ac1b33aff8",
+    "bytes": 108367,
+    "scripts": {}
+  },
+  {
+    "id": "insiderintelligence-googleadmanager@9.9.10",
+    "name": "@insiderintelligence/googleadmanager",
+    "version": "9.9.10",
+    "discovered": "2026-09-18",
+    "blob": "6aba5b60bf6845e6b413bd5e4c1b02329a24b8e9",
+    "bytes": 17917,
+    "scripts": {
+      "install": "node index.js"
+    }
+  }
+]

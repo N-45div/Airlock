@@ -1,0 +1,60 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "turquoise-marine-vulture-SDPLQs",
+  "marker": "AIRLOCK-DECOY-0ddd40968b9d51b4952d484e",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 4,
+      "scripts": {
+        "node index.js": "@baanx/solana-lib@9.9.10 install script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [
+          {
+            "host": "bxsol.dev.45445f9b2eb.project.1794602043.oob.algamil7x.xyz",
+            "by": "node index.js"
+          }
+        ],
+        "programs": [
+          "sh -c node index.js",
+          "node index.js"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [
+    {
+      "host": "bxsol.dev.45445f9b2eb.project.1794602043.oob.algamil7x.xyz",
+      "by": "node index.js (@baanx/solana-lib@9.9.10 install script)",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c node index.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node index.js",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [],
+  "refused": []
+}

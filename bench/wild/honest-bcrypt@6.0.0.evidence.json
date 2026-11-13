@@ -1,0 +1,69 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "copper-historical-reindeer-BSo4J4",
+  "marker": "AIRLOCK-DECOY-10fd3693896ba2e949d6eca3",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 5,
+      "scripts": {
+        "node-gyp-build": "bcrypt@6.0.0 install script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [],
+        "programs": [
+          "sh -c node-gyp-build",
+          "node-gyp-build",
+          "node /home/dev/code/project/node_modules/.bin/node-gyp-build",
+          "/bin/sh -c node-gyp-build-test",
+          "node-gyp-build-test",
+          "node /home/dev/code/project/node_modules/.bin/node-gyp-build-test"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [],
+  "programs": [
+    {
+      "command": "sh -c node-gyp-build",
+      "step": "npm install"
+    },
+    {
+      "command": "node-gyp-build",
+      "step": "npm install"
+    },
+    {
+      "command": "node /home/dev/code/project/node_modules/.bin/node-gyp-build",
+      "step": "npm install"
+    },
+    {
+      "command": "/bin/sh -c node-gyp-build-test",
+      "step": "npm install"
+    },
+    {
+      "command": "node-gyp-build-test",
+      "step": "npm install"
+    },
+    {
+      "command": "node /home/dev/code/project/node_modules/.bin/node-gyp-build-test",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [],
+  "refused": []
+}

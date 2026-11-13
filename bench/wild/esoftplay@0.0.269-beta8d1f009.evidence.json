@@ -1,0 +1,49 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "salmon-narrow-panther-sjmVog",
+  "marker": "AIRLOCK-DECOY-498def4b0746978a155caaa1",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 3,
+      "scripts": {
+        "bun ./bin/build.js install": "esoftplay@0.0.269-beta8d1f009 postinstall script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [],
+        "programs": [
+          "sh -c bun ./bin/build.js install",
+          "bun ./bin/build.js install"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [],
+  "programs": [
+    {
+      "command": "sh -c bun ./bin/build.js install",
+      "step": "npm install"
+    },
+    {
+      "command": "bun ./bin/build.js install",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [],
+  "refused": []
+}

@@ -1,0 +1,49 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "white-pretty-gerbil-69De7n",
+  "marker": "AIRLOCK-DECOY-a9b45fb3d018720a7942dd08",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 15,
+      "scripts": {
+        "node scripts/postinstall.mjs": "@codexed/codex@0.160.1-codexed.1 postinstall script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [],
+        "programs": [
+          "sh -c node scripts/postinstall.mjs",
+          "node scripts/postinstall.mjs"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [],
+  "programs": [
+    {
+      "command": "sh -c node scripts/postinstall.mjs",
+      "step": "npm install"
+    },
+    {
+      "command": "node scripts/postinstall.mjs",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [],
+  "refused": []
+}

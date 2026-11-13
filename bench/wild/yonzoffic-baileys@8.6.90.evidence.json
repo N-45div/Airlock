@@ -1,0 +1,99 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "peach-mad-possum-tKEbyx",
+  "marker": "AIRLOCK-DECOY-e7b2a9680074e30a7d0ecd75",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 1,
+      "timedOut": false,
+      "seconds": 39,
+      "scripts": {},
+      "trace": {
+        "wallets": [],
+        "contacts": [
+          {
+            "host": "github.com",
+            "by": "npm install"
+          }
+        ],
+        "programs": []
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [
+    {
+      "host": "github.com",
+      "by": "npm install",
+      "step": "npm install"
+    }
+  ],
+  "programs": [],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "github.com",
+      "method": "GET",
+      "path": "/adiwajshing/eslint-config.git/info/refs?service=git-upload-pack",
+      "tls": true,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "npm install",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    },
+    {
+      "host": "github.com",
+      "method": "GET",
+      "path": "/adiwajshing/eslint-config.git/HEAD",
+      "tls": true,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "npm install",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    },
+    {
+      "host": "github.com",
+      "method": "GET",
+      "path": "/adiwajshing/eslint-config.git/info/refs?service=git-upload-pack",
+      "tls": true,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "npm install",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    },
+    {
+      "host": "github.com",
+      "method": "GET",
+      "path": "/adiwajshing/eslint-config.git/HEAD",
+      "tls": true,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "npm install",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    }
+  ],
+  "refused": []
+}

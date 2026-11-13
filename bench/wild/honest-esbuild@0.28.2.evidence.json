@@ -1,0 +1,54 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "black-distant-wolverine-7Cv9cL",
+  "marker": "AIRLOCK-DECOY-2a19fe5a4d59f3764b1a4666",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 5,
+      "scripts": {
+        "node install.js": "esbuild@0.28.2 postinstall script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [],
+        "programs": [
+          "sh -c node install.js",
+          "node install.js",
+          "/home/dev/code/project/node_modules/esbuild/bin/esbuild --version"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [],
+  "programs": [
+    {
+      "command": "sh -c node install.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node install.js",
+      "step": "npm install"
+    },
+    {
+      "command": "/home/dev/code/project/node_modules/esbuild/bin/esbuild --version",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [],
+  "refused": []
+}

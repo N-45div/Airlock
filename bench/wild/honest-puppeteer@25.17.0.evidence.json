@@ -1,0 +1,97 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "amaranth-repulsive-clam-5n8Z11",
+  "marker": "AIRLOCK-DECOY-97fa10b7feeb77ca09b98556",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 7,
+      "scripts": {
+        "node install.mjs": "puppeteer@25.17.0 postinstall script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [
+          {
+            "host": "storage.googleapis.com",
+            "by": "node install.mjs"
+          }
+        ],
+        "programs": [
+          "sh -c node install.mjs",
+          "node install.mjs",
+          "unzip -o /home/dev/.cache/puppeteer/chrome/157.0.8103.50-chrome-linux64.zip -d /home/dev/.cache/puppeteer/chrome/linux-157.0.8103.50",
+          "unzip -o /home/dev/.cache/puppeteer/chrome-headless-shell/157.0.8103.50-chrome-headless-shell-linux64.zip -d /home/dev/.cache/puppeteer/chrome-headless-shell/linux-157.0.8103.50"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [
+    {
+      "host": "storage.googleapis.com",
+      "by": "node install.mjs (puppeteer@25.17.0 postinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c node install.mjs",
+      "step": "npm install"
+    },
+    {
+      "command": "node install.mjs",
+      "step": "npm install"
+    },
+    {
+      "command": "unzip -o /home/dev/.cache/puppeteer/chrome/157.0.8103.50-chrome-linux64.zip -d /home/dev/.cache/puppeteer/chrome/linux-157.0.8103.50",
+      "step": "npm install"
+    },
+    {
+      "command": "unzip -o /home/dev/.cache/puppeteer/chrome-headless-shell/157.0.8103.50-chrome-headless-shell-linux64.zip -d /home/dev/.cache/puppeteer/chrome-headless-shell/linux-157.0.8103.50",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "storage.googleapis.com",
+      "method": "GET",
+      "path": "/chrome-for-testing-public/157.0.8103.50/linux64/chrome-linux64.zip",
+      "tls": true,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "node install.mjs (puppeteer@25.17.0 postinstall script)",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    },
+    {
+      "host": "storage.googleapis.com",
+      "method": "GET",
+      "path": "/chrome-for-testing-public/157.0.8103.50/linux64/chrome-headless-shell-linux64.zip",
+      "tls": true,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "node install.mjs (puppeteer@25.17.0 postinstall script)",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    }
+  ],
+  "refused": []
+}

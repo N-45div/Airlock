@@ -99,3 +99,60 @@ all 10 receipts, and the evidence each sandbox receipt binds, verify offline wit
 - With the sandbox, 4/4 were also caught red-handed: the request each one sent to its server was kept, and it named exactly the wallets and keys that stealer took. Reading says "this looks like a stealer"; the sandbox shows what it took.
 - The honest control touched no decoy, reached no host, and was not called "Don't run it" in either mode (1/1).
 - Model cost only; the VM time for a sandbox run is not included. Five samples is a smoke test, not a measure of how often the sandbox catches what reading misses: these samples carry their payload in code the model can read.
+
+## Sandbox against real npm malware (2026-11-13)
+
+20 real malicious npm packages from [Datadog's open dataset](https://github.com/DataDog/malicious-software-packages-dataset) (Apache-2.0): the newest
+packages in its `malicious_intent` folder whose package.json runs something on install, one version each, leaving out
+Windows and macOS binaries. And 10 popular honest packages that also run something on install, installed as a dependency.
+Each ran in its own throwaway Vercel Sandbox VM, on a Vercel account separate from the live site. The VM downloaded and
+opened its own encrypted sample, so no sample existed unencrypted outside it. Rebuild this section with
+`node server/wild-bench.ts render`; every run's evidence is in `bench/wild/`.
+
+This measures the sandbox alone, with no AI review, so it shows what running the code reveals by itself. How a run is
+classed (`outcomeOf` in `server/wild-bench.ts`): *phoning home* is a request with a body, any contact with an out-of-band
+collector service (pipedream.net, webhook.site, oast.*, nip.io and the like), or a host name or path carrying the
+machine's details (the sandbox user's name, or a long hex label: data hidden in DNS). Only downloading files or looking
+hosts up, as installers that fetch prebuilt binaries do, is not.
+
+| Outcome | Malicious | Honest |
+| --- | --- | --- |
+| Caught red-handed: sent decoy secrets out | 0/20 | 0/10 |
+| Caught phoning home with the machine’s details | 9/20 | 0/10 |
+| Only downloaded files or looked up hosts | 5/20 | 4/10 |
+| Did nothing visible on install | 6/20 | 6/10 |
+| Sandbox run failed | 0/20 | 0/10 |
+
+| Package | Discovered | Install script | Outcome | What the sandbox saw |
+| --- | --- | --- | --- | --- |
+| `@myorder-frontend-commons/analytics@101.0.0` | 2026-10-12 | preinstall: `node poc.js`; install: `node poc.js`; postinstall: `node poc.js` | Caught phoning home with the machine’s details | GET oast.fun, GET nip.io |
+| `@hybridaione/hybridclaw@0.39.10` | 2026-10-11 | postinstall: `node ./scripts/postinstall-container.mjs` | Only downloaded files or looked up hosts | GET github.com, GET nodejs.org |
+| `@itsmee_aizat.id/baileys2@2.0.0` | 2026-10-08 | preinstall: `node ./engine-requirements.js` | Only downloaded files or looked up hosts | GET github.com |
+| `@blackbelt-technology/pi-agent-dashboard@0.9.0` | 2026-10-06 | postinstall: `node scripts/maybe-patch-package.cjs && node scripts/fix-pty` | Only downloaded files or looked up hosts | GET sheetjs.com |
+| `@codexed/codex@0.160.1-codexed.1` | 2026-10-05 | postinstall: `node scripts/postinstall.mjs` | Did nothing visible on install | nothing |
+| `gina@0.7.3` | 2026-10-05 | preinstall: `node script/pre_install.js`; postinstall: `node script/post_install.js` | Did nothing visible on install | nothing |
+| `@42ailab/42plugin@0.4.22` | 2026-10-03 | postinstall: `node postinstall.js` | Did nothing visible on install | nothing |
+| `dzyclutch@1.1.11` | 2026-10-03 | preinstall: `node ./engine-requirements.js` | Did nothing visible on install | nothing |
+| `esoftplay@0.0.269-beta8d1f009` | 2026-09-29 | postinstall: `bun ./bin/build.js install` | Did nothing visible on install | nothing |
+| `@pixelzx/genesis@2026.9.27` | 2026-09-27 | preinstall: `node scripts/preinstall-package-manager-warning.mjs`; postinstall: `node scripts/postinstall-bundled-plugins.mjs` | Did nothing visible on install | nothing |
+| `eslint-plugin-skywagon-web@100.0.0` | 2026-09-26 | preinstall: `node index.js` | Caught phoning home with the machine’s details | POST pipedream.net (676 B body) |
+| `yonzoffic-baileys@8.6.90` | 2026-09-26 | preinstall: `node ./engine-requirements.js` | Only downloaded files or looked up hosts | GET github.com |
+| `@alphaspace/core@99.0.1` | 2026-09-25 | preinstall: `node preinstall.js` | Caught phoning home with the machine’s details | POST pipedream.net (901 B body) |
+| `shoplist-app@993.99.99` | 2026-09-25 | preinstall: `node preinstall.js`; install: `node preinstall.js`; postinstall: `node preinstall.js` | Caught phoning home with the machine’s details | GET pipedream.net |
+| `aliftech-ui@99.9.9` | 2026-09-24 | postinstall: `node postinstall.js` | Caught phoning home with the machine’s details | GET webhook.site |
+| `exiouss@5.0.1` | 2026-09-24 | postinstall: `node -e "try{require('electron')}catch(e){console.log('Elect` | Only downloaded files or looked up hosts | GET github.com |
+| `efhthrthrthregerht@99.9.9` | 2026-09-22 | postinstall: `node index.js` | Caught phoning home with the machine’s details | POST webhook.site (90 B body) |
+| `faceplate-docs@99.9.10` | 2026-09-22 | postinstall: `node index.js` | Caught phoning home with the machine’s details | POST webhook.site (90 B body) |
+| `@baanx/abis@9.9.11` | 2026-09-21 | install: `node index.js` | Caught phoning home with the machine’s details | DNS lookup under algamil7x.xyz |
+| `@baanx/solana-lib@9.9.10` | 2026-09-21 | install: `node index.js` | Caught phoning home with the machine’s details | DNS lookup under algamil7x.xyz |
+| esbuild@0.28.2 (honest) | - | postinstall: `node install.js` | Did nothing visible on install | nothing |
+| @swc/core@1.16.22 (honest) | - | postinstall: `node postinstall.js` | Did nothing visible on install | nothing |
+| bcrypt@6.0.0 (honest) | - | install: `node-gyp-build` | Did nothing visible on install | nothing |
+| sqlite3@6.0.1 (honest) | - | install: `prebuild-install -r napi    node-gyp rebuild` | Only downloaded files or looked up hosts | GET github.com, GET nodejs.org |
+| puppeteer@25.17.0 (honest) | - | postinstall: `node install.mjs` | Only downloaded files or looked up hosts | GET googleapis.com |
+| core-js@3.51.0 (honest) | - | postinstall: `node -e "try{require('./postinstall')}catch(e){}"` | Did nothing visible on install | nothing |
+| cypress@16.3.0 (honest) | - | postinstall: `node dist/index.js --exec install` | Only downloaded files or looked up hosts | GET cypress.io |
+| canvas@3.2.3 (honest) | - | install: `prebuild-install -r napi    node-gyp rebuild` | Only downloaded files or looked up hosts | GET github.com, GET nodejs.org |
+| @parcel/watcher@2.6.0 (honest) | - | install: `node scripts/build-from-source.js` | Did nothing visible on install | nothing |
+| lefthook@2.2.2 (honest) | - | postinstall: `node postinstall.js` | Did nothing visible on install | nothing |
+

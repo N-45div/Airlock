@@ -1,0 +1,126 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "coffee-juicy-heron-3M3Xpi",
+  "marker": "AIRLOCK-DECOY-9383fa1a4675123008c0ec35",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 1,
+      "timedOut": false,
+      "seconds": 6,
+      "scripts": {
+        "prebuild-install -r napi || node-gyp rebuild": "canvas@3.2.3 install script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [
+          {
+            "host": "github.com",
+            "by": "node /home/dev/code/project/node_modules/.bin/prebuild-install"
+          },
+          {
+            "host": "nodejs.org",
+            "by": "sh /usr/local/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin/node-gyp"
+          }
+        ],
+        "programs": [
+          "sh -c prebuild-install -r napi || node-gyp rebuild",
+          "prebuild-install -r napi",
+          "node /home/dev/code/project/node_modules/.bin/prebuild-install -r napi",
+          "node-gyp rebuild",
+          "sh /usr/local/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin/node-gyp rebuild",
+          "node /usr/local/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js rebuild",
+          "python3 -c import sys; sys.stdout.buffer.write(sys.executable.encode('utf-8'));",
+          "/usr/bin/python3 -c import sys; print(\"%s.%s.%s\" % sys.version_info[:3]);"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [
+    {
+      "host": "github.com",
+      "by": "node /home/dev/code/project/node_modules/.bin/prebuild-install",
+      "step": "npm install"
+    },
+    {
+      "host": "nodejs.org",
+      "by": "sh /usr/local/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin/node-gyp",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c prebuild-install -r napi || node-gyp rebuild",
+      "step": "npm install"
+    },
+    {
+      "command": "prebuild-install -r napi",
+      "step": "npm install"
+    },
+    {
+      "command": "node /home/dev/code/project/node_modules/.bin/prebuild-install -r napi",
+      "step": "npm install"
+    },
+    {
+      "command": "node-gyp rebuild",
+      "step": "npm install"
+    },
+    {
+      "command": "sh /usr/local/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin/node-gyp rebuild",
+      "step": "npm install"
+    },
+    {
+      "command": "node /usr/local/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js rebuild",
+      "step": "npm install"
+    },
+    {
+      "command": "python3 -c import sys; sys.stdout.buffer.write(sys.executable.encode('utf-8'));",
+      "step": "npm install"
+    },
+    {
+      "command": "/usr/bin/python3 -c import sys; print(\"%s.%s.%s\" % sys.version_info[:3]);",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "github.com",
+      "method": "GET",
+      "path": "/Automattic/node-canvas/releases/download/v3.2.3/canvas-v3.2.3-napi-v7-linux-x64.tar.gz",
+      "tls": true,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "node /home/dev/code/project/node_modules/.bin/prebuild-install",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    },
+    {
+      "host": "nodejs.org",
+      "method": "GET",
+      "path": "/download/release/v24.22.3/node-v24.22.3-headers.tar.gz",
+      "tls": true,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "sh /usr/local/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin/node-gyp",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    }
+  ],
+  "refused": []
+}

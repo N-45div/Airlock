@@ -1,0 +1,35 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "plum-mean-damselfly-nSNHUn",
+  "marker": "AIRLOCK-DECOY-2545497cb82bae2bb90d2c7e",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 1,
+      "timedOut": false,
+      "seconds": 7,
+      "scripts": {},
+      "trace": {
+        "wallets": [],
+        "contacts": [],
+        "programs": []
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [],
+  "programs": [],
+  "capture": {
+    "on": true
+  },
+  "exfil": [],
+  "refused": []
+}

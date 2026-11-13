@@ -1,0 +1,127 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "peach-psychiatric-gull-t1Kc3T",
+  "marker": "AIRLOCK-DECOY-cce38d218a608c4368eebb02",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 1,
+      "timedOut": false,
+      "seconds": 20,
+      "scripts": {
+        "node scripts/build-from-source.js": "@parcel/watcher@2.6.0 install script",
+        "node script/pre_install.js": "gina@0.7.3 preinstall script",
+        "node script/post_install.js": "gina@0.7.3 postinstall script",
+        "node script/prepare_version.js": "gina@0.7.3 prepare script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [],
+        "programs": [
+          "sh -c node scripts/build-from-source.js",
+          "node scripts/build-from-source.js",
+          "sh -c node script/pre_install.js",
+          "node script/pre_install.js",
+          "/bin/sh -c which printenv",
+          "which printenv",
+          "npm config get prefix --quiet",
+          "node /usr/local/bin/npm config get prefix --quiet",
+          "npm list gina --long --json --prefix=/home/dev/code/project",
+          "node /usr/local/bin/npm list gina --long --json --prefix=/home/dev/code/project",
+          "sh -c node script/post_install.js",
+          "node script/post_install.js",
+          "/bin/sh -c npm install",
+          "/usr/local/bin/node /home/dev/code/project/bin/gina framework:set --global-mode=false",
+          "/usr/local/bin/node /home/dev/code/project/bin/gina framework:set --prefix=/usr/local",
+          "sh -c node script/prepare_version.js",
+          "node script/prepare_version.js"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [],
+  "programs": [
+    {
+      "command": "sh -c node scripts/build-from-source.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node scripts/build-from-source.js",
+      "step": "npm install"
+    },
+    {
+      "command": "sh -c node script/pre_install.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node script/pre_install.js",
+      "step": "npm install"
+    },
+    {
+      "command": "/bin/sh -c which printenv",
+      "step": "npm install"
+    },
+    {
+      "command": "which printenv",
+      "step": "npm install"
+    },
+    {
+      "command": "npm config get prefix --quiet",
+      "step": "npm install"
+    },
+    {
+      "command": "node /usr/local/bin/npm config get prefix --quiet",
+      "step": "npm install"
+    },
+    {
+      "command": "npm list gina --long --json --prefix=/home/dev/code/project",
+      "step": "npm install"
+    },
+    {
+      "command": "node /usr/local/bin/npm list gina --long --json --prefix=/home/dev/code/project",
+      "step": "npm install"
+    },
+    {
+      "command": "sh -c node script/post_install.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node script/post_install.js",
+      "step": "npm install"
+    },
+    {
+      "command": "/bin/sh -c npm install",
+      "step": "npm install"
+    },
+    {
+      "command": "/usr/local/bin/node /home/dev/code/project/bin/gina framework:set --global-mode=false",
+      "step": "npm install"
+    },
+    {
+      "command": "/usr/local/bin/node /home/dev/code/project/bin/gina framework:set --prefix=/usr/local",
+      "step": "npm install"
+    },
+    {
+      "command": "sh -c node script/prepare_version.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node script/prepare_version.js",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [],
+  "refused": []
+}

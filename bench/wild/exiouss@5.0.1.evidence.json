@@ -1,0 +1,121 @@
+{
+  "provider": "vercel-sandbox",
+  "sandboxId": "turquoise-close-boa-roQfTg",
+  "marker": "AIRLOCK-DECOY-e9b5e0580afc371d84f3fc8c",
+  "allowedHosts": [
+    "registry.npmjs.org",
+    "registry.yarnpkg.com",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "steps": [
+    {
+      "label": "npm install",
+      "command": "npm install --foreground-scripts --no-audit --no-fund --loglevel=error",
+      "why": "Installing runs the install scripts of the project and of every package it depends on.",
+      "exitCode": 1,
+      "timedOut": false,
+      "seconds": 8,
+      "scripts": {
+        "node src/cnoke/cnoke.js -P . -D src/koffi --prebuild": "koffi@2.16.3 install script",
+        "node-gyp-build": "uiohook-napi@1.5.5 install script",
+        "node install.js": "electron@25.9.8 postinstall script"
+      },
+      "trace": {
+        "wallets": [],
+        "contacts": [
+          {
+            "host": "github.com",
+            "by": "node install.js"
+          }
+        ],
+        "programs": [
+          "sh -c node src/cnoke/cnoke.js -P . -D src/koffi --prebuild",
+          "node src/cnoke/cnoke.js -P . -D src/koffi --prebuild",
+          "/usr/local/bin/node -e require(process.argv[1]) /home/dev/code/project/node_modules/koffi/index.js",
+          "sh -c node-gyp-build",
+          "node-gyp-build",
+          "node /home/dev/code/project/node_modules/.bin/node-gyp-build",
+          "/bin/sh -c node-gyp-build-test",
+          "node-gyp-build-test",
+          "node /home/dev/code/project/node_modules/.bin/node-gyp-build-test",
+          "sh -c node install.js",
+          "node install.js"
+        ]
+      }
+    }
+  ],
+  "wallets": [],
+  "contacts": [
+    {
+      "host": "github.com",
+      "by": "node install.js (electron@25.9.8 postinstall script)",
+      "step": "npm install"
+    }
+  ],
+  "programs": [
+    {
+      "command": "sh -c node src/cnoke/cnoke.js -P . -D src/koffi --prebuild",
+      "step": "npm install"
+    },
+    {
+      "command": "node src/cnoke/cnoke.js -P . -D src/koffi --prebuild",
+      "step": "npm install"
+    },
+    {
+      "command": "/usr/local/bin/node -e require(process.argv[1]) /home/dev/code/project/node_modules/koffi/index.js",
+      "step": "npm install"
+    },
+    {
+      "command": "sh -c node-gyp-build",
+      "step": "npm install"
+    },
+    {
+      "command": "node-gyp-build",
+      "step": "npm install"
+    },
+    {
+      "command": "node /home/dev/code/project/node_modules/.bin/node-gyp-build",
+      "step": "npm install"
+    },
+    {
+      "command": "/bin/sh -c node-gyp-build-test",
+      "step": "npm install"
+    },
+    {
+      "command": "node-gyp-build-test",
+      "step": "npm install"
+    },
+    {
+      "command": "node /home/dev/code/project/node_modules/.bin/node-gyp-build-test",
+      "step": "npm install"
+    },
+    {
+      "command": "sh -c node install.js",
+      "step": "npm install"
+    },
+    {
+      "command": "node install.js",
+      "step": "npm install"
+    }
+  ],
+  "capture": {
+    "on": true
+  },
+  "exfil": [
+    {
+      "host": "github.com",
+      "method": "GET",
+      "path": "/electron/electron/releases/download/v25.9.8/electron-v25.9.8-linux-x64.zip",
+      "tls": true,
+      "bytes": 0,
+      "contentType": null,
+      "decoys": [],
+      "by": "node install.js (electron@25.9.8 postinstall script)",
+      "step": "npm install",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sample": ""
+    }
+  ],
+  "refused": []
+}
