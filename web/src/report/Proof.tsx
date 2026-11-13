@@ -68,6 +68,8 @@ export function ProofPanel({ scan }: { scan: Scan }) {
               ) : null}
               .
             </>
+          ) : proof.notRecorded ? (
+            `Not recorded: ${proof.notRecorded} The receipt below still proves the review.`
           ) : (
             'Not recorded: this server has no recorder key.'
           )}

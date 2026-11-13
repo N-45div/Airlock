@@ -90,8 +90,15 @@ export function nearReviewer(engine: NearEngineOptions): Reviewer {
         const tx = await recordReceipt(receipt, creds);
         proof.onchain = { registry: REGISTRY, recorder: creds.accountId, tx };
       } catch (error) {
-        // A verdict that can't be recorded is still a verdict; the receipt has the proof.
-        console.error(`not recorded on NEAR: ${(error as Error).message}`);
+        // A verdict that can't be recorded is still a verdict; the receipt has the proof. Say why on
+        // the report, so a refusal (such as a model key NEAR AI rotated and nobody registered yet) shows.
+        const why = (error as Error).message;
+        console.error(`not recorded on NEAR: ${why}`);
+        proof.notRecorded = /not a registered model key|registered for another model/.test(why)
+          ? 'the contract does not know the key this model signs with yet (NEAR AI may have rotated it).'
+          : /used its cap/.test(why)
+            ? 'the recorder has used up its allowance on the contract.'
+            : 'the NEAR transaction failed.';
       }
     }
     return {

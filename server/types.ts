@@ -93,6 +93,8 @@ export interface ScanProof {
   replies: number;
   /** Set when the verdict was recorded on NEAR. */
   onchain?: { registry: string; recorder: string; tx: string };
+  /** Why recording failed, when a recorder key is set but the contract refused or couldn't be reached. */
+  notRecorded?: string;
 }
 
 /** What a repository's code did in Airlock's sandbox (server/sandbox), as the report page shows it. */
