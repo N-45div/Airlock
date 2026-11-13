@@ -35,7 +35,7 @@ export const SAMPLES: SampleDef[] = [
   {
     id: 'take-home',
     title: 'A take-home task with notes for AI',
-    blurb: 'Shaped like a job-interview task: notes planted to steer an AI reviewer, and a setup script that downloads more code. Watch the fence hold.',
+    blurb: 'Shaped like a job-interview task: notes planted to steer an AI reviewer, and a setup script that downloads more code. Watch the reviewer flag the planted orders instead of following them.',
     url: 'sample:take-home',
     pack: 'take-home',
   },
