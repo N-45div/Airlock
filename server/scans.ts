@@ -83,10 +83,11 @@ export class Scanner {
     return own ?? (await bundledReceipts()).get(hash) ?? null;
   }
 
-  /** The sandbox evidence a receipt binds, saved next to it by the NEAR engine. */
+  /** The sandbox evidence a receipt binds: saved next to it by the NEAR engine, or shipped with a bundled receipt. */
   async evidence(hash: string): Promise<string | null> {
     if (!/^[0-9a-f]{64}$/.test(hash)) return null;
-    return readFile(path.join(this.dataDir, 'receipts', `${hash}.evidence.json`), 'utf8').catch(() => null);
+    const own = await readFile(path.join(this.dataDir, 'receipts', `${hash}.evidence.json`), 'utf8').catch(() => null);
+    return own ?? (await bundledEvidence()).get(hash) ?? null;
   }
 
   get(id: string): Scan | undefined {
@@ -292,26 +293,34 @@ export class Scanner {
   }
 }
 
-let bundled: Promise<Map<string, string>> | undefined;
+let bundled: Promise<{ receipts: Map<string, string>; evidence: Map<string, string> }> | undefined;
 
-/** Receipts committed with Airlock (fixtures/, bench/ and earlier benchmark runs in bench/archive/), so
- * every verdict already on NEAR links to one. */
-function bundledReceipts(): Promise<Map<string, string>> {
+/** Receipts committed with Airlock (fixtures/, bench/, the sandbox benchmark in bench/sandbox/ and earlier
+ * benchmark runs in bench/archive/), so every verdict already on NEAR links to one, and the sandbox
+ * evidence shipped next to a receipt. */
+function loadBundled(): Promise<{ receipts: Map<string, string>; evidence: Map<string, string> }> {
   bundled ??= (async () => {
     const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-    const map = new Map<string, string>();
+    const receipts = new Map<string, string>();
+    const evidence = new Map<string, string>();
     const archive = (await readdir(path.join(root, 'bench', 'archive')).catch(() => [] as string[])).map((d) => `bench/archive/${d}`);
-    for (const dir of ['fixtures/receipts', 'bench/receipts', ...archive]) {
+    for (const dir of ['fixtures/receipts', 'bench/receipts', 'bench/sandbox', ...archive]) {
       for (const name of await readdir(path.join(root, dir)).catch(() => [] as string[])) {
-        if (!name.endsWith('.json') || name === 'results.json') continue;
+        if (!name.endsWith('.json') || name === 'results.json' || name.endsWith('.evidence.json')) continue;
         const text = await readFile(path.join(root, dir, name), 'utf8');
-        map.set(receiptHash(JSON.parse(text) as Receipt), text);
+        const hash = receiptHash(JSON.parse(text) as Receipt);
+        receipts.set(hash, text);
+        const sidecar = await readFile(path.join(root, dir, name.replace(/\.json$/, '.evidence.json')), 'utf8').catch(() => null);
+        if (sidecar) evidence.set(hash, sidecar);
       }
     }
-    return map;
+    return { receipts, evidence };
   })();
   return bundled;
 }
+
+const bundledReceipts = async () => (await loadBundled()).receipts;
+const bundledEvidence = async () => (await loadBundled()).evidence;
 
 function sameKey(given: string, expected: string): boolean {
   const a = Buffer.from(given);
