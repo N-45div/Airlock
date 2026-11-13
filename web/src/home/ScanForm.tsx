@@ -71,7 +71,7 @@ export function ScanForm({ autoFocus = false, initialUrl = '' }: { autoFocus?: b
         </Button>
       </div>
       <p id={hintId} className="scan-form__hint">
-        Public GitHub repositories. Nothing from the repository runs, on your computer or ours.
+        Public GitHub repositories. Nothing runs on your computer: install steps run only in a throwaway VM full of decoys.
       </p>
       {error ? (
         <p id={errorId} className="form-error" role="alert">
