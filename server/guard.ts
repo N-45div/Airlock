@@ -160,6 +160,10 @@ export function decide(t: Target, record: VerdictRecord | null, head: string | n
   if (t.via === 'github' && head && !head.startsWith(record.revision) && !record.revision.startsWith(head)) {
     return { target: t, action: 'ask', message: `${said}\nThe repository has changed since: it is now at ${head.slice(0, 7)}, which nobody has checked.` };
   }
+  if (t.via === 'npm') {
+    // The package names its own repository, and any package can name any repository.
+    return { target: t, action: 'allow', message: `${said}\nThis verdict is for the repository the package names. The package published on npm was not checked.` };
+  }
   return { target: t, action: 'allow', message: said };
 }
 

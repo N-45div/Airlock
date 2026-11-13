@@ -109,6 +109,13 @@ describe('decide', () => {
     assert.equal(decide(npm, null, null).action, 'allow');
     assert.equal(decide(npm, record('dangerous'), null).action, 'deny');
   });
+
+  it("says a safe verdict for an npm package covers the repository it names, not the published package", () => {
+    const d = decide(npm, record('safe'), null);
+    assert.equal(d.action, 'allow');
+    assert.match(d.message, /repository the package names\. The package published on npm was not checked/);
+    assert.doesNotMatch(decide(github, record('safe'), null).message, /published on npm/);
+  });
 });
 
 describe('hookOutput', () => {
