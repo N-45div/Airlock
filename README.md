@@ -104,6 +104,14 @@ receipt's hash, never code or what the findings say. Reading is a free view call
 
 ### On the live site, with nothing to install
 
+- **Do:** open [airlock-check.vercel.app](https://airlock-check.vercel.app) and press **A take-home that
+  steals wallets**, the first sample.
+  **See:** the sandbox's steps as they happen (a VM starts, decoy wallets are planted, the internet is cut
+  to package registries, `npm install` runs). Then a red **What it did** panel shows the request the
+  stealer sent, a `POST` to its collector, with **NEAR CLI keys, Solana CLI keypair, SSH key** inside,
+  credited to its postinstall script. Next comes *Don't run it*, and the NEAR
+  transaction that recorded it. The host can't exist, so nothing ever left the VM. A finished one:
+  [hidden-loader](https://airlock-check.vercel.app/r/VRut0Lm1).
 - **Do:** open [airlock-check.vercel.app](https://airlock-check.vercel.app), paste a public GitHub
   repository link (or pick a sample) and press the button.
   **See:** the review as it happens, then the verdict and a "Verified review" panel with:
@@ -117,8 +125,9 @@ receipt's hash, never code or what the findings say. Reading is a free view call
 - **Do:** open [airlock-check.vercel.app/near](https://airlock-check.vercel.app/near).
   **See:** every verdict on NEAR, newest first, read by your browser from public NEAR RPC.
 
-The live site fetches and reviews code. The sandbox is turned off on its server; steps 3 and 11 below
-show it.
+On the live site the sandbox runs first for every check, within limits for a public server: 60 seconds
+a step, 3 steps, 4 minutes a run and 60 runs a day. Past those, the review reads the code only and says
+so. Its VMs run on a Vercel account apart from the one that serves the site.
 
 ### On your machine, with no key
 
@@ -285,7 +294,9 @@ to trust for the TEE: [THREAT_MODEL.md](THREAT_MODEL.md).
   waits, checks whether it is in a VM, or acts only when you run the app itself. A clean sandbox run is
   evidence, not proof. An install that fails, for example on a dependency since removed from npm, may
   never reach the code that would show itself.
-- The sandbox runs from the command line with a Vercel account. The live site's server has it off.
+- On the live site the sandbox has a public server's limits (60 seconds a step, 3 steps, 4 minutes a
+  run, 60 runs a day). A run past them falls back to reading the code. From the command line it needs a
+  Vercel account.
 - A repository can change after a check. Every report names the commit it read, and the coding agent
   hook asks again when the commit has moved.
 - Hosted checks cover GitHub only: public repositories up to 60 MB.
@@ -406,7 +417,6 @@ Chrome extension's button. Everything after it is hackathon work:
 - A GitHub App or Action for pull requests.
 - Checking Intel quotes inside the contract.
 - Verdicts on mainnet.
-- The sandbox on the live site.
 - A local sandbox mode on [NEAR AI Red Sandbox](https://github.com/nearai/nearai-red-sandbox), NEAR AI's
   open-source microVM for Apple-silicon Macs: a private repository's install steps would run against
   decoys on your own machine, with no Vercel account and no code leaving it. Red Sandbox gives a
