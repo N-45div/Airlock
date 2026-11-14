@@ -132,7 +132,7 @@ export function HomePage() {
   const narrow = useNarrow();
   const data = showcase as Showcase;
   const real = wild as WildSummary;
-  const verdicts = useVerdictCount(68);
+  const verdicts = useVerdictCount(82);
   // The stealer sample appears once the server runs the sandbox; until then the title says less.
   const [hasStealer, setHasStealer] = useState(false);
   const caughtSamples = data.runs.filter((r) => r.verdict === 'dangerous').length;

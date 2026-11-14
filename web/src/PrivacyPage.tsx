@@ -5,7 +5,11 @@ import { Card } from './ui/primitives.tsx';
 const ITEMS: { title: string; text: ReactNode }[] = [
   {
     title: 'What we keep',
-    text: `The repository URL you check, the report, its receipt and the sandbox evidence the receipt binds, so the share link keeps working and anyone can check it. Nothing personal.`,
+    text: `For an ordinary check: the repository URL you check, the report, its receipt and the sandbox evidence the receipt binds, so the share link keeps working and anyone can check it. Nothing personal.`,
+  },
+  {
+    title: 'A private check',
+    text: 'Tick “Private check” and nothing about the check is kept: no report or receipt is written to disk, no verdict is recorded on NEAR, and the report stays in the server’s memory for 15 minutes so its page can load, then it is gone. You download the receipt and the sandbox evidence from the report instead; they still verify offline.',
   },
   {
     title: 'What we don’t do',
@@ -16,8 +20,8 @@ const ITEMS: { title: string; text: ReactNode }[] = [
     text: 'It is fetched from GitHub for the check and deleted when the check ends. Its install and setup steps may run in a throwaway VM on Vercel Sandbox that holds only decoy wallets and keys; the VM is destroyed when the check ends. Nothing runs on your computer.',
   },
   {
-    title: 'Who reads it',
-    text: 'A model running in a TEE on NEAR AI Cloud. The code and every message go end-to-end encrypted to the attested model, and every reply is signed by it. NEAR AI’s gateway sees that a request was made, its size and timing, not what is in it.',
+    title: 'Who sees it',
+    text: 'Airlock’s server fetches the public repository; a Vercel Sandbox VM, outside any TEE, runs its install steps; and a model running in a TEE on NEAR AI Cloud reviews it. The traffic from the server to the model is end-to-end encrypted to the attested model, and every reply is signed by it. NEAR AI’s gateway sees that a request was made, its size and timing, not what is in it.',
   },
   {
     title: 'What goes on NEAR',
@@ -63,8 +67,8 @@ export function PrivacyPage() {
         <p className="eyebrow">Privacy</p>
         <h1 className="doc-head__title">What {PRODUCT} keeps, and what it doesn’t</h1>
         <p className="doc-head__lede">
-          {PRODUCT} keeps as little as it can: the repository you asked about and the report, so its link works. Nothing
-          about you.
+          {PRODUCT} keeps as little as it can: the repository you asked about and the report, so its link works, or, for a
+          private check, nothing at all. Nothing about you.
         </p>
       </header>
       <Card pad="none">
@@ -77,7 +81,7 @@ export function PrivacyPage() {
           ))}
         </dl>
       </Card>
-      <p className="doc-foot">Last updated 14 October 2026.</p>
+      <p className="doc-foot">Last updated 14 November 2026.</p>
     </div>
   );
 }

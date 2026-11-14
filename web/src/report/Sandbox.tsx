@@ -31,7 +31,7 @@ export function SandboxPanel({ sandbox: sb, receiptHash, evidence }: { sandbox: 
       <p className="sandbox__lede">
         Airlock ran its install and setup steps in a throwaway VM whose home folder held decoy wallets and keys, with the
         internet cut to package registries. {sb.capture ? 'Every other host was answered from inside the VM, so what the code sent was kept.' : 'This run saw which hosts the code looked up, not what it sent.'}{' '}
-        Nothing left the VM.
+        Only package-registry traffic could leave the VM, and it held nothing but decoys.
       </p>
 
       {caught.length > 0 && (
