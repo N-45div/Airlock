@@ -16,7 +16,7 @@ sandbox kept the request and named the decoy keys inside it. Demo video:
 [the 83-second walkthrough on X](https://x.com/godlovesu_n/status/2120528325424939396).*
 
 - **Try it:** [airlock-check.vercel.app](https://airlock-check.vercel.app). Press the first sample, or paste a GitHub link, and get a verdict in one to two minutes. Tick **Private check** to keep nothing.
-- **Every verdict on NEAR:** [airlock-check.vercel.app/near](https://airlock-check.vercel.app/near), from the contract [`airlock-verdicts.testnet`](https://testnet.nearblocks.io/address/airlock-verdicts.testnet)
+- **Every verdict on NEAR:** [airlock-check.vercel.app/near](https://airlock-check.vercel.app/near), from the contract [`airlock-verdicts.testnet`](https://testnet.nearblocks.io/address/airlock-verdicts.testnet). It already covers widely used packages (express, axios, chalk, commander, dotenv, ws, uuid, jsonwebtoken, cors, node-fetch, near-api-js, tweetnacl, bs58, bn.js), each checked with the sandbox, so the guard and the extension answer real installs.
 - **Chrome extension:** [Chrome Web Store](https://chromewebstore.google.com/detail/bmhbejjhiimlcmpkpeglogijodbhmpgd) · [source](extension/)
 - **Check our claims with no key:** `npm ci && npm run judge` (step 1 below)
 
@@ -172,10 +172,11 @@ data.
    caught the decoy keys leaving: [report](https://airlock-check.vercel.app/r/7xgbeEsQ).
    `npm run guard -- check "git clone https://github.com/kelektiv/node.bcrypt.js"` shows
    `ASK  Airlock: "Be careful" …` and exit code 1: this clone waits for you.
-   `npm run guard -- check "npm install escape-string-regexp"` finds the package's repository and shows
-   `ALLOW … "Looks safe"`, with a note that the verdict covers the repository the package names, not
-   the package published on npm. `npm run guard -- --config` prints the hook settings to paste
-   ([docs/guard.md](docs/guard.md)).
+   `npm run guard -- check "npm install express near-api-js axios"` finds each package's repository and
+   shows `ALLOW … "Looks safe"` for express and near-api-js, and `ASK … "Be careful"` for axios, whose
+   repository runs a dev container command and git hooks by itself. Each allow notes that the verdict
+   covers the repository the package names, not the package published on npm. `npm run guard -- --config`
+   prints the hook settings to paste ([docs/guard.md](docs/guard.md)).
 6. **Do:** `npm run build && npm start`, then open http://127.0.0.1:8787/near
    **See:** every verdict on NEAR, each with its receipt to download. Without a key, `npm start` serves
    the pages; starting a review needs `NEARAI_API_KEY`.
