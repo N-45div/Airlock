@@ -11,7 +11,7 @@ TEE on NEAR AI Cloud judge the code and what it did, and records the verdict on 
 a verdict for free and know where it came from. Against 20 real npm malware packages, the sandbox
 caught 9 phoning home at install, and none of 10 honest packages ([Results](#results)).
 
-- **Try it:** [airlock-check.vercel.app](https://airlock-check.vercel.app). Paste a GitHub link and get a verdict in about a minute.
+- **Try it:** [airlock-check.vercel.app](https://airlock-check.vercel.app). Paste a GitHub link and get a verdict in one to two minutes.
 - **Every verdict on NEAR:** [airlock-check.vercel.app/near](https://airlock-check.vercel.app/near), from the contract [`airlock-verdicts.testnet`](https://testnet.nearblocks.io/address/airlock-verdicts.testnet)
 - **Chrome extension:** [Chrome Web Store](https://chromewebstore.google.com/detail/bmhbejjhiimlcmpkpeglogijodbhmpgd) · [source](extension/)
 - **Check our claims with no key:** `npm ci && npm run judge` (step 1 below)
@@ -72,10 +72,12 @@ stores a verdict only if three things hold:
 
 - the model's Ed25519 signature over that exchange verifies on chain;
 - the signature comes from a model key whose Intel TDX attestation was checked before the key was registered;
-- the sender is an allowed recorder whose key can only call `record_verdict`.
+- the sender is an allowed recorder. Airlock's server signs with a function-call key that can only call `record_verdict`.
 
 Each record holds the repository, the commit, the verdict, the number of findings, the model and the
-receipt's hash, never code or what the findings say. Reading is a free view call with no key.
+receipt's hash, never code or what the findings say. Reading is a free view call with no key. The
+signature the contract checks covers the exchange's request and response hashes. The verdict label is
+the recorder's statement, and the receipt, found by its hash, settles it offline.
 ([docs/registry.md](docs/registry.md), `contracts/verdict-registry/`, `server/registry.ts`)
 
 **5. Guards where code gets run.** A verdict helps only where the decision is made:
@@ -120,8 +122,13 @@ receipt's hash, never code or what the findings say. Reading is a free view call
   - the receipt to download;
   - the NEAR transaction that recorded the verdict.
 
-  A review takes about a minute and costs under a cent. Each visitor can start six per hour. Here is
-  a finished one: [sindresorhus/escape-string-regexp](https://airlock-check.vercel.app/r/5tkEtxSf).
+  A check takes one to two minutes and costs about a cent or less. Each visitor can start six per hour.
+  Here is a finished one, with its sandbox run: [sindresorhus/slugify](https://airlock-check.vercel.app/r/g4myAAmA).
+- **Do:** tick **Private check** under the form, then check a repository.
+  **See:** the same check and proof, with the report tagged *Private check*. No share link, the receipt and
+  the sandbox evidence download from the page, and *Recorded on NEAR* says nothing was recorded. The server
+  writes nothing about it to disk, and drops the report from memory 15 minutes after it ends
+  (`server/scans.ts`, `server/near-engine.ts`).
 - **Do:** open [airlock-check.vercel.app/near](https://airlock-check.vercel.app/near).
   **See:** every verdict on NEAR, newest first, read by your browser from public NEAR RPC.
 
@@ -168,7 +175,8 @@ data.
 
 ### In Chrome
 
-8. **Do:** load `extension/` unpacked (`chrome://extensions`, Developer mode), then open the extension's
+8. **Do:** install the extension from the [Chrome Web Store](https://chromewebstore.google.com/detail/bmhbejjhiimlcmpkpeglogijodbhmpgd)
+   (version 0.3.0), or load `extension/` unpacked (`chrome://extensions`, Developer mode). Then open its
    popup on https://github.com/sindresorhus/slugify
    **See:** "Recorded on NEAR testnet: Looks safe", with the model, date and findings. Turn on "Show
    earlier verdicts" in its Settings and the button on the page reads "Looks safe · on NEAR".
@@ -274,8 +282,9 @@ What each way of reviewing sends, and what is kept afterwards:
 
 | Way | Who can read the code | Kept after the review |
 | --- | --- | --- |
-| `npm run scan:private` on your machine | Only the model inside the attested TEE. Files, prompts and tool calls are encrypted to its key before they leave your machine, and no Airlock server is involved. | **Nothing**. A local folder is read in place, and a cloned repository is deleted when the review ends (`server/private-cli.ts`). Only if you ask: `--receipt` writes a file on your machine, and `--record` puts the verdict, the number of findings and hashes on NEAR. |
-| The live site | Airlock's server clones the public repository and sends it encrypted to the same TEE model. | The clone is deleted after the scan (`server/scans.ts`). The repository's address, the report and the receipt stay on the server so the report's link keeps working. The verdict and hashes go on NEAR. |
+| `npm run scan:private` on your machine | Only the model inside the attested TEE. Files, prompts and tool calls are encrypted to its key before they leave your machine, and no Airlock server is involved. | **Nothing**. A local folder is read in place, and a cloned repository is deleted when the review ends (`server/private-cli.ts`). Only if you ask: `--receipt` writes a file on your machine, and `--record` puts the verdict, the number of findings and hashes on NEAR. With `--detonate`, the install steps also run in a Vercel Sandbox VM, outside any TEE. |
+| The live site | Airlock's server clones the public repository and sends it encrypted to the same TEE model. A Vercel Sandbox VM, outside any TEE, runs its install steps. | The clone is deleted after the scan (`server/scans.ts`). The repository's address, the report and the receipt stay on the server so the report's link keeps working. The verdict and hashes go on NEAR. |
+| The live site, **Private check** | The same as above. | **Nothing**. No report, receipt or evidence is written to disk, nothing goes on NEAR, and the report is dropped from memory 15 minutes after the check ends. You download the receipt and evidence from the report. |
 | The sandbox | The throwaway VM, which is stopped and discarded after the run. It holds only decoys, never your keys. | The evidence (steps, files touched, hosts, caught requests) goes to the model and is saved next to the receipt, which binds its hash. |
 
 - **The Chrome extension** sends only the address of a repository you choose to check, and only when
@@ -359,7 +368,7 @@ says, and the verdict is recorded on NEAR, where anyone can read it for free.
 
 **What a check costs us** (measured unless marked):
 
-- A private TEE review costs about $0.002–0.005.
+- A private TEE review costs about $0.003 on average (from $0.0006 to $0.018 in the benchmark).
 - Recording on NEAR costs well under a cent.
 - Looking up an existing verdict costs $0, because it is a public RPC read.
 - A sandbox run took 19–32 seconds of one vCPU with 2 GB (10–20 s of active CPU) and downloaded about
@@ -423,8 +432,7 @@ Chrome extension's button. Everything after it is hackathon work:
   researcher's agent a room to investigate in; Airlock would bring the decoys, the sinkhole that keeps
   what was sent, the verdict, the receipt and the record on NEAR.
 
-**The Chrome Web Store** lists the pre-hackathon extension until version 0.3.0 is approved. Step 8 loads
-the current one.
+**The Chrome Web Store** serves version 0.3.0, the current one, with the agent guard.
 
 **AI-written code.** Much of the code, tests and docs were written with Claude Code (Anthropic).
 
