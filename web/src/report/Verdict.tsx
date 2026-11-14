@@ -91,7 +91,7 @@ export function FailedCard({ scan }: { scan: Scan }) {
         We could not finish this check
       </h2>
       <p className="failed__error">{scan.error || 'The review stopped before it reached a verdict.'}</p>
-      <p className="failed__note">Nothing from the repository was run. You can try again.</p>
+      <p className="failed__note">Nothing from the repository ran on your computer. You can try again.</p>
       <div className="failed__actions">
         <Button variant="primary" busy={busy} iconAfter="arrow" onClick={() => void retry()}>
           {CTA}

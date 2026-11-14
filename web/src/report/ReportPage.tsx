@@ -62,7 +62,7 @@ export function ReportPage({ id }: { id: string }) {
       <div className="page page--report">
         <RepoHeader scan={scan} />
         {scan.status === 'done' ? <VerdictCard scan={scan} rows={rows} /> : <FailedCard scan={scan} />}
-        {scan.sandbox ? <SandboxPanel sandbox={scan.sandbox} {...(scan.proof ? { receiptHash: scan.proof.receiptHash } : {})} /> : null}
+        {scan.sandbox ? <SandboxPanel sandbox={scan.sandbox} {...(scan.proof ? { receiptHash: scan.proof.receiptHash } : {})} {...(scan.files?.evidence ? { evidence: scan.files.evidence } : {})} /> : null}
         <ProofPanel scan={scan} />
         <Findings scan={scan} />
         <FencePanel rows={rows} live={false} thoughts={state.thoughts} tee={tee} />

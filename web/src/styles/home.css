@@ -379,3 +379,28 @@
   color: var(--text-2);
   font-size: 14.5px;
 }
+
+.scan-form__private {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.scan-form__private input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.scan-form__private strong {
+  color: var(--text);
+  font-weight: 600;
+}

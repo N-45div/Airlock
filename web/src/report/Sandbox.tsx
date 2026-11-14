@@ -6,11 +6,14 @@ import type { SandboxReport } from '../../../server/types.ts';
 import { receiptUrl } from '../near.ts';
 import { Icon } from '../ui/Icon.tsx';
 import { Card } from '../ui/primitives.tsx';
+import { useJsonUrl } from './blob.ts';
 
 const kb = (bytes: number) => (bytes < 1024 ? `${bytes} bytes` : `${(bytes / 1024).toFixed(1)} KB`);
 
-/** `receiptHash` is set when the model in the TEE saw this run and a receipt binds it. */
-export function SandboxPanel({ sandbox: sb, receiptHash }: { sandbox: SandboxReport; receiptHash?: string }) {
+/** `receiptHash` is set when the model in the TEE saw this run and a receipt binds it; `evidence` when the
+ * page holds the evidence itself (a private check, whose server kept no copy). */
+export function SandboxPanel({ sandbox: sb, receiptHash, evidence }: { sandbox: SandboxReport; receiptHash?: string; evidence?: unknown }) {
+  const ownEvidence = useJsonUrl(evidence);
   const caught = sb.sent.filter((s) => s.decoys.length > 0);
   const otherSent = sb.sent.filter((s) => s.decoys.length === 0);
   const quiet = sb.wallets.length === 0 && sb.contacts.length === 0 && sb.sent.length === 0;
@@ -116,7 +119,7 @@ export function SandboxPanel({ sandbox: sb, receiptHash }: { sandbox: SandboxRep
           <>
             The model in the TEE saw this evidence before giving its verdict, and the receipt binds it by SHA-256{' '}
             <code title={sb.evidenceSha256}>{sb.evidenceSha256.slice(0, 16)}…</code>.{' '}
-            <a href={`${receiptUrl(receiptHash)}/evidence`} download={`airlock-evidence-${receiptHash.slice(0, 12)}.json`}>
+            <a href={ownEvidence ?? `${receiptUrl(receiptHash)}/evidence`} download={`airlock-evidence-${receiptHash.slice(0, 12)}.json`}>
               Download the evidence
             </a>
             .

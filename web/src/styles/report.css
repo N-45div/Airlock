@@ -484,3 +484,10 @@
   color: var(--text-2);
   font-size: 13px;
 }
+
+.report-head__private {
+  max-width: 340px;
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.5;
+}

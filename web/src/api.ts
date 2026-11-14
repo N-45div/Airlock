@@ -39,7 +39,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export const api = {
   samples: () => request<Sample[]>('/api/samples'),
-  startScan: (url: string) => request<CreateScanResponse>('/api/scans', { method: 'POST', body: JSON.stringify({ url }) }),
+  startScan: (url: string, opts: { private?: boolean } = {}) =>
+    request<CreateScanResponse>('/api/scans', { method: 'POST', body: JSON.stringify({ url, ...(opts.private ? { private: true } : {}) }) }),
   scan: (id: string) => request<Scan>(`/api/scans/${encodeURIComponent(id)}`),
   answer: (id: string, approvalId: string, key: string, decision: 'approve' | 'deny') =>
     request<Approval>(`/api/scans/${encodeURIComponent(id)}/approvals/${encodeURIComponent(approvalId)}`, {
@@ -86,9 +87,9 @@ export function absorbKeyFromHash(id: string): void {
   window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
 }
 
-/** Starts a scan and returns where its report lives. */
-export async function startScan(url: string): Promise<string> {
-  const { id, key } = await api.startScan(url);
+/** Starts a scan and returns where its report lives. A private check keeps nothing on the server. */
+export async function startScan(url: string, opts: { private?: boolean } = {}): Promise<string> {
+  const { id, key } = await api.startScan(url, opts);
   // An empty key means the server reused a recent finished scan of the same repository.
   if (key) saveKey(id, key);
   return `/r/${encodeURIComponent(id)}`;

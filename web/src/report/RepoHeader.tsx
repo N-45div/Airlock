@@ -83,6 +83,11 @@ export function RepoHeader({ scan }: { scan: Scan }) {
           )}
         </h1>
         <ul className="report-head__meta">
+          {scan.private ? (
+            <li>
+              <Chip tone="accent">Private check</Chip>
+            </li>
+          ) : null}
           {repo.host === 'sample' ? (
             <li>
               <Chip tone="accent">{PRODUCT} sample</Chip>
@@ -106,7 +111,14 @@ export function RepoHeader({ scan }: { scan: Scan }) {
           </li>
         </ul>
       </div>
-      <CopyLink id={scan.id} />
+      {scan.private ? (
+        <p className="report-head__private">
+          Kept nothing: this report lives in the server's memory for 15 minutes, then it is gone, and no verdict was
+          recorded on NEAR. Download the receipt below to keep the proof.
+        </p>
+      ) : (
+        <CopyLink id={scan.id} />
+      )}
     </header>
   );
 }

@@ -15,10 +15,12 @@ export function ScanForm({ autoFocus = false, initialUrl = '' }: { autoFocus?: b
   const [url, setUrl] = useState(initialUrl);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [privateCheck, setPrivateCheck] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const hintId = useId();
   const errorId = useId();
+  const privateId = useId();
 
   const submit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -31,7 +33,7 @@ export function ScanForm({ autoFocus = false, initialUrl = '' }: { autoFocus?: b
     setBusy(true);
     setError(null);
     try {
-      navigate(await startScan(value));
+      navigate(await startScan(value, { private: privateCheck }));
     } catch (err) {
       setError(messageOf(err));
       setBusy(false);
@@ -73,6 +75,13 @@ export function ScanForm({ autoFocus = false, initialUrl = '' }: { autoFocus?: b
       <p id={hintId} className="scan-form__hint">
         Public GitHub repositories. Nothing runs on your computer: install steps run only in a throwaway VM full of decoys.
       </p>
+      <label className="scan-form__private" htmlFor={privateId}>
+        <input id={privateId} type="checkbox" checked={privateCheck} onChange={(e) => setPrivateCheck(e.target.checked)} />
+        <span>
+          <strong>Private check.</strong> Keep nothing: no report saved on the server, no verdict recorded on NEAR. You
+          download the receipt instead.
+        </span>
+      </label>
       {error ? (
         <p id={errorId} className="form-error" role="alert">
           <Icon name="info" size={17} />

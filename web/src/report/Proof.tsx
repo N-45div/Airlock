@@ -7,6 +7,7 @@ import type { Scan } from '../../../server/types.ts';
 import { receiptUrl, registryIdOf, txUrl } from '../near.ts';
 import { Icon } from '../ui/Icon.tsx';
 import { Card } from '../ui/primitives.tsx';
+import { useJsonUrl } from './blob.ts';
 
 function Check({ ok, title, children }: { ok: boolean; title: string; children: ReactNode }) {
   return (
@@ -21,6 +22,8 @@ function Check({ ok, title, children }: { ok: boolean; title: string; children: 
 
 export function ProofPanel({ scan }: { scan: Scan }) {
   const proof = scan.proof;
+  // A private check's receipt exists only in this page: the server kept no copy.
+  const ownReceipt = useJsonUrl(scan.files?.receipt);
   if (!proof) return null;
   const repoId = scan.repo.host === 'github' ? registryIdOf(scan.repo.url) : scan.repo.url.startsWith('sample:') ? scan.repo.url : null;
   return (
@@ -76,7 +79,7 @@ export function ProofPanel({ scan }: { scan: Scan }) {
         </Check>
       </ul>
       <p className="proof__receipt">
-        <a href={receiptUrl(proof.receiptHash)} download={`airlock-receipt-${proof.receiptHash.slice(0, 12)}.json`}>
+        <a href={ownReceipt ?? receiptUrl(proof.receiptHash)} download={`airlock-receipt-${proof.receiptHash.slice(0, 12)}.json`}>
           Download the receipt
         </a>{' '}
         and check the quote, the key, the signatures and the verdict yourself with{' '}

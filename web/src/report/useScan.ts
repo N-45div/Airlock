@@ -39,7 +39,7 @@ export type ScanAction =
 
 export const isFinished = (scan: Scan | null | undefined) => scan?.status === 'done' || scan?.status === 'failed';
 
-const INTERRUPTED = 'This check stopped on our side before it finished. Nothing from the repository was run.';
+const INTERRUPTED = 'This check stopped on our side before it finished. Nothing from the repository ran on your computer.';
 
 function upsert<T extends { id: string }>(list: T[], item: T): T[] {
   const i = list.findIndex((x) => x.id === item.id);
