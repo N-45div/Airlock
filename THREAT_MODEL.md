@@ -86,8 +86,9 @@ doesn't prove which model produced the reply.
   findings can quote code: share such a receipt only if you'd share its findings.
 - **Encrypted requests don't hit NEAR AI's prompt cache.** In live runs, 0 input tokens came
   from cache, so every reply pays the full input price. Scans have a budget (default $0.05).
-- **Dependencies.** `npm audit` reports a low-severity advisory in `elliptic`, used by
-  `@phala/dcap-qvl` through the SDK, with no fix available.
+- **Dependencies.** `npm audit` reports only a low-severity advisory in `elliptic` (3 entries:
+  `elliptic`, and `@phala/dcap-qvl` and the SDK that use it), with no fix available. A nested `zod` that
+  `@vercel/sandbox` pins is overridden to the patched 4.6.7 in package.json.
 - **On chain, the verdict label is the recorder's statement.** The contract verifies the model's
   signature over the exchange, but can't decrypt the reply to see the verdict inside it. The
   receipt, found by its hash, settles that offline. The contract doesn't check Intel quotes yet:
