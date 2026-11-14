@@ -276,8 +276,8 @@ export class Scanner {
         error instanceof FetchError || error instanceof ScanError
           ? error.message
           : deadline.signal.aborted
-            ? `The review ran longer than ${Math.round(LIMITS.reviewMs / 60_000)} minutes and was stopped. Nothing from the repository was run.`
-            : 'The review could not finish. Nothing from the repository was run.';
+            ? `The review ran longer than ${Math.round(LIMITS.reviewMs / 60_000)} minutes and was stopped. Nothing from the repository ran on your computer or on this server.`
+            : 'The review could not finish. Nothing from the repository ran on your computer or on this server.';
       if (!(error instanceof FetchError)) console.error(`scan ${scan.id} failed:`, error);
       this.emit(live, { type: 'error', message: scan.error });
     } finally {

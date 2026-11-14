@@ -327,7 +327,7 @@ The hosted server runs it with `deploy/compose.yaml` behind Caddy.
 | `AIRLOCK_NEAR_MAX_USD` | `0.05` | Budget per private review; when it is spent, the next reply must be the verdict |
 | `NEAR_ACCOUNT_ID`, `NEAR_PRIVATE_KEY` | unset | A recorder's function-call key, to record every verdict on NEAR (or `NEAR_KEY_FILE`, a near-cli credentials file) |
 | `AIRLOCK_SANDBOX` | unset | `1` runs each repository's install steps in the sandbox first. It needs `VERCEL_TOKEN`, `VERCEL_TEAM_ID` and `VERCEL_PROJECT_ID`, or `VERCEL_OIDC_TOKEN`. If the sandbox fails, the code is still reviewed. |
-| `AIRLOCK_ENGINE` | `near` with a NEAR AI key, else `claude` | `claude` keeps the pre-hackathon reviewer (below) |
+| `AIRLOCK_ENGINE` | `near` | `claude` runs the pre-hackathon reviewer (below). Without a NEAR AI key, the `near` engine refuses every check rather than fall back |
 | `AIRLOCK_DAILY_USD` | `25` | Stop starting scans after this much per UTC day |
 | `AIRLOCK_PER_IP_HOUR` | `6` | Scans one address may start per hour |
 | `AIRLOCK_CONCURRENT` | `2` | Scans running at once |
@@ -443,7 +443,7 @@ Each scan also runs a fence test: the agent tries once to run the install comman
 the policy refusing it. Details, including how each block is credited to the layer that made it:
 [docs/armoriq.md](docs/armoriq.md).
 
-It still runs with `AIRLOCK_ENGINE=claude`, or when no NEAR AI key is set:
+It still runs, but only when asked for with `AIRLOCK_ENGINE=claude`:
 
 ```sh
 export ANTHROPIC_API_KEY=sk-ant-…
