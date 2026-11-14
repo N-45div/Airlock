@@ -2,16 +2,20 @@
 
 **In web3 your laptop is your wallet. Airlock checks a stranger's code before you, or your AI agent, runs it.**
 
-Other scanners tell you a repository looks like a wallet stealer. Airlock runs it against decoy wallets,
-shows you the request that carried them out, and records a verdict on NEAR that the contract stores
-only after verifying the TEE model's signature.
+Other scanners tell you a repository looks like a wallet stealer. Airlock runs its install in a throwaway
+VM full of decoy wallets and shows you the request that carried them out. A model in a TEE on NEAR AI
+Cloud then judges the code and what it did, and the verdict goes on NEAR, where the contract stores it
+only after verifying the model's signature. Anyone can read it for free. Against 20 real npm malware
+packages, the sandbox caught 9 phoning home at install, and none of 10 honest packages
+([Results](#results)).
 
-Airlock runs a repository's install steps in a throwaway VM full of decoy wallets, has a model inside a
-TEE on NEAR AI Cloud judge the code and what it did, and records the verdict on NEAR. Anyone can read
-a verdict for free and know where it came from. Against 20 real npm malware packages, the sandbox
-caught 9 phoning home at install, and none of 10 honest packages ([Results](#results)).
+![The live site's report for a sample take-home: the request its install script sent, carrying decoy NEAR CLI keys, a Solana keypair and an SSH key](docs/images/caught-red-handed.png)
 
-- **Try it:** [airlock-check.vercel.app](https://airlock-check.vercel.app). Paste a GitHub link and get a verdict in one to two minutes.
+*A live check of the built-in stealer sample ([its report](https://airlock-check.vercel.app/r/VRut0Lm1)): the
+sandbox kept the request and named the decoy keys inside it. Demo video:
+[the 83-second walkthrough on X](https://x.com/godlovesu_n/status/2120528325424939396).*
+
+- **Try it:** [airlock-check.vercel.app](https://airlock-check.vercel.app). Press the first sample, or paste a GitHub link, and get a verdict in one to two minutes. Tick **Private check** to keep nothing.
 - **Every verdict on NEAR:** [airlock-check.vercel.app/near](https://airlock-check.vercel.app/near), from the contract [`airlock-verdicts.testnet`](https://testnet.nearblocks.io/address/airlock-verdicts.testnet)
 - **Chrome extension:** [Chrome Web Store](https://chromewebstore.google.com/detail/bmhbejjhiimlcmpkpeglogijodbhmpgd) · [source](extension/)
 - **Check our claims with no key:** `npm ci && npm run judge` (step 1 below)
