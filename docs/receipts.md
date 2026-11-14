@@ -20,7 +20,7 @@ npm run verify:receipt -- r.json                                           # fin
 ```
 
 `fixtures/receipts/take-home.json` is a real receipt from a live review of Airlock's sample
-take-home task (Nov 4, 2026; 3 replies; $0.0016).
+take-home task (Nov 5, 2026; 2 replies; $0.0029).
 
 ## What the offline check proves
 
@@ -61,7 +61,7 @@ receipt states anyway, plus any short reasoning the model wrote with it.
 For a private repository, the receipt's findings can quote its code. Share a private
 repository's receipt only if you'd share its findings; on chain, only the hash goes.
 
-## Format (`airlock.receipt.v1`)
+## Format (`airlock.receipt.v2`)
 
 | Field | Contents |
 | --- | --- |

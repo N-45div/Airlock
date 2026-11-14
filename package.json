@@ -2,7 +2,7 @@
   "name": "airlock",
   "private": true,
   "type": "module",
-  "description": "Before you run a stranger's code, let a fenced agent open it first.",
+  "description": "Check a stranger's code before you or your AI agent runs it: a decoy-wallet sandbox, a private review in a TEE on NEAR AI Cloud, and verdicts on NEAR.",
   "license": "MIT",
   "workspaces": [
     "web"

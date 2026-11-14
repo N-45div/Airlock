@@ -2,8 +2,8 @@
 
 Check a stranger's GitHub repository right where you found it. On a GitHub repository page or an
 npm package page, the extension adds a **Check before you run** button. Press it and the Airlock
-web app has a fenced AI agent read the repository on Airlock's server, then tells you whether it
-is safe to run. If someone checked it before, the button shows that verdict instead: **Looks safe**,
+web app runs the repository's install steps in a throwaway VM full of decoy wallets, has a model in
+a TEE on NEAR AI Cloud review the code and what it did, then tells you whether it is safe to run. If someone checked it before, the button shows that verdict instead: **Looks safe**,
 **Be careful** or **Don't run it**, with the one-line reason as its tooltip.
 
 The extension never downloads or runs the repository itself. It is plain JavaScript (Manifest V3,
