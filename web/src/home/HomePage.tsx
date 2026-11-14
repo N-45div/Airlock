@@ -59,7 +59,7 @@ const GUARDS: { icon: IconName; where: string; title: string; text: string; code
     where: 'Coding agents',
     title: 'Claude Code and Codex check NEAR first',
     text: 'A hook runs before the agent’s shell commands. A clone or install of a repository marked Don’t run it is blocked; anything unchecked waits for you.',
-    code: '$ git clone github.com/…\nDENY  "Don\'t run it" on NEAR\n      blocked before it runs',
+    code: '$ git clone github.com/N-45div/airlock-demo-stealer\nDENY  "Don\'t run it" (verdict #82 on NEAR)\n      blocked before it runs',
   },
   {
     icon: 'shield',
