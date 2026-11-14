@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Scan } from '../../../server/types.ts';
 import { startScan } from '../api.ts';
-import { CTA } from '../brand.ts';
+import { CTA, PRODUCT } from '../brand.ts';
 import { messageOf } from '../home/ScanForm.tsx';
 import { navigate } from '../router.tsx';
 import { Sigil } from '../art/Art.tsx';
@@ -46,6 +46,12 @@ export function VerdictCard({ scan, rows }: { scan: Scan; rows: FenceRow[] }) {
       <h2 id="verdict-title" className="verdict__title">
         {look.title}
       </h2>
+      {scan.verdict === 'caution' ? (
+        <p className="verdict__meaning">
+          Something in it runs by itself when you install it or open the folder, so {PRODUCT} says to read the findings
+          first, even when nothing in it looks harmful. The reviewer’s own words:
+        </p>
+      ) : null}
       {scan.headline ? <p className="verdict__headline">{scan.headline}</p> : null}
       {scan.summary ? <p className="verdict__summary">{scan.summary}</p> : null}
       <ul className="verdict__facts">
