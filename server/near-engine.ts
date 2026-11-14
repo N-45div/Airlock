@@ -91,9 +91,13 @@ export function nearReviewer(engine: NearEngineOptions): Reviewer {
 
     const receipt = buildReceipt({ repo: opts.repo, tree, result, attestation: client.attestation, exchanges: client.exchanges, ...(sandbox ? { sandbox: sandboxDigest(sandbox) } : {}) });
     const hash = receiptHash(receipt);
-    await mkdir(engine.receiptsDir, { recursive: true });
-    await writeFile(path.join(engine.receiptsDir, `${hash}.json`), `${JSON.stringify(receipt, null, 2)}\n`);
-    if (sandbox) await writeFile(path.join(engine.receiptsDir, `${hash}.evidence.json`), `${JSON.stringify(sandbox, null, 2)}\n`);
+    // A private check keeps nothing: the receipt and evidence go to the browser, not to disk.
+    const keep = opts.keep !== false;
+    if (keep) {
+      await mkdir(engine.receiptsDir, { recursive: true });
+      await writeFile(path.join(engine.receiptsDir, `${hash}.json`), `${JSON.stringify(receipt, null, 2)}\n`);
+      if (sandbox) await writeFile(path.join(engine.receiptsDir, `${hash}.evidence.json`), `${JSON.stringify(sandbox, null, 2)}\n`);
+    }
 
     const a = client.attestation;
     const proof: ScanProof = {
@@ -105,7 +109,9 @@ export function nearReviewer(engine: NearEngineOptions): Reviewer {
       gpuEvidence: a.gpuEvidence,
       replies: result.turns.length,
     };
-    if (engine.record) {
+    if (!keep) {
+      proof.notRecorded = 'this was a private check, so nothing about it was recorded or kept.';
+    } else if (engine.record) {
       try {
         const creds = await loadCredentials();
         const tx = await recordReceipt(receipt, creds);
@@ -130,6 +136,7 @@ export function nearReviewer(engine: NearEngineOptions): Reviewer {
       costUsd: result.costUsd,
       proof,
       ...(sandbox ? { sandbox: sandboxReport(sandbox) } : {}),
+      ...(keep ? {} : { files: { receipt, ...(sandbox ? { evidence: sandbox } : {}) } }),
     };
   };
 }

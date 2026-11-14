@@ -56,3 +56,41 @@ test('receipts are served by hash: the server\'s own and the ones shipped with A
   assert.equal(await scanner.receipt('00'.repeat(32)), null);
   assert.equal(await scanner.receipt('../../etc/passwd'), null);
 });
+
+test('a private check keeps nothing: no file on disk, no lookup, no reuse, and its receipt goes to the browser', async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), 'airlock-private-'));
+  const kept: (boolean | undefined)[] = [];
+  const scanner = new Scanner(dataDir, async (opts) => {
+    kept.push(opts.keep);
+    const notRecorded = opts.keep === false ? { notRecorded: 'private' } : {};
+    const files = opts.keep === false ? { files: { receipt: { schema: 'airlock.receipt.v2' } } } : {};
+    return { verdict: 'safe', headline: 'h', summary: 's', findings: [], costUsd: 0.001, proof: { ...PROOF, ...notRecorded }, ...files };
+  });
+  await scanner.load();
+  const finish = (id: string) =>
+    new Promise<Scan>((resolve) => {
+      const stop = scanner.subscribe(id, (e: ScanEvent) => {
+        if (e.type === 'done') {
+          stop();
+          resolve(e.scan);
+        }
+      });
+    });
+
+  // The packed sample, so the test needs no network.
+  const url = 'sample:take-home';
+  const open = scanner.start('take-home', '1.1.1.1');
+  await finish(open.id);
+  const priv = scanner.start(url, '1.1.1.2', { private: true });
+  assert.notEqual(priv.id, open.id, 'a private check never reuses a recent report');
+  const done = await finish(priv.id);
+
+  assert.equal(done.private, true);
+  assert.deepEqual(kept, [true, false], 'the reviewer is told to keep nothing for the private check only');
+  assert.deepEqual(done.files, { receipt: { schema: 'airlock.receipt.v2' } });
+  assert.equal(scanner.get(priv.id)?.id, priv.id, 'its page can still load it for a while');
+  assert.notEqual(scanner.latest(url)?.id, priv.id, 'a private check never shows up in lookups');
+  const { readdir } = await import('node:fs/promises');
+  const onDisk = await readdir(path.join(dataDir, 'scans'));
+  assert.deepEqual(onDisk, [`${open.id}.json`], 'only the ordinary check was written to disk');
+});

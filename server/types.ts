@@ -129,6 +129,11 @@ export interface Scan {
   proof?: ScanProof;
   /** Present when the repository's install and setup steps also ran in the sandbox. */
   sandbox?: SandboxReport;
+  /** A private check: nothing about it is written to disk or recorded on NEAR, and the report is
+   * dropped from memory soon after it finishes. */
+  private?: boolean;
+  /** A private check's receipt and sandbox evidence, handed to the browser since the server keeps no copy. */
+  files?: { receipt: unknown; evidence?: unknown };
 }
 
 /** Server-sent events on GET /api/scans/:id/stream. */

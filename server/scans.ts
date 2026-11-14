@@ -15,7 +15,7 @@ import { SAMPLES, sampleRepo, sampleSource } from './samples.ts';
 import type { Approval, Finding, RepoInfo, SandboxReport, Scan, ScanEvent, ScanProof, ScanStatus, ToolEvent } from './types.ts';
 
 /** A review engine: Claude (review.ts) or NEAR AI Cloud (near-engine.ts), which adds a proof. */
-export type Reviewer = (opts: ReviewOptions) => Promise<ReviewResult & { proof?: ScanProof; sandbox?: SandboxReport }>;
+export type Reviewer = (opts: ReviewOptions) => Promise<ReviewResult & { proof?: ScanProof; sandbox?: SandboxReport; files?: Scan['files'] }>;
 
 export const LIMITS = {
   /** Scans running at once; the rest wait in line. */
@@ -27,6 +27,8 @@ export const LIMITS = {
   /** A finished scan of the same repo this recent is reused. */
   reuseMs: 6 * 60 * 60 * 1000,
   approvalMs: 3 * 60 * 1000,
+  /** How long a private check's report stays in memory after it finishes, so its page can load it. */
+  privateMs: 15 * 60 * 1000,
   /** A review that runs longer is stopped, so one stuck scan can't hold the line. */
   reviewMs: Number(process.env.AIRLOCK_REVIEW_MINUTES ?? 8) * 60 * 1000,
 };
@@ -49,6 +51,8 @@ interface Live {
 export class Scanner {
   private readonly live = new Map<string, Live>();
   private readonly finished = new Map<string, Scan>();
+  /** Finished private checks, in memory only, each dropped after LIMITS.privateMs. */
+  private readonly fleeting = new Map<string, Scan>();
   private readonly queue: string[] = [];
   private running = 0;
   private readonly starts = new Map<string, number[]>();
@@ -91,7 +95,7 @@ export class Scanner {
   }
 
   get(id: string): Scan | undefined {
-    return this.live.get(id)?.scan ?? this.finished.get(id);
+    return this.live.get(id)?.scan ?? this.finished.get(id) ?? this.fleeting.get(id);
   }
 
   /** The newest finished scan of a repository, for the extension's badge. */
@@ -120,12 +124,13 @@ export class Scanner {
 
   /** Starts a scan of `input` (a GitHub URL or a sample id). Returns the id and
    * the key that lets its holder answer approval prompts. */
-  start(input: string, ip: string): { id: string; key: string } {
+  start(input: string, ip: string, opts: { private?: boolean } = {}): { id: string; key: string } {
     const sample = SAMPLES.find((s) => s.id === input || s.url === input);
     const repo = sample ? sampleRepo(sample) : parseRepoUrl(input);
 
-    // A sample started by its id always runs fresh, so the demo is live; a pasted link may reuse.
-    if (!sample || sample.id !== input) {
+    // A sample started by its id always runs fresh, so the demo is live; a pasted link may reuse. A
+    // private check never reuses another person's report.
+    if (!opts.private && (!sample || sample.id !== input)) {
       const recent = this.latest(repo.url);
       if (recent && Date.now() - Date.parse(recent.startedAt) < LIMITS.reuseMs) return { id: recent.id, key: '' };
     }
@@ -136,7 +141,7 @@ export class Scanner {
 
     const id = randomBytes(6).toString('base64url');
     const key = randomBytes(18).toString('base64url');
-    const scan: Scan = { id, repo, status: 'queued', findings: [], events: [], approvals: [], startedAt: new Date().toISOString() };
+    const scan: Scan = { id, repo, status: 'queued', findings: [], events: [], approvals: [], startedAt: new Date().toISOString(), ...(opts.private ? { private: true } : {}) };
     const live: Live = { scan, key, bus: new EventEmitter(), answers: new Map() };
     live.bus.setMaxListeners(100);
     this.live.set(id, live);
@@ -228,6 +233,7 @@ export class Scanner {
         dir,
         signal: deadline.signal,
         fenceTest: true,
+        keep: !scan.private,
         repo: scan.repo,
         inventory,
         hooks: {
@@ -269,6 +275,7 @@ export class Scanner {
       scan.summary = result.summary;
       if (result.proof) scan.proof = result.proof;
       if (result.sandbox) scan.sandbox = result.sandbox;
+      if (result.files) scan.files = result.files;
       scan.status = 'done';
     } catch (error) {
       scan.status = 'failed';
@@ -284,8 +291,14 @@ export class Scanner {
       clearTimeout(timer);
       scan.finishedAt = new Date().toISOString();
       for (const approval of scan.approvals) if (approval.status === 'pending') approval.status = 'expired';
-      await writeFile(path.join(this.dataDir, 'scans', `${scan.id}.json`), JSON.stringify(scan, null, 2)).catch(() => {});
-      this.finished.set(scan.id, scan);
+      if (scan.private) {
+        // Never written to disk; dropped from memory once its page has had time to load it.
+        this.fleeting.set(scan.id, scan);
+        setTimeout(() => this.fleeting.delete(scan.id), LIMITS.privateMs).unref();
+      } else {
+        await writeFile(path.join(this.dataDir, 'scans', `${scan.id}.json`), JSON.stringify(scan, null, 2)).catch(() => {});
+        this.finished.set(scan.id, scan);
+      }
       this.emit(live, { type: 'done', scan });
       this.live.delete(scan.id);
       await rm(work, { recursive: true, force: true }).catch(() => {});

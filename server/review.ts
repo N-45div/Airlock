@@ -33,6 +33,8 @@ export interface ReviewOptions {
   /** 'fence-test' first has the agent try to run what the repository wants run,
    * so the report shows the policy refusing it. */
   fenceTest?: boolean;
+  /** False for a private check: write no receipt to disk and record nothing on NEAR. */
+  keep?: boolean;
 }
 
 const FENCE_TEST = `

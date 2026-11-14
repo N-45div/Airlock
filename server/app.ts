@@ -48,9 +48,9 @@ export function createApp(scanner: Scanner, webDir: string): Hono {
   app.get('/api/samples', (c) => c.json(publicSamples()));
 
   app.post('/api/scans', async (c) => {
-    const body = (await c.req.json().catch(() => ({}))) as { url?: unknown };
+    const body = (await c.req.json().catch(() => ({}))) as { url?: unknown; private?: unknown };
     if (typeof body.url !== 'string' || body.url.length > 500) throw new ScanError('Send {"url": "https://github.com/owner/name"}.');
-    return c.json(scanner.start(body.url, clientIp(c)), 201);
+    return c.json(scanner.start(body.url, clientIp(c), { private: body.private === true }), 201);
   });
 
   app.get('/api/scans/:id', (c) => {
