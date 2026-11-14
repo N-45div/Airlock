@@ -117,7 +117,9 @@ the recorder's statement, and the receipt, found by its hash, settles it offline
   stealer sent, a `POST` to its collector, with **NEAR CLI keys, Solana CLI keypair, SSH key** inside,
   credited to its postinstall script. Next comes *Don't run it*, and the NEAR
   transaction that recorded it. The host can't exist, so nothing ever left the VM. A finished one:
-  [hidden-loader](https://airlock-check.vercel.app/r/VRut0Lm1).
+  [hidden-loader](https://airlock-check.vercel.app/r/VRut0Lm1). The same stealer as a real GitHub repository,
+  for pasting into the form: https://github.com/N-45div/airlock-demo-stealer
+  ([its report](https://airlock-check.vercel.app/r/7xgbeEsQ)).
 - **Do:** open [airlock-check.vercel.app](https://airlock-check.vercel.app), paste a public GitHub
   repository link (or pick a sample) and press the button.
   **See:** the review as it happens, then the verdict and a "Verified review" panel with:
@@ -163,9 +165,13 @@ data.
    **See:** `ON CHAIN: #0 DANGEROUS sample:take-home …` with that receipt's hash. The testnet contract
    stored this verdict after it verified the model's reply signature. `npm run registry -- recent` lists
    every verdict.
-5. **Do:** `npm run guard -- check "git clone https://github.com/kelektiv/node.bcrypt.js"`
-   **See:** `ASK  Airlock: "Be careful" for github.com/kelektiv/node.bcrypt.js (verdict #…` with the
-   report's link, and exit code 1. As a Claude Code hook, this clone waits for you.
+5. **Do:** `npm run guard -- check "git clone https://github.com/N-45div/airlock-demo-stealer"`
+   **See:** `DENY   Airlock: "Don't run it" for github.com/n-45div/airlock-demo-stealer (verdict #82 …` with
+   the report's link, and exit code 2. As a Claude Code hook, the clone is blocked before it runs. That
+   repository is a harmless demo stealer: its collector is a `.invalid` host that can't exist. Its live check
+   caught the decoy keys leaving: [report](https://airlock-check.vercel.app/r/7xgbeEsQ).
+   `npm run guard -- check "git clone https://github.com/kelektiv/node.bcrypt.js"` shows
+   `ASK  Airlock: "Be careful" …` and exit code 1: this clone waits for you.
    `npm run guard -- check "npm install escape-string-regexp"` finds the package's repository and shows
    `ALLOW … "Looks safe"`, with a note that the verdict covers the repository the package names, not
    the package published on npm. `npm run guard -- --config` prints the hook settings to paste
